@@ -187,9 +187,9 @@ export default function AdminPage() {
                   <Upload className="h-5 w-5 text-primary" />
                   Actualizar base PIM
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Sube un archivo CSV con los registros del PIM. La columna <strong>"Código Jaivaná"</strong> es obligatoria y se usa como clave única.
-                </p>
+                 <p className="text-sm text-muted-foreground mt-1">
+                  Sube un archivo Excel (.xlsx / .xls) con los registros del PIM. La columna <strong>"Código Jaivaná"</strong> es obligatoria y se usa como clave única.
+                 </p>
               </div>
 
               <div className="flex items-center gap-3">
