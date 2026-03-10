@@ -181,7 +181,6 @@ export default function AdminPage() {
       setCsvUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-    }
   };
 
   return (
