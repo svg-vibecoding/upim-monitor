@@ -126,6 +126,7 @@ export default function AdminPage() {
   // CSV upload state
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvUploading, setCsvUploading] = useState(false);
+  const [csvProgress, setCsvProgress] = useState("");
   const [csvResult, setCsvResult] = useState<{
     success: boolean;
     totalRows?: number;
