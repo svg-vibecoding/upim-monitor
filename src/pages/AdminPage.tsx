@@ -226,10 +226,14 @@ export default function AdminPage() {
 
                   {csvResult.success && (
                     <>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-2">
                         <div className="text-center p-2 rounded-md bg-muted">
                           <div className="text-lg font-bold text-foreground">{csvResult.totalRows}</div>
-                          <div className="text-xs text-muted-foreground">Filas procesadas</div>
+                          <div className="text-xs text-muted-foreground">Filas en archivo</div>
+                        </div>
+                        <div className="text-center p-2 rounded-md bg-muted">
+                          <div className="text-lg font-bold text-foreground">{csvResult.uniqueRows}</div>
+                          <div className="text-xs text-muted-foreground">Códigos únicos</div>
                         </div>
                         <div className="text-center p-2 rounded-md bg-muted">
                           <div className="text-lg font-bold text-success">{csvResult.inserted}</div>
