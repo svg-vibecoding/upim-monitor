@@ -122,12 +122,57 @@ export default function AdminPage() {
     setDimDialog(false);
   };
 
+  // CSV upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [csvUploading, setCsvUploading] = useState(false);
+  const [csvResult, setCsvResult] = useState<{
+    success: boolean;
+    totalRows?: number;
+    inserted?: number;
+    updated?: number;
+    errors?: number;
+    errorDetails?: string[];
+    columnsDetected?: { fixed: string[]; attributes: string[] };
+    error?: string;
+  } | null>(null);
+
+  const handleCsvUpload = async () => {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) return;
+
+    setCsvUploading(true);
+    setCsvResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/upload-pim-csv`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      setCsvResult(data);
+    } catch (err) {
+      setCsvResult({ success: false, error: `Error de conexión: ${(err as Error).message}` });
+    } finally {
+      setCsvUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-5xl">
       <h1 className="text-2xl font-bold text-foreground">Administración</h1>
 
-      <Tabs defaultValue="users">
+      <Tabs defaultValue="pim-upload">
         <TabsList>
+          <TabsTrigger value="pim-upload">Base PIM</TabsTrigger>
           <TabsTrigger value="users">Usuarios</TabsTrigger>
           <TabsTrigger value="reports">Informes</TabsTrigger>
           <TabsTrigger value="dimensions">Dimensiones</TabsTrigger>
