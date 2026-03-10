@@ -1,5 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import * as XLSX from "npm:xlsx@0.18.5/xlsx.mjs";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -37,41 +36,17 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    if (!file) {
+    // Expect JSON body with { rows: Record<string, unknown>[] } parsed client-side
+    const { rows: jsonRows } = await req.json() as { rows: Record<string, unknown>[] };
+
+    if (!jsonRows || jsonRows.length === 0) {
       return new Response(
-        JSON.stringify({ error: "No se recibió ningún archivo." }),
+        JSON.stringify({ error: "No se recibieron datos." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Read file as ArrayBuffer and parse with SheetJS
-    const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
-    const sheetName = workbook.SheetNames[0];
-    if (!sheetName) {
-      return new Response(
-        JSON.stringify({ error: "El archivo no contiene hojas." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const sheet = workbook.Sheets[sheetName];
-    // Convert to array of objects, all values as strings
-    const jsonRows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-
-    if (jsonRows.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "El archivo no tiene datos (solo encabezado o vacío)." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Get headers from first row keys
     const rawHeaders = Object.keys(jsonRows[0]);
-
-    // Map each header to either a fixed DB column or an attribute name
     const columnMap: { header: string; dbColumn?: string; attrName?: string }[] = [];
     let hasCodigoJaivana = false;
 
@@ -104,7 +79,6 @@ Deno.serve(async (req) => {
     let errors = 0;
     const errorDetails: string[] = [];
 
-    // Deduplicate: keep last occurrence per codigo_jaivana
     const deduped = new Map<string, Record<string, unknown>>();
     for (let rowIdx = 0; rowIdx < jsonRows.length; rowIdx++) {
       const row = jsonRows[rowIdx];
@@ -127,9 +101,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Ensure codigo_jaivana is always a string (Excel may parse as number)
       record.codigo_jaivana = String(record.codigo_jaivana);
-
       record.attributes = attributes;
       deduped.set(record.codigo_jaivana as string, record);
     }
@@ -139,7 +111,6 @@ Deno.serve(async (req) => {
     const BATCH_SIZE = 500;
     for (let batchStart = 0; batchStart < allRows.length; batchStart += BATCH_SIZE) {
       const upsertRows = allRows.slice(batchStart, batchStart + BATCH_SIZE);
-
       const codes = upsertRows.map((r) => r.codigo_jaivana as string);
       const { data: existing } = await supabase
         .from("pim_records")
