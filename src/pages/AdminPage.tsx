@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,8 @@ import {
   mockUsers, mockPredefinedReports, mockDimensions,
   AppUser, UserRole, PredefinedReport, Dimension,
 } from "@/data/mockData";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ALL_ATTRIBUTES = [
   "Nombre Comercial", "Descripción Corta", "Descripción Larga", "Marca", "EAN",
