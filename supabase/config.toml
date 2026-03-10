@@ -1,1 +1,4 @@
 project_id = "rpakzaqisktvgdqzdjxu"
+
+[functions.upload-pim-csv]
+verify_jwt = false
