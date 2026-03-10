@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,8 @@ import {
   mockUsers, mockPredefinedReports, mockDimensions,
   AppUser, UserRole, PredefinedReport, Dimension,
 } from "@/data/mockData";
-import { Plus, Pencil } from "lucide-react";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const ALL_ATTRIBUTES = [
   "Nombre Comercial", "Descripción Corta", "Descripción Larga", "Marca", "EAN",
@@ -121,18 +122,160 @@ export default function AdminPage() {
     setDimDialog(false);
   };
 
+  // CSV upload state
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [csvUploading, setCsvUploading] = useState(false);
+  const [csvResult, setCsvResult] = useState<{
+    success: boolean;
+    totalRows?: number;
+    inserted?: number;
+    updated?: number;
+    errors?: number;
+    errorDetails?: string[];
+    columnsDetected?: { fixed: string[]; attributes: string[] };
+    error?: string;
+  } | null>(null);
+
+  const handleCsvUpload = async () => {
+    const file = fileInputRef.current?.files?.[0];
+    if (!file) return;
+
+    setCsvUploading(true);
+    setCsvResult(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/upload-pim-csv`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      const data = await res.json();
+      setCsvResult(data);
+    } catch (err) {
+      setCsvResult({ success: false, error: `Error de conexión: ${(err as Error).message}` });
+    } finally {
+      setCsvUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-5xl">
       <h1 className="text-2xl font-bold text-foreground">Administración</h1>
 
-      <Tabs defaultValue="users">
+      <Tabs defaultValue="pim-upload">
         <TabsList>
+          <TabsTrigger value="pim-upload">Base PIM</TabsTrigger>
           <TabsTrigger value="users">Usuarios</TabsTrigger>
           <TabsTrigger value="reports">Informes</TabsTrigger>
           <TabsTrigger value="dimensions">Dimensiones</TabsTrigger>
         </TabsList>
 
-        {/* USERS */}
+        {/* PIM UPLOAD */}
+        <TabsContent value="pim-upload" className="space-y-4">
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Upload className="h-5 w-5 text-primary" />
+                  Actualizar base PIM
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Sube un archivo CSV con los registros del PIM. La columna <strong>"Código Jaivaná"</strong> es obligatoria y se usa como clave única.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  className="max-w-sm"
+                  disabled={csvUploading}
+                />
+                <Button onClick={handleCsvUpload} disabled={csvUploading} className="gap-2">
+                  {csvUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
+                  {csvUploading ? "Procesando..." : "Cargar CSV"}
+                </Button>
+              </div>
+
+              {csvResult && (
+                <div className={`rounded-lg border p-4 space-y-2 ${csvResult.success ? "border-success bg-success/5" : "border-destructive bg-destructive/5"}`}>
+                  <div className="flex items-center gap-2">
+                    {csvResult.success ? (
+                      <CheckCircle2 className="h-5 w-5 text-success" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-destructive" />
+                    )}
+                    <span className="font-semibold text-foreground">
+                      {csvResult.success ? "Carga completada" : "Error en la carga"}
+                    </span>
+                  </div>
+
+                  {csvResult.error && (
+                    <p className="text-sm text-destructive">{csvResult.error}</p>
+                  )}
+
+                  {csvResult.success && (
+                    <>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
+                        <div className="text-center p-2 rounded-md bg-muted">
+                          <div className="text-lg font-bold text-foreground">{csvResult.totalRows}</div>
+                          <div className="text-xs text-muted-foreground">Filas procesadas</div>
+                        </div>
+                        <div className="text-center p-2 rounded-md bg-muted">
+                          <div className="text-lg font-bold text-success">{csvResult.inserted}</div>
+                          <div className="text-xs text-muted-foreground">Insertados</div>
+                        </div>
+                        <div className="text-center p-2 rounded-md bg-muted">
+                          <div className="text-lg font-bold text-primary">{csvResult.updated}</div>
+                          <div className="text-xs text-muted-foreground">Actualizados</div>
+                        </div>
+                        <div className="text-center p-2 rounded-md bg-muted">
+                          <div className="text-lg font-bold text-destructive">{csvResult.errors}</div>
+                          <div className="text-xs text-muted-foreground">Errores</div>
+                        </div>
+                      </div>
+
+                      {csvResult.columnsDetected && (
+                        <div className="text-xs text-muted-foreground mt-2">
+                          <p><strong>Columnas fijas detectadas:</strong> {csvResult.columnsDetected.fixed.join(", ")}</p>
+                          <p><strong>Atributos detectados:</strong> {csvResult.columnsDetected.attributes.length} columnas adicionales</p>
+                        </div>
+                      )}
+
+                      {csvResult.errorDetails && csvResult.errorDetails.length > 0 && (
+                        <div className="mt-2">
+                          <p className="text-xs font-medium text-destructive">Detalle de errores:</p>
+                          <ul className="text-xs text-muted-foreground list-disc list-inside">
+                            {csvResult.errorDetails.map((e, i) => <li key={i}>{e}</li>)}
+                          </ul>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div className="bg-muted rounded-lg p-4 text-xs text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground text-sm">Formato esperado del CSV:</p>
+                <p>• Separador: coma (<code>,</code>) o punto y coma (<code>;</code>)</p>
+                <p>• Columna obligatoria: <strong>Código Jaivaná</strong></p>
+                <p>• Columnas fijas reconocidas: Estado Global, Código SumaGo, Visibilidad B2B, Visibilidad B2C, Categoría N1 Comercial, Clasificación del Producto</p>
+                <p>• Cualquier otra columna se almacena como <strong>atributo</strong> evaluable en los informes</p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+
         <TabsContent value="users" className="space-y-4">
           <div className="flex justify-end">
             <Dialog open={userDialog} onOpenChange={setUserDialog}>
