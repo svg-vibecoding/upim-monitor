@@ -202,7 +202,7 @@ export default function AdminPage() {
                 />
                 <Button onClick={handleCsvUpload} disabled={csvUploading} className="gap-2">
                   {csvUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
-                  {csvUploading ? "Procesando..." : "Cargar CSV"}
+                  {csvUploading ? "Procesando..." : "Cargar Excel"}
                 </Button>
               </div>
 
