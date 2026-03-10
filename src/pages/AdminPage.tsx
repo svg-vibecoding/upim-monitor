@@ -128,6 +128,7 @@ export default function AdminPage() {
   const [csvResult, setCsvResult] = useState<{
     success: boolean;
     totalRows?: number;
+    uniqueRows?: number;
     inserted?: number;
     updated?: number;
     errors?: number;
