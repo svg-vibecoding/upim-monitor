@@ -15,6 +15,7 @@ import {
 } from "@/data/mockData";
 import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from "xlsx";
 
 const ALL_ATTRIBUTES = [
   "Nombre Comercial", "Descripción Corta", "Descripción Larga", "Marca", "EAN",
