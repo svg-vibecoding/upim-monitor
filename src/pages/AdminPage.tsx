@@ -262,6 +262,13 @@ export default function AdminPage() {
                 </Button>
               </div>
 
+              {csvUploading && csvProgress && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>{csvProgress}</span>
+                </div>
+              )}
+
               {csvResult && (
                 <div className={`rounded-lg border p-4 space-y-2 ${csvResult.success ? "border-success bg-success/5" : "border-destructive bg-destructive/5"}`}>
                   <div className="flex items-center gap-2">
