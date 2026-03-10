@@ -265,11 +265,12 @@ export default function AdminPage() {
               )}
 
               <div className="bg-muted rounded-lg p-4 text-xs text-muted-foreground space-y-1">
-                <p className="font-medium text-foreground text-sm">Formato esperado del CSV:</p>
-                <p>• Separador: coma (<code>,</code>) o punto y coma (<code>;</code>)</p>
-                <p>• Columna obligatoria: <strong>Código Jaivaná</strong></p>
-                <p>• Columnas fijas reconocidas: Estado Global, Código SumaGo, Visibilidad B2B, Visibilidad B2C, Categoría N1 Comercial, Clasificación del Producto</p>
-                <p>• Cualquier otra columna se almacena como <strong>atributo</strong> evaluable en los informes</p>
+                 <p className="font-medium text-foreground text-sm">Formato esperado del archivo Excel:</p>
+                 <p>• Formato: <strong>.xlsx</strong> o <strong>.xls</strong> (se lee la primera hoja)</p>
+                 <p>• Columna obligatoria: <strong>Código Jaivaná</strong></p>
+                 <p>• Columnas fijas reconocidas: Estado Global, Código SumaGo, Visibilidad B2B, Visibilidad B2C, Categoría N1 Comercial, Clasificación del Producto</p>
+                 <p>• Cualquier otra columna se almacena como <strong>atributo</strong> evaluable en los informes</p>
+                 <p>• Los códigos numéricos se preservan como texto</p>
               </div>
             </CardContent>
           </Card>
