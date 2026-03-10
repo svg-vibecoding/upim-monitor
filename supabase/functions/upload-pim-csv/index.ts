@@ -125,38 +125,38 @@ Deno.serve(async (req) => {
     let errors = 0;
     const errorDetails: string[] = [];
 
-    // Process in batches of 100
-    const BATCH_SIZE = 100;
-    for (let batchStart = 0; batchStart < dataRows.length; batchStart += BATCH_SIZE) {
-      const batch = dataRows.slice(batchStart, batchStart + BATCH_SIZE);
-      const upsertRows: Record<string, unknown>[] = [];
+    // Deduplicate: keep last occurrence per codigo_jaivana
+    const deduped = new Map<string, Record<string, unknown>>();
+    for (let rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
+      const cells = dataRows[rowIdx];
+      const record: Record<string, unknown> = {};
+      const attributes: Record<string, string | null> = {};
 
-      for (let rowIdx = 0; rowIdx < batch.length; rowIdx++) {
-        const cells = batch[rowIdx];
-        const record: Record<string, unknown> = {};
-        const attributes: Record<string, string | null> = {};
-
-        for (const col of columnMap) {
-          const value = cells[col.index]?.trim() || null;
-          if (col.dbColumn) {
-            record[col.dbColumn] = value;
-          } else if (col.attrName && value) {
-            attributes[col.attrName] = value;
-          }
+      for (const col of columnMap) {
+        const value = cells[col.index]?.trim() || null;
+        if (col.dbColumn) {
+          record[col.dbColumn] = value;
+        } else if (col.attrName && value) {
+          attributes[col.attrName] = value;
         }
-
-        if (!record.codigo_jaivana) {
-          errors++;
-          const globalRow = batchStart + rowIdx + 2; // +2 for header + 0-index
-          errorDetails.push(`Fila ${globalRow}: código Jaivaná vacío`);
-          continue;
-        }
-
-        record.attributes = attributes;
-        upsertRows.push(record);
       }
 
-      if (upsertRows.length === 0) continue;
+      if (!record.codigo_jaivana) {
+        errors++;
+        errorDetails.push(`Fila ${rowIdx + 2}: código Jaivaná vacío`);
+        continue;
+      }
+
+      record.attributes = attributes;
+      deduped.set(record.codigo_jaivana as string, record);
+    }
+
+    const allRows = Array.from(deduped.values());
+
+    // Process in batches of 500
+    const BATCH_SIZE = 500;
+    for (let batchStart = 0; batchStart < allRows.length; batchStart += BATCH_SIZE) {
+      const upsertRows = allRows.slice(batchStart, batchStart + BATCH_SIZE);
 
       // Check which codes already exist
       const codes = upsertRows.map((r) => r.codigo_jaivana as string);
