@@ -14,16 +14,159 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dimensions: {
+        Row: {
+          created_at: string
+          field: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          field: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          field?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      pim_records: {
+        Row: {
+          attributes: Json
+          categoria_n1_comercial: string | null
+          clasificacion_producto: string | null
+          codigo_jaivana: string
+          codigo_sumago: string | null
+          created_at: string
+          estado_global: string
+          id: string
+          updated_at: string
+          visibilidad_b2b: string
+          visibilidad_b2c: string
+        }
+        Insert: {
+          attributes?: Json
+          categoria_n1_comercial?: string | null
+          clasificacion_producto?: string | null
+          codigo_jaivana: string
+          codigo_sumago?: string | null
+          created_at?: string
+          estado_global?: string
+          id?: string
+          updated_at?: string
+          visibilidad_b2b?: string
+          visibilidad_b2c?: string
+        }
+        Update: {
+          attributes?: Json
+          categoria_n1_comercial?: string | null
+          clasificacion_producto?: string | null
+          codigo_jaivana?: string
+          codigo_sumago?: string | null
+          created_at?: string
+          estado_global?: string
+          id?: string
+          updated_at?: string
+          visibilidad_b2b?: string
+          visibilidad_b2c?: string
+        }
+        Relationships: []
+      }
+      predefined_reports: {
+        Row: {
+          attributes: string[]
+          created_at: string
+          description: string
+          id: string
+          name: string
+          universe: string
+          updated_at: string
+        }
+        Insert: {
+          attributes?: string[]
+          created_at?: string
+          description?: string
+          id?: string
+          name: string
+          universe?: string
+          updated_at?: string
+        }
+        Update: {
+          attributes?: string[]
+          created_at?: string
+          description?: string
+          id?: string
+          name?: string
+          universe?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "pim_manager" | "usuario_pro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +293,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["pim_manager", "usuario_pro"],
+    },
   },
 } as const
