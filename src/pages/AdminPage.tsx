@@ -139,15 +139,17 @@ export default function AdminPage() {
     error?: string;
   } | null>(null);
 
+  const CHUNK_SIZE = 2000; // rows per request to edge function
+
   const handleCsvUpload = async () => {
     const file = fileInputRef.current?.files?.[0];
     if (!file) return;
 
     setCsvUploading(true);
     setCsvResult(null);
+    setCsvProgress("Leyendo archivo...");
 
     try {
-      // Parse Excel client-side
       const buffer = await file.arrayBuffer();
       const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
       const sheetName = workbook.SheetNames[0];
@@ -156,30 +158,66 @@ export default function AdminPage() {
         return;
       }
       const sheet = workbook.Sheets[sheetName];
-      const rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      const allRows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-      if (rows.length === 0) {
+      if (allRows.length === 0) {
         setCsvResult({ success: false, error: "El archivo no tiene datos." });
         return;
       }
 
-      // Send parsed JSON to edge function
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/upload-pim-csv`,
-        {
+      const url = `https://${projectId}.supabase.co/functions/v1/upload-pim-csv`;
+
+      let totalInserted = 0;
+      let totalUpdated = 0;
+      let totalErrors = 0;
+      const allErrorDetails: string[] = [];
+      let columnsDetected: { fixed: string[]; attributes: string[] } | undefined;
+      let totalUnique = 0;
+
+      const totalChunks = Math.ceil(allRows.length / CHUNK_SIZE);
+
+      for (let i = 0; i < totalChunks; i++) {
+        const chunk = allRows.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
+        setCsvProgress(`Enviando lote ${i + 1} de ${totalChunks} (${chunk.length} filas)...`);
+
+        const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ rows }),
-        }
-      );
+          body: JSON.stringify({ rows: chunk }),
+        });
 
-      const data = await res.json();
-      setCsvResult(data);
+        const data = await res.json();
+
+        if (!data.success) {
+          totalErrors += chunk.length;
+          allErrorDetails.push(`Lote ${i + 1}: ${data.error || "Error desconocido"}`);
+          continue;
+        }
+
+        totalInserted += data.inserted || 0;
+        totalUpdated += data.updated || 0;
+        totalErrors += data.errors || 0;
+        totalUnique += data.uniqueRows || 0;
+        if (data.errorDetails) allErrorDetails.push(...data.errorDetails);
+        if (!columnsDetected && data.columnsDetected) columnsDetected = data.columnsDetected;
+      }
+
+      setCsvResult({
+        success: true,
+        totalRows: allRows.length,
+        uniqueRows: totalUnique,
+        inserted: totalInserted,
+        updated: totalUpdated,
+        errors: totalErrors,
+        errorDetails: allErrorDetails.slice(0, 20),
+        columnsDetected,
+      });
     } catch (err) {
       setCsvResult({ success: false, error: `Error: ${(err as Error).message}` });
     } finally {
       setCsvUploading(false);
+      setCsvProgress("");
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
