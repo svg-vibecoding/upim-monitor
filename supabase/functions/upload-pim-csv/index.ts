@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import * as XLSX from "https://cdn.sheetjs.com/xlsx-0.20.3/package/xlsx.mjs";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,7 +7,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Expected fixed columns (case-insensitive match)
 const FIXED_COLUMNS: Record<string, string> = {
   "codigo jaivana": "codigo_jaivana",
   "código jaivaná": "codigo_jaivana",
@@ -27,39 +27,6 @@ const FIXED_COLUMNS: Record<string, string> = {
 
 const REQUIRED_COLUMN = "codigo_jaivana";
 
-function parseCSV(text: string): string[][] {
-  const lines = text.split(/\r?\n/).filter((l) => l.trim() !== "");
-  return lines.map((line) => {
-    const cells: string[] = [];
-    let current = "";
-    let inQuotes = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (inQuotes) {
-        if (ch === '"' && line[i + 1] === '"') {
-          current += '"';
-          i++;
-        } else if (ch === '"') {
-          inQuotes = false;
-        } else {
-          current += ch;
-        }
-      } else {
-        if (ch === '"') {
-          inQuotes = true;
-        } else if (ch === "," || ch === ";") {
-          cells.push(current.trim());
-          current = "";
-        } else {
-          current += ch;
-        }
-      }
-    }
-    cells.push(current.trim());
-    return cells;
-  });
-}
-
 function normalizeHeader(h: string): string {
   return h.toLowerCase().replace(/[_\-]+/g, " ").trim();
 }
@@ -79,43 +46,55 @@ Deno.serve(async (req) => {
       );
     }
 
-    const text = await file.text();
-    const rows = parseCSV(text);
-    if (rows.length < 2) {
+    // Read file as ArrayBuffer and parse with SheetJS
+    const buffer = await file.arrayBuffer();
+    const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
+    const sheetName = workbook.SheetNames[0];
+    if (!sheetName) {
+      return new Response(
+        JSON.stringify({ error: "El archivo no contiene hojas." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const sheet = workbook.Sheets[sheetName];
+    // Convert to array of objects, all values as strings
+    const jsonRows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+    if (jsonRows.length === 0) {
       return new Response(
         JSON.stringify({ error: "El archivo no tiene datos (solo encabezado o vacío)." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const rawHeaders = rows[0];
-    // Map each column index to either a fixed DB column or an attribute name
-    const columnMap: { index: number; dbColumn?: string; attrName?: string }[] = [];
+    // Get headers from first row keys
+    const rawHeaders = Object.keys(jsonRows[0]);
+
+    // Map each header to either a fixed DB column or an attribute name
+    const columnMap: { header: string; dbColumn?: string; attrName?: string }[] = [];
     let hasCodigoJaivana = false;
 
-    for (let i = 0; i < rawHeaders.length; i++) {
-      const normalized = normalizeHeader(rawHeaders[i]);
+    for (const header of rawHeaders) {
+      const normalized = normalizeHeader(header);
       const dbCol = FIXED_COLUMNS[normalized];
       if (dbCol) {
-        columnMap.push({ index: i, dbColumn: dbCol });
+        columnMap.push({ header, dbColumn: dbCol });
         if (dbCol === REQUIRED_COLUMN) hasCodigoJaivana = true;
       } else {
-        // Treat as attribute
-        columnMap.push({ index: i, attrName: rawHeaders[i] });
+        columnMap.push({ header, attrName: header });
       }
     }
 
     if (!hasCodigoJaivana) {
       return new Response(
         JSON.stringify({
-          error: `No se encontró la columna obligatoria "Código Jaivaná" (o variante). Columnas recibidas: ${rawHeaders.join(", ")}`,
+          error: `No se encontró la columna obligatoria "Código Jaivaná". Columnas recibidas: ${rawHeaders.join(", ")}`,
         }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Build records
-    const dataRows = rows.slice(1);
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
@@ -127,13 +106,14 @@ Deno.serve(async (req) => {
 
     // Deduplicate: keep last occurrence per codigo_jaivana
     const deduped = new Map<string, Record<string, unknown>>();
-    for (let rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
-      const cells = dataRows[rowIdx];
+    for (let rowIdx = 0; rowIdx < jsonRows.length; rowIdx++) {
+      const row = jsonRows[rowIdx];
       const record: Record<string, unknown> = {};
       const attributes: Record<string, string | null> = {};
 
       for (const col of columnMap) {
-        const value = cells[col.index]?.trim() || null;
+        const rawValue = row[col.header];
+        const value = rawValue != null && String(rawValue).trim() !== "" ? String(rawValue).trim() : null;
         if (col.dbColumn) {
           record[col.dbColumn] = value;
         } else if (col.attrName && value) {
@@ -147,18 +127,19 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Ensure codigo_jaivana is always a string (Excel may parse as number)
+      record.codigo_jaivana = String(record.codigo_jaivana);
+
       record.attributes = attributes;
       deduped.set(record.codigo_jaivana as string, record);
     }
 
     const allRows = Array.from(deduped.values());
 
-    // Process in batches of 500
     const BATCH_SIZE = 500;
     for (let batchStart = 0; batchStart < allRows.length; batchStart += BATCH_SIZE) {
       const upsertRows = allRows.slice(batchStart, batchStart + BATCH_SIZE);
 
-      // Check which codes already exist
       const codes = upsertRows.map((r) => r.codigo_jaivana as string);
       const { data: existing } = await supabase
         .from("pim_records")
@@ -188,7 +169,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        totalRows: dataRows.length,
+        totalRows: jsonRows.length,
+        uniqueRows: allRows.length,
         inserted,
         updated,
         errors,

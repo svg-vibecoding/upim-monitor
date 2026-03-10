@@ -128,6 +128,7 @@ export default function AdminPage() {
   const [csvResult, setCsvResult] = useState<{
     success: boolean;
     totalRows?: number;
+    uniqueRows?: number;
     inserted?: number;
     updated?: number;
     errors?: number;
@@ -187,22 +188,22 @@ export default function AdminPage() {
                   <Upload className="h-5 w-5 text-primary" />
                   Actualizar base PIM
                 </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Sube un archivo CSV con los registros del PIM. La columna <strong>"Código Jaivaná"</strong> es obligatoria y se usa como clave única.
-                </p>
+                 <p className="text-sm text-muted-foreground mt-1">
+                  Sube un archivo Excel (.xlsx / .xls) con los registros del PIM. La columna <strong>"Código Jaivaná"</strong> es obligatoria y se usa como clave única.
+                 </p>
               </div>
 
               <div className="flex items-center gap-3">
                 <Input
                   ref={fileInputRef}
                   type="file"
-                  accept=".csv"
+                  accept=".xlsx,.xls"
                   className="max-w-sm"
                   disabled={csvUploading}
                 />
                 <Button onClick={handleCsvUpload} disabled={csvUploading} className="gap-2">
                   {csvUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileUp className="h-4 w-4" />}
-                  {csvUploading ? "Procesando..." : "Cargar CSV"}
+                  {csvUploading ? "Procesando..." : "Cargar Excel"}
                 </Button>
               </div>
 
@@ -225,10 +226,14 @@ export default function AdminPage() {
 
                   {csvResult.success && (
                     <>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-2">
                         <div className="text-center p-2 rounded-md bg-muted">
                           <div className="text-lg font-bold text-foreground">{csvResult.totalRows}</div>
-                          <div className="text-xs text-muted-foreground">Filas procesadas</div>
+                          <div className="text-xs text-muted-foreground">Filas en archivo</div>
+                        </div>
+                        <div className="text-center p-2 rounded-md bg-muted">
+                          <div className="text-lg font-bold text-foreground">{csvResult.uniqueRows}</div>
+                          <div className="text-xs text-muted-foreground">Códigos únicos</div>
                         </div>
                         <div className="text-center p-2 rounded-md bg-muted">
                           <div className="text-lg font-bold text-success">{csvResult.inserted}</div>
@@ -265,11 +270,12 @@ export default function AdminPage() {
               )}
 
               <div className="bg-muted rounded-lg p-4 text-xs text-muted-foreground space-y-1">
-                <p className="font-medium text-foreground text-sm">Formato esperado del CSV:</p>
-                <p>• Separador: coma (<code>,</code>) o punto y coma (<code>;</code>)</p>
-                <p>• Columna obligatoria: <strong>Código Jaivaná</strong></p>
-                <p>• Columnas fijas reconocidas: Estado Global, Código SumaGo, Visibilidad B2B, Visibilidad B2C, Categoría N1 Comercial, Clasificación del Producto</p>
-                <p>• Cualquier otra columna se almacena como <strong>atributo</strong> evaluable en los informes</p>
+                 <p className="font-medium text-foreground text-sm">Formato esperado del archivo Excel:</p>
+                 <p>• Formato: <strong>.xlsx</strong> o <strong>.xls</strong> (se lee la primera hoja)</p>
+                 <p>• Columna obligatoria: <strong>Código Jaivaná</strong></p>
+                 <p>• Columnas fijas reconocidas: Estado Global, Código SumaGo, Visibilidad B2B, Visibilidad B2C, Categoría N1 Comercial, Clasificación del Producto</p>
+                 <p>• Cualquier otra columna se almacena como <strong>atributo</strong> evaluable en los informes</p>
+                 <p>• Los códigos numéricos se preservan como texto</p>
               </div>
             </CardContent>
           </Card>
