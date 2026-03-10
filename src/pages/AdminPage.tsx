@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +15,7 @@ import {
 } from "@/data/mockData";
 import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from "xlsx";
 
 const ALL_ATTRIBUTES = [
   "Nombre Comercial", "Descripción Corta", "Descripción Larga", "Marca", "EAN",
@@ -145,22 +146,37 @@ export default function AdminPage() {
     setCsvResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append("file", file);
+      // Parse Excel client-side
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(new Uint8Array(buffer), { type: "array" });
+      const sheetName = workbook.SheetNames[0];
+      if (!sheetName) {
+        setCsvResult({ success: false, error: "El archivo no contiene hojas." });
+        return;
+      }
+      const sheet = workbook.Sheets[sheetName];
+      const rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
+      if (rows.length === 0) {
+        setCsvResult({ success: false, error: "El archivo no tiene datos." });
+        return;
+      }
+
+      // Send parsed JSON to edge function
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/upload-pim-csv`,
         {
           method: "POST",
-          body: formData,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ rows }),
         }
       );
 
       const data = await res.json();
       setCsvResult(data);
     } catch (err) {
-      setCsvResult({ success: false, error: `Error de conexión: ${(err as Error).message}` });
+      setCsvResult({ success: false, error: `Error: ${(err as Error).message}` });
     } finally {
       setCsvUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
