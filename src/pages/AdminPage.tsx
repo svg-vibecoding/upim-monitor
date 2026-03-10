@@ -196,7 +196,7 @@ export default function AdminPage() {
                 <Input
                   ref={fileInputRef}
                   type="file"
-                  accept=".csv"
+                  accept=".xlsx,.xls"
                   className="max-w-sm"
                   disabled={csvUploading}
                 />
