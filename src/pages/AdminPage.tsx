@@ -380,7 +380,7 @@ export default function AdminPage() {
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ rows: chunk, isFirstChunk: i === 0 }),
+          body: JSON.stringify({ rows: chunk, isFirstChunk: i === 0, fileName: file.name }),
         });
 
         const data = await res.json();
@@ -397,7 +397,14 @@ export default function AdminPage() {
         totalUnique += data.uniqueRows || 0;
         if (data.errorDetails) allErrorDetails.push(...data.errorDetails);
         if (!columnsDetected && data.columnsDetected) columnsDetected = data.columnsDetected;
+        // Capture uploadId and attributeOrder from first chunk response
+        if (i === 0 && data.uploadId) {
+          setPendingUploadId(data.uploadId);
+          setPendingAttributeOrder(data.attributeOrder || []);
+        }
       }
+
+      const attrOrder = pendingAttributeOrder.length > 0 ? pendingAttributeOrder : undefined;
 
       setCsvResult({
         success: true,
@@ -408,23 +415,11 @@ export default function AdminPage() {
         errors: totalErrors,
         errorDetails: allErrorDetails.slice(0, 20),
         columnsDetected,
+        attributeOrder: attrOrder,
       });
 
-      // Register in upload history
-      try {
-        await supabase.from("pim_upload_history" as any).insert({
-          file_name: file.name,
-          total_rows: allRows.length,
-          unique_rows: totalUnique,
-          inserted: totalInserted,
-          updated: totalUpdated,
-          errors: totalErrors,
-        });
-        // Only refresh upload history, NOT app data — user must explicitly click "Actualizar datos de la app"
-        queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
-      } catch {
-        // Non-blocking: history registration failure shouldn't break the upload flow
-      }
+      // Refresh upload history
+      queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
     } catch (err) {
       setCsvResult({ success: false, error: `Error: ${(err as Error).message}` });
     } finally {
