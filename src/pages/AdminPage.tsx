@@ -13,7 +13,7 @@ import {
   mockUsers, mockDimensions,
   AppUser, UserRole, Dimension,
 } from "@/data/mockData";
-import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, ArrowRight, RefreshCw, Search, CheckSquare, Square } from "lucide-react";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
