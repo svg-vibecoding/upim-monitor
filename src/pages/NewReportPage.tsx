@@ -101,6 +101,7 @@ export default function NewReportPage() {
     setSelectedAttrs([]);
     setDimensionId("");
     setCsvCodes([]);
+    setUploadedFileName("");
     setSource("general");
   };
 
