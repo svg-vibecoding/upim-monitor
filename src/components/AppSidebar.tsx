@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, PlusCircle, Settings } from "lucide-react";
+import { BarChart3, FileText, PlusCircle, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -18,7 +18,7 @@ export function AppSidebar() {
   const { user } = useAuth();
 
   const items = [
-    { title: "Inicio", url: "/", icon: LayoutDashboard },
+    { title: "Inicio", url: "/", icon: BarChart3 },
     { title: "Informes", url: "/informes", icon: FileText },
     { title: "Nuevo Informe", url: "/nuevo-informe", icon: PlusCircle },
   ];
