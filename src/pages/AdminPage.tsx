@@ -494,18 +494,32 @@ export default function AdminPage() {
                       </Button>
                     </div>
                     <div className="border rounded-md p-2 overflow-auto flex-1 min-h-0 max-h-[50vh]">
-                      {filteredAttrs.map((attr) => (
+                      {/* Código Jaivaná — always selected, not removable */}
+                      <label className="flex items-center gap-2 text-sm py-1 px-1 rounded opacity-70">
+                        <Checkbox checked={true} disabled />
+                        <span className="truncate">Código Jaivaná</span>
+                        <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
+                      </label>
+                      {filteredAttrs.map((attr) => {
+                        const isNonEvaluable = NON_EVALUABLE_FIELDS.includes(attr);
+                        return (
                           <label
                             key={attr}
-                            className="flex items-center gap-2 text-sm cursor-pointer py-1 px-1 rounded hover:bg-muted/50"
+                            className={`flex items-center gap-2 text-sm cursor-pointer py-1 px-1 rounded hover:bg-muted/50 ${isNonEvaluable ? "opacity-60" : ""}`}
                           >
                             <Checkbox
                               checked={reportAttrs.includes(attr)}
                               onCheckedChange={() => toggleReportAttr(attr)}
                             />
                             <span className="truncate">{attr}</span>
+                            {isNonEvaluable && (
+                              <Badge variant="outline" className="text-[10px] ml-auto shrink-0">
+                                {DIMENSION_FIELDS.includes(attr) ? "dimensión" : "funcional"}
+                              </Badge>
+                            )}
                           </label>
-                        ))}
+                        );
+                      })}
                       {filteredAttrs.length === 0 && (
                         <p className="text-sm text-muted-foreground text-center py-4">No se encontraron atributos</p>
                       )}
