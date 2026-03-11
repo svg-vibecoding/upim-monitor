@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import upimLogo from "@/assets/upim-logo.png";
+import upimLogoLogin from "@/assets/upim-logo-login.png";
 
 export default function LoginPage() {
   const { login } = useAuth();
