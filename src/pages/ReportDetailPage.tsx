@@ -43,13 +43,14 @@ export default function ReportDetailPage() {
   if (!report) return <div className="p-6">Informe no encontrado.</div>;
 
   const records = getRecordsForReport(allRecords || [], report);
-  const attrResults = computeAttributeResults(records, report.attributes);
+  const validAttrs = filterRealAttributes(report.attributes, attributeOrder || []);
+  const attrResults = computeAttributeResults(records, validAttrs);
   const avgCompleteness = attrResults.length > 0
     ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
     : 0;
 
   const dimension = dimensions?.find((d) => d.id === selectedDimension);
-  const dimensionResults = dimension ? computeDimensionResults(records, report.attributes, dimension.field) : [];
+  const dimensionResults = dimension ? computeDimensionResults(records, validAttrs, dimension.field) : [];
 
   const handleDownload = () => {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
