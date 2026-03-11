@@ -303,6 +303,9 @@ export default function AdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvUploading, setCsvUploading] = useState(false);
   const [csvProgress, setCsvProgress] = useState("");
+  const [pendingUploadId, setPendingUploadId] = useState<string | null>(null);
+  const [pendingAttributeOrder, setPendingAttributeOrder] = useState<string[]>([]);
+  const [activating, setActivating] = useState(false);
   const [csvResult, setCsvResult] = useState<{
     success: boolean;
     totalRows?: number;
@@ -312,8 +315,25 @@ export default function AdminPage() {
     errors?: number;
     errorDetails?: string[];
     columnsDetected?: { fixed: string[]; attributes: string[] };
+    attributeOrder?: string[];
+    uploadId?: string;
     error?: string;
   } | null>(null);
+
+  // Mandatory attributes validation (same as server-side)
+  const MANDATORY_ATTRIBUTES = [
+    "Estado (Global)",
+    "Código SumaGo",
+    "Visibilidad Adobe B2B",
+    "Visibilidad Adobe B2C",
+  ];
+
+  const missingMandatory = useMemo(() => {
+    if (!csvResult?.success || !csvResult.attributeOrder) return [];
+    return MANDATORY_ATTRIBUTES.filter((a) => !csvResult.attributeOrder!.includes(a));
+  }, [csvResult]);
+
+  const canActivate = csvResult?.success && missingMandatory.length === 0 && (csvResult.uniqueRows || 0) > 0 && !!pendingUploadId;
 
   const CHUNK_SIZE = 2000;
 
@@ -360,7 +380,7 @@ export default function AdminPage() {
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ rows: chunk, isFirstChunk: i === 0 }),
+          body: JSON.stringify({ rows: chunk, isFirstChunk: i === 0, fileName: file.name }),
         });
 
         const data = await res.json();
@@ -377,7 +397,14 @@ export default function AdminPage() {
         totalUnique += data.uniqueRows || 0;
         if (data.errorDetails) allErrorDetails.push(...data.errorDetails);
         if (!columnsDetected && data.columnsDetected) columnsDetected = data.columnsDetected;
+        // Capture uploadId and attributeOrder from first chunk response
+        if (i === 0 && data.uploadId) {
+          setPendingUploadId(data.uploadId);
+          setPendingAttributeOrder(data.attributeOrder || []);
+        }
       }
+
+      const attrOrder = pendingAttributeOrder.length > 0 ? pendingAttributeOrder : undefined;
 
       setCsvResult({
         success: true,
@@ -388,23 +415,11 @@ export default function AdminPage() {
         errors: totalErrors,
         errorDetails: allErrorDetails.slice(0, 20),
         columnsDetected,
+        attributeOrder: attrOrder,
       });
 
-      // Register in upload history
-      try {
-        await supabase.from("pim_upload_history" as any).insert({
-          file_name: file.name,
-          total_rows: allRows.length,
-          unique_rows: totalUnique,
-          inserted: totalInserted,
-          updated: totalUpdated,
-          errors: totalErrors,
-        });
-        // Only refresh upload history, NOT app data — user must explicitly click "Actualizar datos de la app"
-        queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
-      } catch {
-        // Non-blocking: history registration failure shouldn't break the upload flow
-      }
+      // Refresh upload history
+      queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
     } catch (err) {
       setCsvResult({ success: false, error: `Error: ${(err as Error).message}` });
     } finally {
@@ -520,26 +535,67 @@ export default function AdminPage() {
                         </div>
                       )}
 
+                      {missingMandatory.length > 0 && (
+                        <div className="rounded-md border border-destructive bg-destructive/5 p-3 mt-2">
+                          <p className="text-xs font-medium text-destructive flex items-center gap-1">
+                            <AlertCircle className="h-3.5 w-3.5" /> Faltan atributos obligatorios:
+                          </p>
+                          <ul className="text-xs text-destructive list-disc list-inside mt-1">
+                            {missingMandatory.map((a) => <li key={a}>{a}</li>)}
+                          </ul>
+                          <p className="text-xs text-muted-foreground mt-1">No se puede activar esta versión hasta incluir estos atributos.</p>
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
                         <Button
                           variant="default"
                           size="sm"
                           className="gap-2"
-                          onClick={() => {
-                            invalidatePimData();
-                            setCsvResult(null);
-                            toast.success("Datos actualizados correctamente");
+                          disabled={!canActivate || activating}
+                          onClick={async () => {
+                            if (!pendingUploadId) return;
+                            setActivating(true);
+                            try {
+                              const { data, error } = await supabase.functions.invoke("activate-pim-version", {
+                                body: { upload_id: pendingUploadId },
+                              });
+                              if (error) throw error;
+                              if (data?.error) throw new Error(data.error);
+                              invalidatePimData();
+                              setCsvResult(null);
+                              setPendingUploadId(null);
+                              setPendingAttributeOrder([]);
+                              toast.success("Base PIM activada correctamente");
+                            } catch (err: any) {
+                              toast.error(err.message || "Error activando la base PIM");
+                            } finally {
+                              setActivating(false);
+                            }
                           }}
                         >
-                          <RefreshCw className="h-4 w-4" /> Actualizar datos de la app
+                          {activating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                          {activating ? "Activando..." : "Actualizar datos de la app"}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           className="gap-2"
-                          onClick={() => {
+                          disabled={activating}
+                          onClick={async () => {
+                            if (pendingUploadId) {
+                              try {
+                                await supabase
+                                  .from("pim_upload_history" as any)
+                                  .update({ status: "discarded" })
+                                  .eq("id", pendingUploadId);
+                              } catch { /* non-blocking */ }
+                            }
                             setCsvResult(null);
-                            toast.info("Carga descartada. Los datos de la app no fueron actualizados.");
+                            setPendingUploadId(null);
+                            setPendingAttributeOrder([]);
+                            queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
+                            toast.info("Carga descartada. Los datos de la app no fueron modificados.");
                           }}
                         >
                           Descartar esta actualización
@@ -600,12 +656,14 @@ export default function AdminPage() {
                     </TableHeader>
                     <TableBody>
                       {uploadHistory.map((entry) => (
-                        <TableRow key={entry.id} className={entry.is_active ? "bg-primary/5" : ""}>
+                        <TableRow key={entry.id} className={entry.status === "active" ? "bg-primary/5" : ""}>
                           <TableCell>
-                            {entry.is_active ? (
+                            {entry.status === "active" ? (
                               <Badge variant="default" className="text-xs">Activa</Badge>
+                            ) : entry.status === "pending" ? (
+                              <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">Pendiente</Badge>
                             ) : (
-                              <Badge variant="outline" className="text-xs text-muted-foreground">Anterior</Badge>
+                              <Badge variant="outline" className="text-xs text-muted-foreground">Descartada</Badge>
                             )}
                           </TableCell>
                           <TableCell className="font-medium text-sm max-w-[200px] truncate" title={entry.file_name}>
@@ -623,20 +681,7 @@ export default function AdminPage() {
                           <TableCell className="text-right text-sm text-primary">{entry.updated}</TableCell>
                           <TableCell className="text-right text-sm text-destructive">{entry.errors}</TableCell>
                           <TableCell>
-                            {!entry.is_active && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground" disabled>
-                                      <RotateCcw className="h-3 w-3" /> Restablecer a esta versión
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Disponible próximamente</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
+                            {/* Empty - actions removed for V1 */}
                           </TableCell>
                         </TableRow>
                       ))}
