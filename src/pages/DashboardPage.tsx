@@ -166,15 +166,18 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* A) Catálogo */}
             <Card>
-              <CardContent className="pt-5 pb-5 px-5">
-                <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
-                  Catálogo
-                </span>
-                <p className="text-xs text-muted-foreground mt-1">SKUs totales</p>
-                <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-2">
+              <CardContent className="pt-5 pb-5 px-5 flex flex-col">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+                    Catálogo
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/50">/</span>
+                  <span className="text-[10px] text-muted-foreground">SKUs totales</span>
+                </div>
+                <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
                   {kpis!.total.toLocaleString()}
                 </p>
-                <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
+                <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
@@ -209,18 +212,21 @@ export default function DashboardPage() {
 
             {/* B) Base Digital */}
             <Card>
-              <CardContent className="pt-5 pb-5 px-5">
-                <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
-                  Base Digital
-                </span>
-                <p className="text-xs text-muted-foreground mt-1">SKUs con Código SumaGo</p>
-                <div className="flex items-baseline gap-2 mt-2">
+              <CardContent className="pt-5 pb-5 px-5 flex flex-col">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+                    Base Digital
+                  </span>
+                  <span className="text-[10px] text-muted-foreground/50">/</span>
+                  <span className="text-[10px] text-muted-foreground">SKUs con Código SumaGo</span>
+                </div>
+                <div className="flex items-baseline gap-2 mt-3">
                   <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
                     {kpis!.digitalBase.toLocaleString()}
                   </p>
                   <span className="text-xs text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
+                <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
@@ -255,24 +261,28 @@ export default function DashboardPage() {
 
             {/* C) Completitud General */}
             <Card>
-              <CardContent className="pt-5 pb-5 px-5">
-                <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
-                  Completitud General
-                </span>
+              <CardContent className="pt-5 pb-5 px-5 flex flex-col">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+                    Completitud General
+                  </span>
+                </div>
                 {pimGeneralCompleteness !== null ? (
                   <>
-                    <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-2">
+                    <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
                       {pimGeneralCompleteness}%
                     </p>
-                    <div className="mt-4 pt-4 border-t border-border">
+                    <div className="mt-auto pt-4 border-t border-border">
                       <p className="text-xs text-muted-foreground mb-2">Progreso PIM General</p>
                       <CompletenessBar value={pimGeneralCompleteness} showLabel={false} size="sm" />
                     </div>
                   </>
                 ) : (
                   <>
-                    <p className="text-5xl font-bold text-muted-foreground/30 tabular-nums leading-none mt-2">—</p>
-                    <p className="text-xs text-muted-foreground mt-1">Sin datos de completitud</p>
+                    <p className="text-5xl font-bold text-muted-foreground/30 tabular-nums leading-none mt-3">—</p>
+                    <div className="mt-auto pt-4 border-t border-border">
+                      <p className="text-xs text-muted-foreground">Sin datos de completitud</p>
+                    </div>
                   </>
                 )}
               </CardContent>
