@@ -3,19 +3,24 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    if (!login(email, password)) {
-      setError("Credenciales inválidas o usuario inactivo.");
+    setLoading(true);
+    const result = await login(email, password);
+    if (!result.success) {
+      setError(result.error || "Error de autenticación");
     }
+    setLoading(false);
   };
 
   return (
@@ -28,20 +33,17 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="email">Correo electrónico</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="correo@upim.com" required />
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="correo@empresa.com" required />
           </div>
           <div>
             <Label htmlFor="password">Contraseña</Label>
             <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button type="submit" className="w-full">Iniciar sesión</Button>
+          <Button type="submit" className="w-full" disabled={loading}>
+            {loading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Ingresando...</> : "Iniciar sesión"}
+          </Button>
         </form>
-        <div className="mt-4 text-xs text-muted-foreground text-center space-y-1">
-          <p>Demo: <strong>carlos@upim.com</strong> (UsuarioPRO)</p>
-          <p>Demo: <strong>ana@upim.com</strong> (PIM Manager)</p>
-          <p className="text-[10px]">Cualquier contraseña funciona en esta V1</p>
-        </div>
       </div>
     </div>
   );

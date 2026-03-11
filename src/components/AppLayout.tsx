@@ -10,7 +10,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   // Block PIM Managers from admin
-  if (user?.role === "PIM Manager" && location.pathname.startsWith("/admin")) {
+  if (user?.role !== "usuario_pro" && location.pathname.startsWith("/admin")) {
     return <Navigate to="/" replace />;
   }
 
@@ -25,7 +25,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex items-center gap-3 text-sm">
               <span className="text-muted-foreground">{user?.name}</span>
-              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{user?.role}</span>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
+                {user?.role === "usuario_pro" ? "UsuarioPRO" : "PIM Manager"}
+              </span>
               <button onClick={logout} className="text-muted-foreground hover:text-foreground transition-colors text-sm">
                 Cerrar sesión
               </button>

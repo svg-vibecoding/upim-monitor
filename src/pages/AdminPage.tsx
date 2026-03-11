@@ -9,14 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import {
-  mockUsers, mockDimensions,
-  AppUser, UserRole, Dimension,
-} from "@/data/mockData";
-import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw } from "lucide-react";
+import { mockDimensions, Dimension } from "@/data/mockData";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   useInvalidatePimData,
   usePredefinedReports,
@@ -31,26 +29,66 @@ import {
 } from "@/hooks/usePimData";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import type { AppRole } from "@/contexts/AuthContext";
+
+interface DBUser {
+  id: string;
+  name: string;
+  email: string;
+  active: boolean;
+  role: AppRole;
+}
+
+function useUsers() {
+  return useQuery({
+    queryKey: ["admin-users"],
+    queryFn: async (): Promise<DBUser[]> => {
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("id, name, email, active")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+
+      const roleMap = new Map<string, AppRole>();
+      (roles || []).forEach((r) => roleMap.set(r.user_id, r.role as AppRole));
+
+      return (profiles || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        active: p.active,
+        role: roleMap.get(p.id) || "pim_manager",
+      }));
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+}
 
 export default function AdminPage() {
   const navigate = useNavigate();
   const invalidatePimData = useInvalidatePimData();
+  const queryClient = useQueryClient();
 
   // DB-driven data
   const { data: dbReports = [], isLoading: reportsLoading } = usePredefinedReports();
   const { data: attributeOrder = [], isLoading: attrsLoading } = useAttributeOrder();
   const { data: uploadHistory = [], isLoading: historyLoading } = usePimUploadHistory();
+  const { data: dbUsers = [], isLoading: usersLoading } = useUsers();
   const updateReportAttrs = useUpdateReportAttributes();
 
-  const [users, setUsers] = useState<AppUser[]>([...mockUsers]);
   const [dimensions, setDimensions] = useState<Dimension[]>([...mockDimensions]);
 
   // User form
   const [userDialog, setUserDialog] = useState(false);
-  const [editingUser, setEditingUser] = useState<AppUser | null>(null);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [userRole, setUserRole] = useState<UserRole>("PIM Manager");
+  const [userPassword, setUserPassword] = useState("");
+  const [userRole, setUserRole] = useState<AppRole>("pim_manager");
+  const [userSaving, setUserSaving] = useState(false);
 
   // Report edit state
   const [reportDialog, setReportDialog] = useState(false);
@@ -63,32 +101,48 @@ export default function AdminPage() {
   const [dimName, setDimName] = useState("");
   const [dimField, setDimField] = useState("");
 
-  const openUserDialog = (user?: AppUser) => {
-    if (user) {
-      setEditingUser(user);
-      setUserName(user.name);
-      setUserEmail(user.email);
-      setUserRole(user.role);
-    } else {
-      setEditingUser(null);
-      setUserName("");
-      setUserEmail("");
-      setUserRole("PIM Manager");
-    }
+  const openUserDialog = () => {
+    setUserName("");
+    setUserEmail("");
+    setUserPassword("");
+    setUserRole("pim_manager");
     setUserDialog(true);
   };
 
-  const saveUser = () => {
-    if (editingUser) {
-      setUsers((prev) => prev.map((u) => u.id === editingUser.id ? { ...u, name: userName, email: userEmail, role: userRole } : u));
-    } else {
-      setUsers((prev) => [...prev, { id: String(Date.now()), name: userName, email: userEmail, role: userRole, active: true }]);
+  const saveUser = async () => {
+    if (!userName || !userEmail || !userPassword) {
+      toast.error("Completa todos los campos");
+      return;
     }
-    setUserDialog(false);
+    setUserSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: { name: userName, email: userEmail, password: userPassword, role: userRole, active: true },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Usuario ${userEmail} creado exitosamente`);
+      setUserDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error creando usuario");
+    } finally {
+      setUserSaving(false);
+    }
   };
 
-  const toggleUserActive = (id: string) => {
-    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, active: !u.active } : u));
+  const toggleUserActive = async (userId: string, currentActive: boolean) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("toggle-user-active", {
+        body: { userId, active: !currentActive },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(currentActive ? "Usuario desactivado" : "Usuario activado");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error actualizando estado");
+    }
   };
 
   // --- Reports: open edit dialog with current attrs from DB ---
@@ -280,6 +334,7 @@ export default function AdminPage() {
           <TabsTrigger value="attributes">Atributos</TabsTrigger>
           <TabsTrigger value="reports">Informes</TabsTrigger>
           <TabsTrigger value="dimensions">Dimensiones</TabsTrigger>
+          <TabsTrigger value="users">Usuarios</TabsTrigger>
         </TabsList>
 
         {/* PIM UPLOAD */}
@@ -730,6 +785,91 @@ export default function AdminPage() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* USERS */}
+        <TabsContent value="users" className="space-y-4">
+          <div className="flex justify-end">
+            <Dialog open={userDialog} onOpenChange={setUserDialog}>
+              <DialogTrigger asChild>
+                <Button onClick={openUserDialog} className="gap-2"><UserPlus className="h-4 w-4" /> Nuevo usuario</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Crear usuario</DialogTitle></DialogHeader>
+                <div className="space-y-3 pt-2">
+                  <div><Label>Nombre</Label><Input value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="Nombre completo" /></div>
+                  <div><Label>Correo electrónico</Label><Input type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} placeholder="correo@empresa.com" /></div>
+                  <div><Label>Contraseña inicial</Label><Input type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)} placeholder="Mínimo 6 caracteres" /></div>
+                  <div>
+                    <Label>Rol</Label>
+                    <Select value={userRole} onValueChange={(v) => setUserRole(v as AppRole)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pim_manager">PIM Manager</SelectItem>
+                        <SelectItem value="usuario_pro">UsuarioPRO</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={saveUser} className="w-full" disabled={userSaving}>
+                    {userSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creando...</> : "Crear usuario"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <Card>
+            <CardContent className="pt-4">
+              {usersLoading ? (
+                <div className="flex items-center gap-2 p-8 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Cargando usuarios...
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Correo</TableHead>
+                      <TableHead>Rol</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="w-28">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dbUsers.map((u) => (
+                      <TableRow key={u.id} className={!u.active ? "opacity-50" : ""}>
+                        <TableCell className="font-medium">{u.name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
+                        <TableCell>
+                          <Badge variant={u.role === "usuario_pro" ? "default" : "secondary"}>
+                            {u.role === "usuario_pro" ? "UsuarioPRO" : "PIM Manager"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={u.active ? "outline" : "destructive"}>
+                            {u.active ? "Activo" : "Inactivo"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleUserActive(u.id, u.active)}
+                          >
+                            {u.active ? "Desactivar" : "Activar"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {dbUsers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground">No hay usuarios registrados</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
