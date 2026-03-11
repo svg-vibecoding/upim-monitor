@@ -166,7 +166,55 @@ export default function AdminPage() {
   const [reportAttrs, setReportAttrs] = useState<string[]>([]);
   const [attrSearch, setAttrSearch] = useState("");
 
-  // Dimension form
+  // --- Reports: open edit dialog with current attrs from DB ---
+  const openReportDialog = (reportId: string) => {
+    const report = dbReports.find((r) => r.id === reportId);
+    if (!report) return;
+    setEditingReportId(reportId);
+    setAttrSearch("");
+    const isPimGeneral = report.name.toLowerCase().includes("general");
+    const evaluableAttrs = getEvaluableAttributes(attributeOrder);
+    if (isPimGeneral && (report.attributes.length === 0 || report.attributes.some((a) => !attributeOrder.includes(a)))) {
+      setReportAttrs([...evaluableAttrs]);
+    } else {
+      setReportAttrs(report.attributes.filter((a) => evaluableAttrs.includes(a)));
+    }
+    setReportDialog(true);
+  };
+
+  const saveReportAttrs = async () => {
+    if (!editingReportId) return;
+    try {
+      await updateReportAttrs.mutateAsync({ reportId: editingReportId, attributes: reportAttrs });
+      toast.success("Atributos del informe actualizados");
+      setReportDialog(false);
+    } catch (err) {
+      toast.error(`Error al guardar: ${(err as Error).message}`);
+    }
+  };
+
+  const toggleReportAttr = (attr: string) => {
+    setReportAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]);
+  };
+
+  const selectAllAttrs = () => {
+    setReportAttrs(getEvaluableAttributes(getFullAttributeList(attributeOrder)));
+  };
+
+  const deselectAllAttrs = () => {
+    setReportAttrs([]);
+  };
+
+  const fullAttributeList = useMemo(() => getFullAttributeList(attributeOrder), [attributeOrder]);
+
+  const filteredAttrs = useMemo(() => {
+    if (!attrSearch.trim()) return fullAttributeList;
+    const q = attrSearch.toLowerCase();
+    return fullAttributeList.filter((a) => a.toLowerCase().includes(q));
+  }, [fullAttributeList, attrSearch]);
+
+  const editingReport = dbReports.find((r) => r.id === editingReportId);
+
   const [dimDialog, setDimDialog] = useState(false);
   const [dimName, setDimName] = useState("");
   const [dimField, setDimField] = useState("");
