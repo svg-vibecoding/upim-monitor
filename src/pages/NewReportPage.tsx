@@ -232,6 +232,7 @@ export default function NewReportPage() {
 
               {source === "report" && (
                 <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">Utiliza el universo de productos definido en un informe existente como base para el análisis.</p>
                   <Select value={selectedReportId} onValueChange={setSelectedReportId}>
                     <SelectTrigger className="w-72">
                       <SelectValue placeholder="Seleccionar informe" />
