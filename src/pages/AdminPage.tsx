@@ -38,6 +38,7 @@ export default function AdminPage() {
   // DB-driven data
   const { data: dbReports = [], isLoading: reportsLoading } = usePredefinedReports();
   const { data: attributeOrder = [], isLoading: attrsLoading } = useAttributeOrder();
+  const { data: uploadHistory = [], isLoading: historyLoading } = usePimUploadHistory();
   const updateReportAttrs = useUpdateReportAttributes();
 
   const [users, setUsers] = useState<AppUser[]>([...mockUsers]);
