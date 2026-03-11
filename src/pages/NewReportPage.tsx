@@ -12,7 +12,8 @@ import {
 } from "@/data/mockData";
 import { usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList, getAttributeClassification, isNonEvaluable } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText } from "lucide-react";
+import { Upload, FileText, FileSpreadsheet, X, CheckCircle2 } from "lucide-react";
+import * as XLSX from "xlsx";
 
 type Step = "config" | "results";
 
