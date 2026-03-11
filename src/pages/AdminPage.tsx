@@ -101,32 +101,48 @@ export default function AdminPage() {
   const [dimName, setDimName] = useState("");
   const [dimField, setDimField] = useState("");
 
-  const openUserDialog = (user?: AppUser) => {
-    if (user) {
-      setEditingUser(user);
-      setUserName(user.name);
-      setUserEmail(user.email);
-      setUserRole(user.role);
-    } else {
-      setEditingUser(null);
-      setUserName("");
-      setUserEmail("");
-      setUserRole("PIM Manager");
-    }
+  const openUserDialog = () => {
+    setUserName("");
+    setUserEmail("");
+    setUserPassword("");
+    setUserRole("pim_manager");
     setUserDialog(true);
   };
 
-  const saveUser = () => {
-    if (editingUser) {
-      setUsers((prev) => prev.map((u) => u.id === editingUser.id ? { ...u, name: userName, email: userEmail, role: userRole } : u));
-    } else {
-      setUsers((prev) => [...prev, { id: String(Date.now()), name: userName, email: userEmail, role: userRole, active: true }]);
+  const saveUser = async () => {
+    if (!userName || !userEmail || !userPassword) {
+      toast.error("Completa todos los campos");
+      return;
     }
-    setUserDialog(false);
+    setUserSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body: { name: userName, email: userEmail, password: userPassword, role: userRole, active: true },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Usuario ${userEmail} creado exitosamente`);
+      setUserDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error creando usuario");
+    } finally {
+      setUserSaving(false);
+    }
   };
 
-  const toggleUserActive = (id: string) => {
-    setUsers((prev) => prev.map((u) => u.id === id ? { ...u, active: !u.active } : u));
+  const toggleUserActive = async (userId: string, currentActive: boolean) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("toggle-user-active", {
+        body: { userId, active: !currentActive },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(currentActive ? "Usuario desactivado" : "Usuario activado");
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error actualizando estado");
+    }
   };
 
   // --- Reports: open edit dialog with current attrs from DB ---
