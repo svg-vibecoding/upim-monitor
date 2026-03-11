@@ -4,7 +4,7 @@ import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   usePimRecords, usePredefinedReports, useAttributeOrder,
-  computeAttributeResults, getRecordsForReport, filterRealAttributes,
+  computeAttributeResults, getRecordsForReport, filterRealAttributes, getEvaluableAttributes,
 } from "@/hooks/usePimData";
 import { FileText } from "lucide-react";
 
