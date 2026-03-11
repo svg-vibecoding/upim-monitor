@@ -175,12 +175,12 @@ export default function NewReportPage() {
                   <Label htmlFor="src-gen" className="text-sm cursor-pointer">Base general del PIM</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="file" id="src-file" />
-                  <Label htmlFor="src-file" className="text-sm cursor-pointer">Cargar archivo Excel</Label>
-                </div>
-                <div className="flex items-center gap-2">
                   <RadioGroupItem value="report" id="src-report" />
                   <Label htmlFor="src-report" className="text-sm cursor-pointer">Informe predefinido</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="file" id="src-file" />
+                  <Label htmlFor="src-file" className="text-sm cursor-pointer">Cargar archivo Excel</Label>
                 </div>
               </RadioGroup>
 
