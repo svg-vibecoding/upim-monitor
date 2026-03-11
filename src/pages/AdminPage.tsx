@@ -84,11 +84,78 @@ export default function AdminPage() {
 
   // User form
   const [userDialog, setUserDialog] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
   const [userRole, setUserRole] = useState<AppRole>("pim_manager");
+  const [userActive, setUserActive] = useState(true);
   const [userSaving, setUserSaving] = useState(false);
+
+  const openUserDialog = (user?: DBUser) => {
+    if (user) {
+      setEditingUserId(user.id);
+      setUserName(user.name);
+      setUserEmail(user.email);
+      setUserPassword("");
+      setUserRole(user.role);
+      setUserActive(user.active);
+    } else {
+      setEditingUserId(null);
+      setUserName("");
+      setUserEmail("");
+      setUserPassword("");
+      setUserRole("pim_manager");
+      setUserActive(true);
+    }
+    setUserDialog(true);
+  };
+
+  const saveUser = async () => {
+    if (editingUserId) {
+      if (!userName || !userEmail) {
+        toast.error("Nombre y correo son obligatorios");
+        return;
+      }
+      setUserSaving(true);
+      try {
+        const body: Record<string, unknown> = {
+          userId: editingUserId, name: userName, email: userEmail, role: userRole, active: userActive,
+        };
+        if (userPassword) body.password = userPassword;
+        const { data, error } = await supabase.functions.invoke("update-user", { body });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        toast.success("Usuario actualizado");
+        setUserDialog(false);
+        queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      } catch (err: any) {
+        toast.error(err.message || "Error actualizando usuario");
+      } finally {
+        setUserSaving(false);
+      }
+    } else {
+      if (!userName || !userEmail || !userPassword) {
+        toast.error("Completa todos los campos");
+        return;
+      }
+      setUserSaving(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("create-user", {
+          body: { name: userName, email: userEmail, password: userPassword, role: userRole, active: true },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        toast.success(`Usuario ${userEmail} creado exitosamente`);
+        setUserDialog(false);
+        queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      } catch (err: any) {
+        toast.error(err.message || "Error creando usuario");
+      } finally {
+        setUserSaving(false);
+      }
+    }
+  };
 
   // Report edit state
   const [reportDialog, setReportDialog] = useState(false);
@@ -100,50 +167,6 @@ export default function AdminPage() {
   const [dimDialog, setDimDialog] = useState(false);
   const [dimName, setDimName] = useState("");
   const [dimField, setDimField] = useState("");
-
-  const openUserDialog = () => {
-    setUserName("");
-    setUserEmail("");
-    setUserPassword("");
-    setUserRole("pim_manager");
-    setUserDialog(true);
-  };
-
-  const saveUser = async () => {
-    if (!userName || !userEmail || !userPassword) {
-      toast.error("Completa todos los campos");
-      return;
-    }
-    setUserSaving(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-user", {
-        body: { name: userName, email: userEmail, password: userPassword, role: userRole, active: true },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success(`Usuario ${userEmail} creado exitosamente`);
-      setUserDialog(false);
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-    } catch (err: any) {
-      toast.error(err.message || "Error creando usuario");
-    } finally {
-      setUserSaving(false);
-    }
-  };
-
-  const toggleUserActive = async (userId: string, currentActive: boolean) => {
-    try {
-      const { data, error } = await supabase.functions.invoke("toggle-user-active", {
-        body: { userId, active: !currentActive },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success(currentActive ? "Usuario desactivado" : "Usuario activado");
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-    } catch (err: any) {
-      toast.error(err.message || "Error actualizando estado");
-    }
-  };
 
   // --- Reports: open edit dialog with current attrs from DB ---
   const openReportDialog = (reportId: string) => {
@@ -794,14 +817,17 @@ export default function AdminPage() {
           <div className="flex justify-end">
             <Dialog open={userDialog} onOpenChange={setUserDialog}>
               <DialogTrigger asChild>
-                <Button onClick={openUserDialog} className="gap-2"><UserPlus className="h-4 w-4" /> Nuevo usuario</Button>
+                <Button onClick={() => openUserDialog()} className="gap-2"><UserPlus className="h-4 w-4" /> Nuevo usuario</Button>
               </DialogTrigger>
               <DialogContent>
-                <DialogHeader><DialogTitle>Crear usuario</DialogTitle></DialogHeader>
+                <DialogHeader><DialogTitle>{editingUserId ? "Editar usuario" : "Crear usuario"}</DialogTitle></DialogHeader>
                 <div className="space-y-3 pt-2">
                   <div><Label>Nombre</Label><Input value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="Nombre completo" /></div>
                   <div><Label>Correo electrónico</Label><Input type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} placeholder="correo@empresa.com" /></div>
-                  <div><Label>Contraseña inicial</Label><Input type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)} placeholder="Mínimo 6 caracteres" /></div>
+                  <div>
+                    <Label>{editingUserId ? "Nueva contraseña (dejar vacío para no cambiar)" : "Contraseña inicial"}</Label>
+                    <Input type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)} placeholder={editingUserId ? "Sin cambios" : "Mínimo 6 caracteres"} />
+                  </div>
                   <div>
                     <Label>Rol</Label>
                     <Select value={userRole} onValueChange={(v) => setUserRole(v as AppRole)}>
@@ -812,8 +838,20 @@ export default function AdminPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  {editingUserId && (
+                    <div className="flex items-center gap-2">
+                      <Label>Estado</Label>
+                      <Select value={userActive ? "active" : "inactive"} onValueChange={(v) => setUserActive(v === "active")}>
+                        <SelectTrigger className="w-36"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="active">Activo</SelectItem>
+                          <SelectItem value="inactive">Inactivo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <Button onClick={saveUser} className="w-full" disabled={userSaving}>
-                    {userSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creando...</> : "Crear usuario"}
+                    {userSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {editingUserId ? "Guardando..." : "Creando..."}</> : editingUserId ? "Guardar cambios" : "Crear usuario"}
                   </Button>
                 </div>
               </DialogContent>
@@ -852,12 +890,8 @@ export default function AdminPage() {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleUserActive(u.id, u.active)}
-                          >
-                            {u.active ? "Desactivar" : "Activar"}
+                          <Button variant="ghost" size="sm" onClick={() => openUserDialog(u)}>
+                            <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
                           </Button>
                         </TableCell>
                       </TableRow>

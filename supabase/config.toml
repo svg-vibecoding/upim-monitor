@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.toggle-user-active]
 verify_jwt = false
+
+[functions.update-user]
+verify_jwt = false
