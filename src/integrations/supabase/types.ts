@@ -92,6 +92,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pim_upload_history: {
+        Row: {
+          errors: number
+          file_name: string
+          id: string
+          inserted: number
+          is_active: boolean
+          total_rows: number
+          unique_rows: number
+          updated: number
+          uploaded_at: string
+        }
+        Insert: {
+          errors?: number
+          file_name: string
+          id?: string
+          inserted?: number
+          is_active?: boolean
+          total_rows?: number
+          unique_rows?: number
+          updated?: number
+          uploaded_at?: string
+        }
+        Update: {
+          errors?: number
+          file_name?: string
+          id?: string
+          inserted?: number
+          is_active?: boolean
+          total_rows?: number
+          unique_rows?: number
+          updated?: number
+          uploaded_at?: string
+        }
+        Relationships: []
+      }
       predefined_reports: {
         Row: {
           attributes: string[]
