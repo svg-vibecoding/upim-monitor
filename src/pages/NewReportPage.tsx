@@ -16,6 +16,14 @@ import { Upload, FileText } from "lucide-react";
 type Step = "config" | "results";
 
 export default function NewReportPage() {
+  const { data: allRecords = [] } = usePimRecords();
+  const { data: dimensionsData = [] } = useDimensions();
+  const { data: attributeOrder = [] } = useAttributeOrder();
+
+  const realAttributes = useMemo(() => {
+    return attributeOrder.filter((a) => !STRUCTURAL_ATTRIBUTES.includes(a));
+  }, [attributeOrder]);
+
   const [source, setSource] = useState<"general" | "csv">("general");
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [selectedAttrs, setSelectedAttrs] = useState<string[]>([]);
@@ -23,7 +31,7 @@ export default function NewReportPage() {
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
 
-  const filteredAttrs = ALL_ATTRIBUTES.filter((a) => a.toLowerCase().includes(searchAttr.toLowerCase()));
+  const filteredAttrs = realAttributes.filter((a) => a.toLowerCase().includes(searchAttr.toLowerCase()));
 
   const toggleAttr = (attr: string) => {
     setSelectedAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]);
@@ -31,10 +39,10 @@ export default function NewReportPage() {
 
   const records = useMemo(() => {
     if (source === "csv" && csvCodes.length > 0) {
-      return mockPIMData.filter((r) => csvCodes.includes(r.codigoJaivana));
+      return allRecords.filter((r) => csvCodes.includes(r.codigoJaivana));
     }
-    return mockPIMData;
-  }, [source, csvCodes]);
+    return allRecords;
+  }, [source, csvCodes, allRecords]);
 
   const attrResults = useMemo(() => {
     if (step !== "results") return [];
