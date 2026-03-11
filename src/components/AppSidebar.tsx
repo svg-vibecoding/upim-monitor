@@ -1,5 +1,6 @@
 import { BarChart3, FileText, PlusCircle, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
+import upimLogo from "@/assets/upim-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
@@ -33,8 +34,8 @@ export function AppSidebar() {
         <div className="p-4 pb-2">
           {!collapsed && (
             <div className="mb-1">
-              <h2 className="text-sm font-bold tracking-wide text-sidebar-foreground">UPIM</h2>
-              <p className="text-[11px] text-sidebar-muted leading-tight">Monitor de Completitud</p>
+              <img src={upimLogo} alt="UPIM" className="h-5 w-auto" />
+              <p className="text-[11px] text-sidebar-muted leading-tight mt-1">Monitor de Completitud</p>
             </div>
           )}
           {collapsed && (
