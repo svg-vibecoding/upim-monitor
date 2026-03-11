@@ -29,6 +29,8 @@ export default function NewReportPage() {
   const [source, setSource] = useState<"general" | "file">("general");
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string>("");
+  const [uploadedFileReady, setUploadedFileReady] = useState(false);
+  const [uploadedTotalRows, setUploadedTotalRows] = useState(0);
   const [selectedAttrs, setSelectedAttrs] = useState<string[]>([]);
   const [dimensionId, setDimensionId] = useState<string>("");
   const [step, setStep] = useState<Step>("config");
@@ -64,17 +66,43 @@ export default function NewReportPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadedFileName(file.name);
+    setUploadedFileReady(false);
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const data = new Uint8Array(ev.target?.result as ArrayBuffer);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-      // Extract codes starting with JAV- from first column
-      const codes = rows
-        .map((row) => String(row[0] || "").trim())
-        .filter((val) => val.startsWith("JAV-"));
-      setCsvCodes(codes);
+      try {
+        const data = new Uint8Array(ev.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        // Look for a column that contains Código Jaivaná values
+        const dataRows = rows.filter((r) => r.length > 0);
+        setUploadedTotalRows(Math.max(0, dataRows.length - 1)); // minus header
+        
+        // Try to find JAV- codes in any column of first row to detect the right column
+        let codeColIndex = 0;
+        if (dataRows.length > 0) {
+          const headerRow = dataRows[0];
+          for (let i = 0; i < headerRow.length; i++) {
+            const val = String(headerRow[i] || "").toLowerCase();
+            if (val.includes("jaivan") || val.includes("código") || val.includes("codigo")) {
+              codeColIndex = i;
+              break;
+            }
+          }
+        }
+        
+        // Extract all non-empty values from the detected column (skip header)
+        const codes = dataRows.slice(1)
+          .map((row) => String(row[codeColIndex] || "").trim())
+          .filter((val) => val.length > 0);
+        setCsvCodes(codes);
+        setUploadedFileReady(true);
+      } catch {
+        setUploadedFileName(file.name);
+        setCsvCodes([]);
+        setUploadedFileReady(true);
+        setUploadedTotalRows(0);
+      }
     };
     reader.readAsArrayBuffer(file);
   };
@@ -82,6 +110,8 @@ export default function NewReportPage() {
   const handleClearFile = () => {
     setCsvCodes([]);
     setUploadedFileName("");
+    setUploadedFileReady(false);
+    setUploadedTotalRows(0);
   };
 
   const canGenerate = selectedAttrs.length > 0;
@@ -102,6 +132,8 @@ export default function NewReportPage() {
     setDimensionId("");
     setCsvCodes([]);
     setUploadedFileName("");
+    setUploadedFileReady(false);
+    setUploadedTotalRows(0);
     setSource("general");
   };
 
@@ -127,8 +159,8 @@ export default function NewReportPage() {
               </RadioGroup>
               {source === "file" && (
                 <div className="space-y-3">
-                  <p className="text-xs text-muted-foreground">El archivo debe tener una columna con Código Jaivaná (formato JAV-XXXXX). Se aceptan archivos .xlsx y .xls.</p>
-                  {csvCodes.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">El archivo debe tener una columna con Código Jaivaná. Se aceptan archivos .xlsx y .xls.</p>
+                  {!uploadedFileName ? (
                     <label className="flex items-center gap-2 cursor-pointer border border-dashed border-input rounded-md px-4 py-3 text-sm hover:bg-accent transition-colors w-fit">
                       <Upload className="h-4 w-4 text-muted-foreground" />
                       <span>Seleccionar archivo</span>
@@ -139,17 +171,27 @@ export default function NewReportPage() {
                       <FileSpreadsheet className="h-5 w-5 text-success shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{uploadedFileName}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <CheckCircle2 className="h-3 w-3 text-success" />
-                          <span className="text-xs text-muted-foreground">
-                            {csvCodes.length} código{csvCodes.length !== 1 ? "s" : ""} Jaivaná encontrado{csvCodes.length !== 1 ? "s" : ""}
-                          </span>
-                          {allRecords.length > 0 && (
-                            <span className="text-xs text-muted-foreground">
-                              · {allRecords.filter((r) => csvCodes.includes(r.codigoJaivana)).length} coinciden en la base
-                            </span>
-                          )}
-                        </div>
+                        {uploadedFileReady ? (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {csvCodes.length > 0 ? (
+                              <>
+                                <CheckCircle2 className="h-3 w-3 text-success" />
+                                <span className="text-xs text-muted-foreground">
+                                  {uploadedTotalRows} fila{uploadedTotalRows !== 1 ? "s" : ""} · {csvCodes.length} código{csvCodes.length !== 1 ? "s" : ""} detectado{csvCodes.length !== 1 ? "s" : ""}
+                                </span>
+                                {allRecords.length > 0 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    · {allRecords.filter((r) => csvCodes.includes(r.codigoJaivana)).length} coinciden en la base
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="text-xs text-destructive">No se encontraron códigos en el archivo</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Procesando…</span>
+                        )}
                       </div>
                       <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClearFile}>
                         <X className="h-3.5 w-3.5" />
