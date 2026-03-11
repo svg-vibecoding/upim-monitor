@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  usePimKPIs, usePimRecords, usePredefinedReports,
+  usePimKPIs, usePimRecords, usePredefinedReports, useAttributeOrder,
   computeFocusPoints,
 } from "@/hooks/usePimData";
 import { PlusCircle, FileText, AlertTriangle } from "lucide-react";
