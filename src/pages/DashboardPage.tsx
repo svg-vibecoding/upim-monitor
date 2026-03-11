@@ -393,7 +393,7 @@ export default function DashboardPage() {
 
             {/* ── Informes Predefinidos (narrower, right) ── */}
             <div className="lg:col-span-1 flex flex-col">
-              <h2 className="text-xs font-medium text-muted-foreground mb-3">
+              <h2 className="text-sm font-semibold text-foreground mb-3">
                 Informes Predefinidos
               </h2>
               <Card className="h-full">
