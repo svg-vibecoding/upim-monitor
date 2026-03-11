@@ -359,6 +359,7 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
     case "all":
     default:
       return allRecords;
+  }
 }
 
 /** Canonical display order for predefined reports */
@@ -371,7 +372,6 @@ export function sortReportsByDisplayOrder<T extends { name: string }>(reports: T
     const idxB = REPORT_DISPLAY_ORDER.indexOf(b.name);
     return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
   });
-}
 }
 
 export function computeFocusPoints(records: PIMRecord[], reports: PredefinedReport[], realAttributeKeys: string[] = []): AttributeResult[] {
