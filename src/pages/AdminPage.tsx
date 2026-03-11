@@ -400,7 +400,8 @@ export default function AdminPage() {
           updated: totalUpdated,
           errors: totalErrors,
         });
-        invalidatePimData();
+        // Only refresh upload history, NOT app data — user must explicitly click "Actualizar datos de la app"
+        queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
       } catch {
         // Non-blocking: history registration failure shouldn't break the upload flow
       }
