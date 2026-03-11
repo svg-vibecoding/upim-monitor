@@ -59,7 +59,6 @@ export type Database = {
           categoria_n1_comercial: string | null
           clasificacion_producto: string | null
           codigo_jaivana: string
-          codigo_sumago: string | null
           created_at: string
           estado_global: string | null
           id: string
@@ -72,7 +71,6 @@ export type Database = {
           categoria_n1_comercial?: string | null
           clasificacion_producto?: string | null
           codigo_jaivana: string
-          codigo_sumago?: string | null
           created_at?: string
           estado_global?: string | null
           id?: string
@@ -85,7 +83,6 @@ export type Database = {
           categoria_n1_comercial?: string | null
           clasificacion_producto?: string | null
           codigo_jaivana?: string
-          codigo_sumago?: string | null
           created_at?: string
           estado_global?: string | null
           id?: string

@@ -18,7 +18,6 @@ function resolveField(
 function dbRowToPIMRecord(row: {
   codigo_jaivana: string;
   estado_global: string | null;
-  codigo_sumago: string | null;
   visibilidad_b2b: string | null;
   visibilidad_b2c: string | null;
   categoria_n1_comercial: string | null;
@@ -27,13 +26,11 @@ function dbRowToPIMRecord(row: {
 }): PIMRecord {
   const attrs = (typeof row.attributes === "object" && row.attributes !== null ? row.attributes : {}) as Record<string, string | null>;
 
-  // estado_global: use DB value, fallback to JSONB, keep null as empty string (unpopulated)
   const estadoRaw = row.estado_global || attrs["Estado (Global)"] || null;
   const estado = estadoRaw
     ? (estadoRaw.toLowerCase() === "activo" ? "Activo" : "Inactivo")
     : null;
 
-  // visibilidad: use DB value, fallback to JSONB, keep null as empty string (unpopulated)
   const visB2BRaw = row.visibilidad_b2b || attrs["Visibilidad Adobe B2B"] || null;
   const visB2B = visB2BRaw
     ? (visB2BRaw.toLowerCase() === "visible" ? "Visible" : "Oculto")
@@ -44,18 +41,14 @@ function dbRowToPIMRecord(row: {
     ? (visB2CRaw.toLowerCase() === "visible" ? "Visible" : "Oculto")
     : null;
 
-  const sumaGo = row.codigo_sumago || attrs["SumaGO"] || null;
-
   const cleanAttrs = { ...attrs };
   delete cleanAttrs["Estado (Global)"];
   delete cleanAttrs["Visibilidad Adobe B2B"];
   delete cleanAttrs["Visibilidad Adobe B2C"];
-  delete cleanAttrs["SumaGO"];
 
   return {
     codigoJaivana: row.codigo_jaivana,
     estadoGlobal: estado as any,
-    codigoSumaGo: sumaGo,
     visibilidadB2B: visB2B as any,
     visibilidadB2C: visB2C as any,
     categoriaN1Comercial: row.categoria_n1_comercial || attrs["Categoría N1 Comercial"] || "",
@@ -130,7 +123,6 @@ export interface AttributeClassification {
 const ATTRIBUTE_CLASSIFICATION: Record<string, AttributeClassification> = {
   "Código Jaivaná":            { type: "base",      evaluable: false },
   "Estado (Global)":           { type: "funcional",  evaluable: false },
-  "SumaGO":                    { type: "funcional",  evaluable: true },
   "Visibilidad Adobe B2B":     { type: "funcional",  evaluable: true },
   "Visibilidad Adobe B2C":     { type: "funcional",  evaluable: true },
   "Categoría N1 Comercial":    { type: "dimensión",  evaluable: true },
@@ -170,7 +162,6 @@ export const STRUCTURAL_ATTRIBUTES = FUNCTIONAL_FIELDS;
 /** Fields stored as fixed DB columns (excluding Código Jaivaná which is handled separately) */
 export const FIXED_COLUMN_FIELDS = [
   "Estado (Global)",
-  "SumaGO",
   "Visibilidad Adobe B2B",
   "Visibilidad Adobe B2C",
   "Categoría N1 Comercial",

@@ -12,10 +12,9 @@ export interface AppUser {
 
 export interface PIMRecord {
   codigoJaivana: string;
-  estadoGlobal: "Activo" | "Inactivo";
-  codigoSumaGo: string | null;
-  visibilidadB2B: "Visible" | "Oculto";
-  visibilidadB2C: "Visible" | "Oculto";
+  estadoGlobal: "Activo" | "Inactivo" | null;
+  visibilidadB2B: "Visible" | "Oculto" | null;
+  visibilidadB2C: "Visible" | "Oculto" | null;
   categoriaN1Comercial: string;
   clasificacionProducto: string;
   [key: string]: string | null;
@@ -125,7 +124,6 @@ function generateMockData(): PIMRecord[] {
     const record: PIMRecord = {
       codigoJaivana: `JAV-${String(i + 1).padStart(6, "0")}`,
       estadoGlobal: isActive ? "Activo" : "Inactivo",
-      codigoSumaGo: hasSumaGo ? `SG-${String(i + 1).padStart(5, "0")}` : null,
       visibilidadB2B: hasSumaGo && Math.random() > 0.2 ? "Visible" : "Oculto",
       visibilidadB2C: hasSumaGo && Math.random() > 0.3 ? "Visible" : "Oculto",
       categoriaN1Comercial: categories[Math.floor(Math.random() * categories.length)],
@@ -197,7 +195,7 @@ export function computeKPIs() {
   const total = mockPIMData.length;
   const active = mockPIMData.filter((r) => r.estadoGlobal === "Activo").length;
   const inactive = total - active;
-  const digitalBase = mockPIMData.filter((r) => r.codigoSumaGo !== null).length;
+  const digitalBase = 0;
   const visibleB2B = mockPIMData.filter((r) => r.visibilidadB2B === "Visible").length;
   const visibleB2C = mockPIMData.filter((r) => r.visibilidadB2C === "Visible").length;
 
