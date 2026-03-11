@@ -274,7 +274,8 @@ export default function DashboardPage() {
                     <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
                       {pimGeneralCompleteness}%
                     </p>
-                    <div className="mt-auto pt-4 border-t border-border">
+                    <div className="flex-1 min-h-6" />
+                    <div className="pt-4 border-t border-border">
                       <p className="text-xs text-muted-foreground mb-2">Progreso PIM General</p>
                       <CompletenessBar value={pimGeneralCompleteness} showLabel={false} size="sm" />
                     </div>
