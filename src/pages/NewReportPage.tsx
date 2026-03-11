@@ -41,7 +41,7 @@ export default function NewReportPage() {
   };
 
   const records = useMemo(() => {
-    if (source === "csv" && csvCodes.length > 0) {
+    if (source === "file" && csvCodes.length > 0) {
       return allRecords.filter((r) => csvCodes.includes(r.codigoJaivana));
     }
     return allRecords;
