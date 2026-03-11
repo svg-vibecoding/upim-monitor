@@ -29,6 +29,8 @@ export default function NewReportPage() {
   const [source, setSource] = useState<"general" | "file">("general");
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string>("");
+  const [uploadedFileReady, setUploadedFileReady] = useState(false);
+  const [uploadedTotalRows, setUploadedTotalRows] = useState(0);
   const [selectedAttrs, setSelectedAttrs] = useState<string[]>([]);
   const [dimensionId, setDimensionId] = useState<string>("");
   const [step, setStep] = useState<Step>("config");
