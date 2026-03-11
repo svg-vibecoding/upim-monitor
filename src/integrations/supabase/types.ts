@@ -98,7 +98,6 @@ export type Database = {
           file_name: string
           id: string
           inserted: number
-          is_active: boolean
           total_rows: number
           unique_rows: number
           updated: number
@@ -109,7 +108,6 @@ export type Database = {
           file_name: string
           id?: string
           inserted?: number
-          is_active?: boolean
           total_rows?: number
           unique_rows?: number
           updated?: number
@@ -120,7 +118,6 @@ export type Database = {
           file_name?: string
           id?: string
           inserted?: number
-          is_active?: boolean
           total_rows?: number
           unique_rows?: number
           updated?: number
@@ -211,6 +208,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      activate_pim_version: {
+        Args: { p_upload_id: string }
+        Returns: undefined
+      }
       get_pim_kpis: { Args: never; Returns: Json }
       get_report_completeness: { Args: { p_report_id: string }; Returns: Json }
       has_role: {
