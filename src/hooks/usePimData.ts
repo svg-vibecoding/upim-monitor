@@ -330,11 +330,17 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
 }
 
 export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedReport): PIMRecord[] {
-  const u = report.universe.toLowerCase();
-  if (u.includes("activos")) return allRecords.filter((r) => r.estadoGlobal === "Activo");
-  if (u.includes("b2b")) return allRecords.filter((r) => r.visibilidadB2B === "Visible");
-  if (u.includes("b2c")) return allRecords.filter((r) => r.visibilidadB2C === "Visible");
-  return allRecords;
+  switch (report.universeKey) {
+    case "active":
+      return allRecords.filter((r) => r.estadoGlobal === "Activo");
+    case "visible_b2b":
+      return allRecords.filter((r) => r.visibilidadB2B === "Visible");
+    case "visible_b2c":
+      return allRecords.filter((r) => r.visibilidadB2C === "Visible");
+    case "all":
+    default:
+      return allRecords;
+  }
 }
 
 export function computeFocusPoints(records: PIMRecord[], reports: PredefinedReport[], realAttributeKeys: string[] = []): AttributeResult[] {

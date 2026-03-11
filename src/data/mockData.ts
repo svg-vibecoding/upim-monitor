@@ -34,11 +34,14 @@ export interface DimensionResult {
   completeness: number;
 }
 
+export type UniverseKey = "all" | "active" | "visible_b2b" | "visible_b2c";
+
 export interface PredefinedReport {
   id: string;
   name: string;
   description: string;
   universe: string;
+  universeKey: UniverseKey;
   attributes: string[];
 }
 
