@@ -540,8 +540,8 @@ export default function AdminPage() {
                           <TableCell className="font-medium">{r.name}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">{r.universe}</TableCell>
                           <TableCell className="text-right">
-                            <Badge variant={r.attributes.length > 0 ? "secondary" : "destructive"}>
-                              {r.attributes.length}
+                            <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
+                              {getEvaluableAttributes(r.attributes).length}
                             </Badge>
                           </TableCell>
                           <TableCell>
