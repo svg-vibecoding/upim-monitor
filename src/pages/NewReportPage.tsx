@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
 } from "@/data/mockData";
-import { usePimRecords, useDimensions, useAttributeOrder, NON_EVALUABLE_FIELDS, DIMENSION_FIELDS, getFullAttributeList } from "@/hooks/usePimData";
+import { usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList, getAttributeClassification, isNonEvaluable } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText } from "lucide-react";
 
