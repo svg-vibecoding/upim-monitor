@@ -316,11 +316,9 @@ export default function DashboardPage() {
                       <span className={`h-2.5 w-2.5 rounded-full ${severityDot(s)} ${
                         severityFilter === s ? "ring-2 ring-offset-1 ring-foreground/20" : ""
                       }`} />
-                      {severityCounts[s] > 0 && (
-                        <span className="text-[10px] tabular-nums text-muted-foreground font-medium">
+                      <span className="text-[10px] tabular-nums text-muted-foreground font-medium">
                           {severityCounts[s]}
                         </span>
-                      )}
                     </button>
                   ))}
                 </div>
