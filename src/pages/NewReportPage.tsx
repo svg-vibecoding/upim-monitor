@@ -164,7 +164,7 @@ export default function NewReportPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Sin dimensión</SelectItem>
-                  {mockDimensions.map((d) => (
+                  {dimensionsData.map((d) => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                   ))}
                 </SelectContent>
