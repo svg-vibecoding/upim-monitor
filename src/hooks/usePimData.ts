@@ -106,13 +106,32 @@ export function useAttributeOrder() {
   });
 }
 
-// --- Structural attributes excluded from completeness by default ---
-export const STRUCTURAL_ATTRIBUTES = [
+// --- Field classification ---
+
+/** Functional fields: always available but NOT part of completeness calculation */
+export const FUNCTIONAL_FIELDS = [
   "Estado (Global)",
   "SumaGO",
   "Visibilidad Adobe B2B",
   "Visibilidad Adobe B2C",
 ];
+
+/** Dimension fields: used for distribution, NOT part of completeness */
+export const DIMENSION_FIELDS = [
+  "Categoría N1 Comercial",
+  "Clasificación del Producto",
+];
+
+/** All non-evaluable fields (functional + dimensions) */
+export const NON_EVALUABLE_FIELDS = [...FUNCTIONAL_FIELDS, ...DIMENSION_FIELDS];
+
+/** Legacy alias kept for backward compat */
+export const STRUCTURAL_ATTRIBUTES = FUNCTIONAL_FIELDS;
+
+/** Given a full attribute order, return only evaluable attributes */
+export function getEvaluableAttributes(allAttrs: string[]): string[] {
+  return allAttrs.filter((a) => !NON_EVALUABLE_FIELDS.includes(a));
+}
 
 // --- Records hook (only fetches valid rows, excludes ghosts) ---
 export function usePimRecords() {
