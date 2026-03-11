@@ -297,7 +297,7 @@ export default function DashboardPage() {
               <Card className="h-full">
                 <CardContent className="py-2 px-2">
                   {reports &&
-                    reports.map((r, idx) => (
+                    sortReportsByDisplayOrder(reports).map((r, idx) => (
                       <div
                         key={r.id}
                         className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/60 cursor-pointer transition-colors group"

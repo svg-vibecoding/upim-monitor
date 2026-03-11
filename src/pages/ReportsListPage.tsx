@@ -34,7 +34,7 @@ export default function ReportsListPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {reports!.map((report) => {
+          {sortReportsByDisplayOrder(reports!).map((report) => {
             const records = getRecordsForReport(allRecords!, report);
             const validAttrs = getEvaluableAttributes(filterRealAttributes(report.attributes, attributeOrder || []));
             const attrResults = computeAttributeResults(records, validAttrs);
