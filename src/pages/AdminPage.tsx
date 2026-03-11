@@ -506,22 +506,31 @@ export default function AdminPage() {
                         <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
                       </label>
                       {filteredAttrs.map((attr) => {
-                        const isNonEvaluable = NON_EVALUABLE_FIELDS.includes(attr);
+                        const classification = getAttributeClassification(attr);
+                        const nonEvaluable = !classification.evaluable;
+                        const showTypeBadge = classification.type !== "general";
                         return (
                           <label
                             key={attr}
-                            className={`flex items-center gap-2 text-sm cursor-pointer py-1 px-1 rounded hover:bg-muted/50 ${isNonEvaluable ? "opacity-60" : ""}`}
+                            className={`flex items-center gap-2 text-sm cursor-pointer py-1 px-1 rounded hover:bg-muted/50 ${nonEvaluable ? "opacity-60" : ""}`}
                           >
                             <Checkbox
                               checked={reportAttrs.includes(attr)}
                               onCheckedChange={() => toggleReportAttr(attr)}
                             />
                             <span className="truncate">{attr}</span>
-                            {isNonEvaluable && (
-                              <Badge variant="outline" className="text-[10px] ml-auto shrink-0">
-                                {DIMENSION_FIELDS.includes(attr) ? "dimensión" : "funcional"}
-                              </Badge>
-                            )}
+                            <span className="ml-auto flex gap-1 shrink-0">
+                              {showTypeBadge && (
+                                <Badge variant="outline" className="text-[10px]">
+                                  {classification.type}
+                                </Badge>
+                              )}
+                              {nonEvaluable && (
+                                <Badge variant="secondary" className="text-[10px]">
+                                  no evaluable
+                                </Badge>
+                              )}
+                            </span>
                           </label>
                         );
                       })}
