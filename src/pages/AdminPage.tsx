@@ -22,7 +22,8 @@ import {
   usePredefinedReports,
   useAttributeOrder,
   useUpdateReportAttributes,
-  STRUCTURAL_ATTRIBUTES,
+  NON_EVALUABLE_FIELDS,
+  getEvaluableAttributes,
 } from "@/hooks/usePimData";
 import { toast } from "sonner";
 
