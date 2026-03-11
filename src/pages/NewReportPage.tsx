@@ -66,17 +66,43 @@ export default function NewReportPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadedFileName(file.name);
+    setUploadedFileReady(false);
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const data = new Uint8Array(ev.target?.result as ArrayBuffer);
-      const workbook = XLSX.read(data, { type: "array" });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const rows: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-      // Extract codes starting with JAV- from first column
-      const codes = rows
-        .map((row) => String(row[0] || "").trim())
-        .filter((val) => val.startsWith("JAV-"));
-      setCsvCodes(codes);
+      try {
+        const data = new Uint8Array(ev.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        // Look for a column that contains Código Jaivaná values
+        const dataRows = rows.filter((r) => r.length > 0);
+        setUploadedTotalRows(Math.max(0, dataRows.length - 1)); // minus header
+        
+        // Try to find JAV- codes in any column of first row to detect the right column
+        let codeColIndex = 0;
+        if (dataRows.length > 0) {
+          const headerRow = dataRows[0];
+          for (let i = 0; i < headerRow.length; i++) {
+            const val = String(headerRow[i] || "").toLowerCase();
+            if (val.includes("jaivan") || val.includes("código") || val.includes("codigo")) {
+              codeColIndex = i;
+              break;
+            }
+          }
+        }
+        
+        // Extract all non-empty values from the detected column (skip header)
+        const codes = dataRows.slice(1)
+          .map((row) => String(row[codeColIndex] || "").trim())
+          .filter((val) => val.length > 0);
+        setCsvCodes(codes);
+        setUploadedFileReady(true);
+      } catch {
+        setUploadedFileName(file.name);
+        setCsvCodes([]);
+        setUploadedFileReady(true);
+        setUploadedTotalRows(0);
+      }
     };
     reader.readAsArrayBuffer(file);
   };
@@ -84,6 +110,8 @@ export default function NewReportPage() {
   const handleClearFile = () => {
     setCsvCodes([]);
     setUploadedFileName("");
+    setUploadedFileReady(false);
+    setUploadedTotalRows(0);
   };
 
   const canGenerate = selectedAttrs.length > 0;
