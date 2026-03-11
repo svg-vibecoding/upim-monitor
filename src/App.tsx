@@ -11,21 +11,36 @@ import ReportsListPage from "@/pages/ReportsListPage";
 import ReportDetailPage from "@/pages/ReportDetailPage";
 import NewReportPage from "@/pages/NewReportPage";
 import AdminPage from "@/pages/AdminPage";
+import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <Routes>
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/" element={<AppLayout><DashboardPage /></AppLayout>} />
-      <Route path="/informes" element={<AppLayout><ReportsListPage /></AppLayout>} />
-      <Route path="/informes/:reportId" element={<AppLayout><ReportDetailPage /></AppLayout>} />
-      <Route path="/nuevo-informe" element={<AppLayout><NewReportPage /></AppLayout>} />
-      <Route path="/admin" element={<AppLayout><AdminPage /></AppLayout>} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {!isAuthenticated ? (
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      ) : (
+        <>
+          <Route path="/" element={<AppLayout><DashboardPage /></AppLayout>} />
+          <Route path="/informes" element={<AppLayout><ReportsListPage /></AppLayout>} />
+          <Route path="/informes/:reportId" element={<AppLayout><ReportDetailPage /></AppLayout>} />
+          <Route path="/nuevo-informe" element={<AppLayout><NewReportPage /></AppLayout>} />
+          <Route path="/admin" element={<AppLayout><AdminPage /></AppLayout>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </>
+      )}
     </Routes>
   );
 }
