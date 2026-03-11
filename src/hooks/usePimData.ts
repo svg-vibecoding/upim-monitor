@@ -128,7 +128,7 @@ export function usePimRecords() {
         const { data, error } = await supabase
           .from("pim_records")
           .select("*")
-          .or("estado_global.ilike.activo,estado_global.ilike.inactivo")
+          .in("estado_global", ["activo", "inactivo"])
           .range(from, from + PAGE_SIZE - 1);
 
         if (error) throw error;
