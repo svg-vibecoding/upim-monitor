@@ -212,6 +212,7 @@ export type Database = {
     }
     Functions: {
       get_pim_kpis: { Args: never; Returns: Json }
+      get_report_completeness: { Args: { p_report_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
