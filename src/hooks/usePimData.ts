@@ -17,24 +17,32 @@ function resolveField(
 
 function dbRowToPIMRecord(row: {
   codigo_jaivana: string;
-  estado_global: string;
+  estado_global: string | null;
   codigo_sumago: string | null;
-  visibilidad_b2b: string;
-  visibilidad_b2c: string;
+  visibilidad_b2b: string | null;
+  visibilidad_b2c: string | null;
   categoria_n1_comercial: string | null;
   clasificacion_producto: string | null;
   attributes: Record<string, unknown> | unknown;
 }): PIMRecord {
   const attrs = (typeof row.attributes === "object" && row.attributes !== null ? row.attributes : {}) as Record<string, string | null>;
 
-  const estadoRaw = resolveField(row.estado_global, "Activo", attrs, "Estado (Global)");
-  const estado = estadoRaw.toLowerCase() === "activo" ? "Activo" : "Inactivo";
+  // estado_global: use DB value, fallback to JSONB, keep null as empty string (unpopulated)
+  const estadoRaw = row.estado_global || attrs["Estado (Global)"] || null;
+  const estado = estadoRaw
+    ? (estadoRaw.toLowerCase() === "activo" ? "Activo" : "Inactivo")
+    : null;
 
-  const visB2BRaw = resolveField(row.visibilidad_b2b, "Oculto", attrs, "Visibilidad Adobe B2B");
-  const visB2B = visB2BRaw.toLowerCase() === "visible" ? "Visible" : "Oculto";
+  // visibilidad: use DB value, fallback to JSONB, keep null as empty string (unpopulated)
+  const visB2BRaw = row.visibilidad_b2b || attrs["Visibilidad Adobe B2B"] || null;
+  const visB2B = visB2BRaw
+    ? (visB2BRaw.toLowerCase() === "visible" ? "Visible" : "Oculto")
+    : null;
 
-  const visB2CRaw = resolveField(row.visibilidad_b2c, "Oculto", attrs, "Visibilidad Adobe B2C");
-  const visB2C = visB2CRaw.toLowerCase() === "visible" ? "Visible" : "Oculto";
+  const visB2CRaw = row.visibilidad_b2c || attrs["Visibilidad Adobe B2C"] || null;
+  const visB2C = visB2CRaw
+    ? (visB2CRaw.toLowerCase() === "visible" ? "Visible" : "Oculto")
+    : null;
 
   const sumaGo = row.codigo_sumago || attrs["SumaGO"] || null;
 
