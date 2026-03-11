@@ -20,12 +20,9 @@ import type { PredefinedReport } from "@/data/mockData";
 import {
   PlusCircle,
   FileText,
-  BarChart3,
   Layers,
   Settings2,
   Eye,
-  Monitor,
-  ShoppingCart,
   ChevronRight,
   AlertTriangle,
   Filter,
@@ -71,16 +68,8 @@ function severityBarColor(s: SeverityLevel) {
   }
 }
 
-/* ── Report icon helper ───────────────────────────────────────── */
-function reportIcon(name: string) {
-  switch (name) {
-    case "PIM General": return <BarChart3 className="h-5 w-5 text-primary" />;
-    case "SumaGO B2B": return <Monitor className="h-5 w-5 text-info" />;
-    case "SumaGO B2C": return <Eye className="h-5 w-5 text-success" />;
-    case "Compras": return <ShoppingCart className="h-5 w-5 text-warning" />;
-    default: return <FileText className="h-5 w-5 text-primary" />;
-  }
-}
+/* ── Focus report order ───────────────────────────────────────── */
+const FOCUS_REPORT_ORDER = ["PIM General", "SumaGO B2B", "SumaGO B2C", "Compras"];
 
 /* ── Dashboard ──────────────────────────────────────────────────── */
 
@@ -94,19 +83,17 @@ export default function DashboardPage() {
   const isLoading = loadingKPIs || loadingRecords || loadingReports;
   const hasData = kpis && kpis.total > 0;
 
-  // ── Focus: report selector & severity filter ──
   const focusReports = useMemo(
-    () => (reports || []).filter((r) =>
-      ["PIM General", "SumaGO B2B", "SumaGO B2C", "Compras"].includes(r.name)
-    ),
+    () => {
+      const filtered = (reports || []).filter((r) => FOCUS_REPORT_ORDER.includes(r.name));
+      return filtered.sort((a, b) => FOCUS_REPORT_ORDER.indexOf(a.name) - FOCUS_REPORT_ORDER.indexOf(b.name));
+    },
     [reports]
   );
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const activeReport = focusReports.find((r) => r.id === selectedReportId) || focusReports[0] || null;
-
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
 
-  // ── PIM General completeness ──
   const pimGeneralCompleteness = useMemo(() => {
     if (!records || records.length === 0 || !reports || !attributeOrder) return null;
     const pimGeneral = reports.find((r) => r.name === "PIM General");
@@ -119,11 +106,9 @@ export default function DashboardPage() {
     const evaluable = getEvaluableAttributes(realAttrs);
     if (evaluable.length === 0) return null;
     const results = computeAttributeResults(universe, evaluable);
-    const avg = Math.round(results.reduce((s, a) => s + a.completeness, 0) / results.length);
-    return avg;
+    return Math.round(results.reduce((s, a) => s + a.completeness, 0) / results.length);
   }, [records, reports, attributeOrder]);
 
-  // ── Focus points for selected report ──
   const focusItems = useMemo(() => {
     if (!activeReport || !records || records.length === 0 || !attributeOrder) return [];
     const universe = getRecordsForReport(records, activeReport);
@@ -146,20 +131,14 @@ export default function DashboardPage() {
     return counts;
   }, [focusItems]);
 
-  // ── Formatted date ──
   const lastUpdateFormatted = kpis?.lastUpdated
     ? format(new Date(kpis.lastUpdated), "d 'de' MMMM yyyy, HH:mm", { locale: es })
     : "Sin datos cargados";
 
-  // ── Percentages ──
-  const pctActive = kpis && kpis.total > 0 ? Math.round((kpis.active / kpis.total) * 100) : 0;
-  const pctInactive = kpis && kpis.total > 0 ? Math.round((kpis.inactive / kpis.total) * 100) : 0;
   const pctDigitalBase = kpis && kpis.total > 0 ? Math.round((kpis.digitalBase / kpis.total) * 100) : 0;
-  const pctVisB2B = kpis && kpis.digitalBase > 0 ? Math.round((kpis.visibleB2B / kpis.digitalBase) * 100) : 0;
-  const pctVisB2C = kpis && kpis.digitalBase > 0 ? Math.round((kpis.visibleB2C / kpis.digitalBase) * 100) : 0;
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-5 max-w-6xl">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -178,7 +157,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
           </div>
-          <Skeleton className="h-80 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
       ) : !hasData ? (
         <Card>
@@ -192,7 +171,7 @@ export default function DashboardPage() {
         <>
           {/* ═══ KPI CARDS ═══ */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* ── A) Estado General ── */}
+            {/* A) Estado General */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5">
                 <div className="flex items-center justify-between mb-4">
@@ -219,7 +198,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* ── B) Estado Operativo ── */}
+            {/* B) Estado Operativo */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5">
                 <div className="flex items-center justify-between mb-4">
@@ -256,7 +235,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            {/* ── C) Visibilidad Digital ── */}
+            {/* C) Visibilidad Digital */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5">
                 <div className="flex items-center justify-between mb-4">
@@ -268,27 +247,17 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-info/10 flex items-center justify-center shrink-0">
-                      <Monitor className="h-5 w-5 text-info" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Visibles B2B</p>
-                      <p className="text-2xl font-bold text-foreground tabular-nums leading-none">
-                        {kpis!.visibleB2B.toLocaleString()}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Visibles B2B</p>
+                    <p className="text-2xl font-bold text-foreground tabular-nums leading-none mt-0.5">
+                      {kpis!.visibleB2B.toLocaleString()}
+                    </p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
-                      <ShoppingCart className="h-5 w-5 text-success" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Visibles B2C</p>
-                      <p className="text-2xl font-bold text-foreground tabular-nums leading-none">
-                        {kpis!.visibleB2C.toLocaleString()}
-                      </p>
-                    </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Visibles B2C</p>
+                    <p className="text-2xl font-bold text-foreground tabular-nums leading-none mt-0.5">
+                      {kpis!.visibleB2C.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -298,21 +267,22 @@ export default function DashboardPage() {
           {/* ═══ REPORTS + FOCUS ═══ */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* ── Informes Predefinidos ── */}
-            <Card>
-              <CardContent className="pt-5 pb-4 px-5">
-                <h2 className="text-base font-semibold text-foreground mb-4">
-                  Informes Predefinidos
-                </h2>
-                <div className="space-y-2">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Informes Predefinidos
+              </h2>
+              <Card>
+                <CardContent className="py-2 px-2">
                   {reports &&
                     reports.map((r, idx) => (
                       <div
                         key={r.id}
-                        className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted/60 cursor-pointer transition-colors group"
+                        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/60 cursor-pointer transition-colors group"
                         onClick={() => navigate(`/informes/${r.id}`)}
                       >
-                        <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          {reportIcon(r.name)}
+                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          <FileText className="h-4 w-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground">
@@ -323,99 +293,96 @@ export default function DashboardPage() {
                         <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       </div>
                     ))}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </div>
 
             {/* ── Focos de atención ── */}
-            <Card>
-              <CardContent className="pt-5 pb-4 px-5">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-warning" />
-                    Focos de atención
-                  </h2>
-                  {/* Severity dots summary */}
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                    {(["critical", "low", "medium", "acceptable"] as SeverityLevel[]).map((s) => (
-                      <button
-                        key={s}
-                        onClick={() => setSeverityFilter(severityFilter === s ? null : s)}
-                        className={`h-3 w-3 rounded-full transition-all ${severityDot(s)} ${
-                          severityFilter === s ? "ring-2 ring-offset-2 ring-foreground/30" : "opacity-60 hover:opacity-100"
-                        }`}
-                        title={severityLabel(s)}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Report tabs */}
-                <div className="flex border-b border-border mb-4">
-                  {focusReports.map((r) => (
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-warning" />
+                  Focos de atención
+                </h2>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                  {(["critical", "low", "medium", "acceptable"] as SeverityLevel[]).map((s) => (
                     <button
-                      key={r.id}
-                      onClick={() => {
-                        setSelectedReportId(r.id);
-                        setSeverityFilter(null);
-                      }}
-                      className={`px-3 py-2 text-xs font-medium transition-all border-b-2 -mb-px ${
-                        activeReport?.id === r.id
-                          ? "border-primary text-foreground"
-                          : "border-transparent text-muted-foreground hover:text-foreground"
+                      key={s}
+                      onClick={() => setSeverityFilter(severityFilter === s ? null : s)}
+                      className={`h-3 w-3 rounded-full transition-all ${severityDot(s)} ${
+                        severityFilter === s ? "ring-2 ring-offset-2 ring-foreground/30" : "opacity-60 hover:opacity-100"
                       }`}
-                    >
-                      {r.name}
-                    </button>
+                      title={severityLabel(s)}
+                    />
                   ))}
                 </div>
+              </div>
+              <Card>
+                <CardContent className="pt-4 pb-4 px-4">
+                  {/* Report tabs */}
+                  <div className="flex border-b border-border mb-4">
+                    {focusReports.map((r) => (
+                      <button
+                        key={r.id}
+                        onClick={() => {
+                          setSelectedReportId(r.id);
+                          setSeverityFilter(null);
+                        }}
+                        className={`px-3 py-2 text-xs font-medium transition-all border-b-2 -mb-px ${
+                          activeReport?.id === r.id
+                            ? "border-primary text-foreground"
+                            : "border-transparent text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {r.name}
+                      </button>
+                    ))}
+                  </div>
 
-                {/* Focus list */}
-                {filteredFocusItems.length > 0 ? (
-                  <ScrollArea className="max-h-[360px]">
-                    <div className="space-y-3 pr-2">
-                      {filteredFocusItems.map((fp) => {
-                        const severity = getSeverity(fp.completeness);
-                        return (
-                          <div key={fp.name} className="space-y-1.5">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-medium text-foreground truncate pr-3">
-                                {fp.name}
-                              </span>
-                              <span
-                                className="text-sm font-bold tabular-nums shrink-0"
-                                style={{ color: severityBarColor(severity) }}
-                              >
-                                {fp.completeness}%
-                              </span>
+                  {/* Focus list */}
+                  {filteredFocusItems.length > 0 ? (
+                    <ScrollArea className="max-h-[280px]">
+                      <div className="space-y-3 pr-2">
+                        {filteredFocusItems.map((fp) => {
+                          const severity = getSeverity(fp.completeness);
+                          return (
+                            <div key={fp.name} className="space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-foreground truncate pr-3">
+                                  {fp.name}
+                                </span>
+                                <span
+                                  className="text-sm font-bold tabular-nums shrink-0"
+                                  style={{ color: severityBarColor(severity) }}
+                                >
+                                  {fp.completeness}%
+                                </span>
+                              </div>
+                              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                                <div
+                                  className="h-full rounded-full transition-all"
+                                  style={{
+                                    width: `${Math.max(fp.completeness, 2)}%`,
+                                    backgroundColor: severityBarColor(severity),
+                                  }}
+                                />
+                              </div>
                             </div>
-                            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all"
-                                style={{
-                                  width: `${Math.max(fp.completeness, 2)}%`,
-                                  backgroundColor: severityBarColor(severity),
-                                }}
-                              />
-                            </div>
-                            <p className="text-[11px] text-muted-foreground tabular-nums">
-                              {fp.populated.toLocaleString()} de {fp.totalSKUs.toLocaleString()} SKUs
-                            </p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </ScrollArea>
-                ) : (
-                  <p className="text-xs text-muted-foreground py-6 text-center">
-                    {focusItems.length > 0
-                      ? "No hay atributos en este rango de severidad."
-                      : "Sin datos suficientes para calcular focos."}
-                  </p>
-                )}
-              </CardContent>
-            </Card>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  ) : (
+                    <p className="text-xs text-muted-foreground py-6 text-center">
+                      {focusItems.length > 0
+                        ? "No hay atributos en este rango de severidad."
+                        : "Sin datos suficientes para calcular focos."}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </>
       )}
