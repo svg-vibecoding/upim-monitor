@@ -558,7 +558,7 @@ export default function AdminPage() {
                             setActivating(true);
                             try {
                               const { data: latestPending, error: pendingError } = await supabase
-                                .from("pim_upload_history" as any)
+                                .from("pim_upload_history")
                                 .select("id")
                                 .eq("status", "pending")
                                 .order("uploaded_at", { ascending: false })
