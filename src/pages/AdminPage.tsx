@@ -542,7 +542,7 @@ export default function AdminPage() {
                             toast.info("Carga descartada. Los datos de la app no fueron actualizados.");
                           }}
                         >
-                          Descartar
+                          Descartar esta actualización
                         </Button>
                       </div>
                     </>
