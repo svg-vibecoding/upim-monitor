@@ -120,7 +120,7 @@ export default function AdminPage() {
   };
 
   const selectAllAttrs = () => {
-    setReportAttrs(attributeOrder.filter((a) => !STRUCTURAL_ATTRIBUTES.includes(a)));
+    setReportAttrs(getEvaluableAttributes(attributeOrder));
   };
 
   const deselectAllAttrs = () => {
