@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CompletenessBar } from "@/components/CompletenessBar";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
-  mockPredefinedReports, mockDimensions, getRecordsForReport,
-  computeAttributeResults, computeDimensionResults, downloadCSV,
-} from "@/data/mockData";
+  usePimRecords, usePredefinedReports, useDimensions,
+  computeAttributeResults, computeDimensionResults, getRecordsForReport,
+} from "@/hooks/usePimData";
+import { downloadCSV } from "@/data/mockData";
 import { ArrowLeft, Download } from "lucide-react";
 
 export default function ReportDetailPage() {
@@ -16,14 +18,35 @@ export default function ReportDetailPage() {
   const navigate = useNavigate();
   const [selectedDimension, setSelectedDimension] = useState<string>("");
 
-  const report = mockPredefinedReports.find((r) => r.id === reportId);
+  const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
+  const { data: reports, isLoading: loadingReports } = usePredefinedReports();
+  const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
+
+  const isLoading = loadingRecords || loadingReports || loadingDimensions;
+
+  const report = reports?.find((r) => r.id === reportId);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6 max-w-6xl">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
+        </div>
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
+
   if (!report) return <div className="p-6">Informe no encontrado.</div>;
 
-  const records = getRecordsForReport(report.id);
+  const records = getRecordsForReport(allRecords || [], report);
   const attrResults = computeAttributeResults(records, report.attributes);
-  const avgCompleteness = Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length);
+  const avgCompleteness = attrResults.length > 0
+    ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
+    : 0;
 
-  const dimension = mockDimensions.find((d) => d.id === selectedDimension);
+  const dimension = dimensions?.find((d) => d.id === selectedDimension);
   const dimensionResults = dimension ? computeDimensionResults(records, report.attributes, dimension.field) : [];
 
   const handleDownload = () => {
@@ -94,7 +117,7 @@ export default function ReportDetailPage() {
                 <SelectValue placeholder="Seleccionar dimensión" />
               </SelectTrigger>
               <SelectContent>
-                {mockDimensions.map((d) => (
+                {(dimensions || []).map((d) => (
                   <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                 ))}
               </SelectContent>

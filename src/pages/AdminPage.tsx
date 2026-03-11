@@ -13,9 +13,11 @@ import {
   mockUsers, mockPredefinedReports, mockDimensions,
   AppUser, UserRole, PredefinedReport, Dimension,
 } from "@/data/mockData";
-import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, ArrowRight, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
+import { useNavigate } from "react-router-dom";
+import { useInvalidatePimData } from "@/hooks/usePimData";
 
 const ALL_ATTRIBUTES = [
   "Nombre Comercial", "Descripción Corta", "Descripción Larga", "Marca", "EAN",
