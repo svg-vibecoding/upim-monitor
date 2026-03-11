@@ -15,10 +15,6 @@ const FIXED_COLUMNS: Record<string, string> = {
   // Estado (Global) variants
   "estado global": "estado_global",
   "estado (global)": "estado_global",
-  // Código SumaGo / SumaGO variants
-  "codigo sumago": "codigo_sumago",
-  "código sumago": "codigo_sumago",
-  "sumago": "codigo_sumago",
   // Visibilidad Adobe B2B variants
   "visibilidad b2b": "visibilidad_b2b",
   "visibilidad adobe b2b": "visibilidad_b2b",
