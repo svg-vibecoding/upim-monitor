@@ -7,17 +7,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   usePimKPIs,
-  usePimRecords,
   usePredefinedReports,
-  useAttributeOrder,
-  getEvaluableAttributes,
-  filterRealAttributes,
-  getRecordsForReport,
-  computeAttributeResults,
-  getFullAttributeList,
+  useReportCompleteness,
   sortReportsByDisplayOrder,
+  NON_EVALUABLE_FIELDS,
 } from "@/hooks/usePimData";
-import type { PredefinedReport } from "@/data/mockData";
 import {
   PlusCircle,
   ChevronRight,
@@ -65,18 +59,14 @@ function severityBarColor(s: SeverityLevel) {
   }
 }
 
-/* ── Focus report order ───────────────────────────────────────── */
-
 /* ── Dashboard ──────────────────────────────────────────────────── */
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { data: kpis, isLoading: loadingKPIs } = usePimKPIs();
-  const { data: records, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
-  const { data: attributeOrder } = useAttributeOrder();
 
-  const isLoading = loadingKPIs || loadingRecords || loadingReports;
+  const isLoading = loadingKPIs || loadingReports;
   const hasData = kpis && kpis.total > 0;
 
   const focusReports = useMemo(
@@ -87,32 +77,26 @@ export default function DashboardPage() {
   const activeReport = focusReports.find((r) => r.id === selectedReportId) || focusReports[0] || null;
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
 
+  // Server-side completeness for active report tab
+  const { data: rawFocusItems } = useReportCompleteness(activeReport?.id);
+
+  // Server-side completeness for PIM General
+  const pimGeneralReport = useMemo(() => reports?.find((r) => r.name === "PIM General"), [reports]);
+  const { data: pimGeneralItems } = useReportCompleteness(pimGeneralReport?.id);
+
   const pimGeneralCompleteness = useMemo(() => {
-    if (!records || records.length === 0 || !reports || !attributeOrder) return null;
-    const pimGeneral = reports.find((r) => r.name === "PIM General");
-    if (!pimGeneral) return null;
-    const universe = getRecordsForReport(records, pimGeneral);
-    if (universe.length === 0) return null;
-    const realAttrs = attributeOrder.length > 0
-      ? filterRealAttributes(pimGeneral.attributes, getFullAttributeList(attributeOrder))
-      : pimGeneral.attributes;
-    const evaluable = getEvaluableAttributes(realAttrs);
+    if (!pimGeneralItems || pimGeneralItems.length === 0) return null;
+    const evaluable = pimGeneralItems.filter((a) => !NON_EVALUABLE_FIELDS.includes(a.name));
     if (evaluable.length === 0) return null;
-    const results = computeAttributeResults(universe, evaluable);
-    return Math.round(results.reduce((s, a) => s + a.completeness, 0) / results.length);
-  }, [records, reports, attributeOrder]);
+    return Math.round(evaluable.reduce((s, a) => s + a.completeness, 0) / evaluable.length);
+  }, [pimGeneralItems]);
 
   const focusItems = useMemo(() => {
-    if (!activeReport || !records || records.length === 0 || !attributeOrder) return [];
-    const universe = getRecordsForReport(records, activeReport);
-    if (universe.length === 0) return [];
-    const realAttrs = attributeOrder.length > 0
-      ? filterRealAttributes(activeReport.attributes, getFullAttributeList(attributeOrder))
-      : activeReport.attributes;
-    const evaluable = getEvaluableAttributes(realAttrs);
-    if (evaluable.length === 0) return [];
-    return computeAttributeResults(universe, evaluable).sort((a, b) => a.completeness - b.completeness);
-  }, [activeReport, records, attributeOrder]);
+    if (!rawFocusItems) return [];
+    return rawFocusItems
+      .filter((a) => !NON_EVALUABLE_FIELDS.includes(a.name))
+      .sort((a, b) => a.completeness - b.completeness);
+  }, [rawFocusItems]);
 
   const filteredFocusItems = severityFilter
     ? focusItems.filter((fp) => getSeverity(fp.completeness) === severityFilter)
