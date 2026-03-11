@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
 } from "@/data/mockData";
-import { usePimRecords, useDimensions, useAttributeOrder, STRUCTURAL_ATTRIBUTES } from "@/hooks/usePimData";
+import { usePimRecords, useDimensions, useAttributeOrder, NON_EVALUABLE_FIELDS, getFullAttributeList } from "@/hooks/usePimData";
 import { Upload, FileText } from "lucide-react";
 
 type Step = "config" | "results";
@@ -21,7 +21,7 @@ export default function NewReportPage() {
   const { data: attributeOrder = [] } = useAttributeOrder();
 
   const realAttributes = useMemo(() => {
-    return attributeOrder.filter((a) => !STRUCTURAL_ATTRIBUTES.includes(a));
+    return getFullAttributeList(attributeOrder).filter((a) => !NON_EVALUABLE_FIELDS.includes(a));
   }, [attributeOrder]);
 
   const [source, setSource] = useState<"general" | "csv">("general");
