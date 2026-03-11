@@ -22,6 +22,7 @@ export default function ReportDetailPage() {
   const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
+  const { data: attributeOrder } = useAttributeOrder();
 
   const isLoading = loadingRecords || loadingReports || loadingDimensions;
 
