@@ -162,7 +162,6 @@ export const STRUCTURAL_ATTRIBUTES = FUNCTIONAL_FIELDS;
 /** Fields stored as fixed DB columns (excluding Código Jaivaná which is handled separately) */
 export const FIXED_COLUMN_FIELDS = [
   "Estado (Global)",
-  "SumaGO",
   "Visibilidad Adobe B2B",
   "Visibilidad Adobe B2C",
   "Categoría N1 Comercial",

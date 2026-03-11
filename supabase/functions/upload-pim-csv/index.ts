@@ -34,7 +34,6 @@ const FIXED_COLUMNS: Record<string, string> = {
 // Reverse map: DB column → canonical display name (for attribute_order storage)
 const FIXED_DISPLAY_NAMES: Record<string, string> = {
   estado_global: "Estado (Global)",
-  codigo_sumago: "SumaGO",
   visibilidad_b2b: "Visibilidad Adobe B2B",
   visibilidad_b2c: "Visibilidad Adobe B2C",
   categoria_n1_comercial: "Categoría N1 Comercial",
