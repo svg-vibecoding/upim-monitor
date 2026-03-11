@@ -10,7 +10,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
 } from "@/data/mockData";
-import { usePimRecords, useDimensions, useAttributeOrder, NON_EVALUABLE_FIELDS, getFullAttributeList } from "@/hooks/usePimData";
+import { usePimRecords, useDimensions, useAttributeOrder, NON_EVALUABLE_FIELDS, DIMENSION_FIELDS, getFullAttributeList } from "@/hooks/usePimData";
+import { Badge } from "@/components/ui/badge";
 import { Upload, FileText } from "lucide-react";
 
 type Step = "config" | "results";
@@ -20,8 +21,8 @@ export default function NewReportPage() {
   const { data: dimensionsData = [] } = useDimensions();
   const { data: attributeOrder = [] } = useAttributeOrder();
 
-  const realAttributes = useMemo(() => {
-    return getFullAttributeList(attributeOrder).filter((a) => !NON_EVALUABLE_FIELDS.includes(a));
+  const fullAttributes = useMemo(() => {
+    return getFullAttributeList(attributeOrder);
   }, [attributeOrder]);
 
   const [source, setSource] = useState<"general" | "csv">("general");
@@ -31,7 +32,7 @@ export default function NewReportPage() {
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
 
-  const filteredAttrs = realAttributes.filter((a) => a.toLowerCase().includes(searchAttr.toLowerCase()));
+  const filteredAttrs = fullAttributes.filter((a) => a.toLowerCase().includes(searchAttr.toLowerCase()));
 
   const toggleAttr = (attr: string) => {
     setSelectedAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]);
@@ -141,12 +142,20 @@ export default function NewReportPage() {
                 className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
               />
               <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
-                {filteredAttrs.map((attr) => (
-                  <label key={attr} className="flex items-center gap-2 py-1 px-1 text-sm cursor-pointer hover:bg-accent rounded">
-                    <Checkbox checked={selectedAttrs.includes(attr)} onCheckedChange={() => toggleAttr(attr)} />
-                    <span className="truncate">{attr}</span>
-                  </label>
-                ))}
+                {filteredAttrs.map((attr) => {
+                  const isNonEvaluable = NON_EVALUABLE_FIELDS.includes(attr);
+                  return (
+                    <label key={attr} className={`flex items-center gap-2 py-1 px-1 text-sm cursor-pointer hover:bg-accent rounded ${isNonEvaluable ? "opacity-60" : ""}`}>
+                      <Checkbox checked={selectedAttrs.includes(attr)} onCheckedChange={() => toggleAttr(attr)} />
+                      <span className="truncate">{attr}</span>
+                      {isNonEvaluable && (
+                        <Badge variant="outline" className="text-[10px] shrink-0">
+                          {DIMENSION_FIELDS.includes(attr) ? "dimensión" : "funcional"}
+                        </Badge>
+                      )}
+                    </label>
+                  );
+                })}
               </div>
               {selectedAttrs.length > 0 && (
                 <p className="text-xs text-muted-foreground">{selectedAttrs.length} atributos seleccionados</p>
