@@ -170,10 +170,10 @@ export default function DashboardPage() {
                 <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
                   Catálogo
                 </span>
+                <p className="text-xs text-muted-foreground mt-1">SKUs totales</p>
                 <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-2">
                   {kpis!.total.toLocaleString()}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">SKUs totales</p>
                 <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
@@ -213,13 +213,13 @@ export default function DashboardPage() {
                 <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
                   Base Digital
                 </span>
+                <p className="text-xs text-muted-foreground mt-1">SKUs con Código SumaGo</p>
                 <div className="flex items-baseline gap-2 mt-2">
                   <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
                     {kpis!.digitalBase.toLocaleString()}
                   </p>
                   <span className="text-xs text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">SKUs con Código SumaGo</p>
                 <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
@@ -264,8 +264,8 @@ export default function DashboardPage() {
                     <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-2">
                       {pimGeneralCompleteness}%
                     </p>
-                    <p className="text-xs text-muted-foreground mt-1">Progreso PIM General</p>
                     <div className="mt-4 pt-4 border-t border-border">
+                      <p className="text-xs text-muted-foreground mb-2">Progreso PIM General</p>
                       <CompletenessBar value={pimGeneralCompleteness} showLabel={false} size="sm" />
                     </div>
                   </>
