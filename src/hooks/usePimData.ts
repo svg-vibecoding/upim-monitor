@@ -354,6 +354,34 @@ export function computeFocusPoints(records: PIMRecord[], reports: PredefinedRepo
   return results.sort((a, b) => a.completeness - b.completeness).slice(0, 5);
 }
 
+// --- Upload history ---
+export interface PimUploadRecord {
+  id: string;
+  file_name: string;
+  uploaded_at: string;
+  total_rows: number;
+  unique_rows: number;
+  inserted: number;
+  updated: number;
+  errors: number;
+  is_active: boolean;
+}
+
+export function usePimUploadHistory() {
+  return useQuery({
+    queryKey: ["pim-upload-history"],
+    queryFn: async (): Promise<PimUploadRecord[]> => {
+      const { data, error } = await supabase
+        .from("pim_upload_history" as any)
+        .select("*")
+        .order("uploaded_at", { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as PimUploadRecord[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 export function useInvalidatePimData() {
   const queryClient = useQueryClient();
   return () => {
@@ -362,5 +390,6 @@ export function useInvalidatePimData() {
     queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
     queryClient.invalidateQueries({ queryKey: ["dimensions"] });
     queryClient.invalidateQueries({ queryKey: ["pim-attribute-order"] });
+    queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
   };
 }
