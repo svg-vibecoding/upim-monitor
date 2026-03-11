@@ -378,7 +378,7 @@ export default function DashboardPage() {
             </div>
 
             {/* ── Informes Predefinidos (narrower, right) ── */}
-            <div className="lg:col-span-2 flex flex-col">
+            <div className="lg:col-span-1 flex flex-col">
               <h2 className="text-xs font-medium text-muted-foreground mb-3">
                 Informes Predefinidos
               </h2>
