@@ -45,14 +45,27 @@ function dbRowToPIMRecord(row: {
   delete cleanAttrs["Estado (Global)"];
   delete cleanAttrs["Visibilidad Adobe B2B"];
   delete cleanAttrs["Visibilidad Adobe B2C"];
+  delete cleanAttrs["Categoría N1 Comercial"];
+  delete cleanAttrs["Clasificación del Producto"];
+
+  // Resolve values for fixed columns (prefer DB column, fallback to JSONB)
+  const catN1 = row.categoria_n1_comercial || attrs["Categoría N1 Comercial"] || null;
+  const clasifProd = row.clasificacion_producto || attrs["Clasificación del Producto"] || null;
 
   return {
     codigoJaivana: row.codigo_jaivana,
     estadoGlobal: estado as any,
     visibilidadB2B: visB2B as any,
     visibilidadB2C: visB2C as any,
-    categoriaN1Comercial: row.categoria_n1_comercial || attrs["Categoría N1 Comercial"] || "",
-    clasificacionProducto: row.clasificacion_producto || attrs["Clasificación del Producto"] || "",
+    categoriaN1Comercial: catN1 || "",
+    clasificacionProducto: clasifProd || "",
+    // Display-name keys for attribute lookups in computeAttributeResults
+    "Código Jaivaná": row.codigo_jaivana,
+    "Estado (Global)": estadoRaw || null,
+    "Visibilidad Adobe B2B": visB2BRaw || null,
+    "Visibilidad Adobe B2C": visB2CRaw || null,
+    "Categoría N1 Comercial": catN1,
+    "Clasificación del Producto": clasifProd,
     ...cleanAttrs,
   };
 }
