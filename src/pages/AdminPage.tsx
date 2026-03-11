@@ -557,10 +557,35 @@ export default function AdminPage() {
                             if (!pendingUploadId) return;
                             setActivating(true);
                             try {
+                              const { data: latestPending, error: pendingError } = await supabase
+                                .from("pim_upload_history" as any)
+                                .select("id")
+                                .eq("status", "pending")
+                                .order("uploaded_at", { ascending: false })
+                                .limit(1)
+                                .maybeSingle();
+
+                              if (pendingError) throw pendingError;
+
+                              const uploadIdToActivate = latestPending?.id || pendingUploadId;
+                              if (!uploadIdToActivate) {
+                                throw new Error("No hay una carga pendiente para activar");
+                              }
+
                               const { data, error } = await supabase.functions.invoke("activate-pim-version", {
-                                body: { upload_id: pendingUploadId },
+                                body: { upload_id: uploadIdToActivate },
                               });
-                              if (error) throw error;
+
+                              if (error) {
+                                let detailedMessage = error.message;
+                                const response = (error as any)?.context;
+                                if (response && typeof response.json === "function") {
+                                  const parsed = await response.json().catch(() => null);
+                                  if (parsed?.error) detailedMessage = parsed.error;
+                                }
+                                throw new Error(detailedMessage);
+                              }
+
                               if (data?.error) throw new Error(data.error);
                               invalidatePimData();
                               setCsvResult(null);
