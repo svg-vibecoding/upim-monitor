@@ -116,7 +116,31 @@ export default function ReportDetailPage() {
       {/* Attribute table */}
       <Card>
         <CardContent className="pt-4">
-          <h2 className="text-sm font-semibold mb-3 text-foreground">Detalle por atributo</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-foreground">Detalle por atributo</h2>
+            <div className="flex items-center gap-1.5">
+              {severityLevels.map((level) => {
+                const count = attrResults.filter((a) => getSeverity(a.completeness) === level).length;
+                const isActive = severityFilter === level;
+                return (
+                  <button
+                    key={level}
+                    onClick={() => setSeverityFilter(isActive ? null : level)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors ${isActive ? "bg-accent ring-1 ring-ring" : "hover:bg-muted"}`}
+                    title={severityLabel(level)}
+                  >
+                    <span className={`inline-block h-2.5 w-2.5 rounded-full ${severityDot(level)}`} />
+                    <span className="tabular-nums text-muted-foreground">{count}</span>
+                  </button>
+                );
+              })}
+              {severityFilter && (
+                <button onClick={() => setSeverityFilter(null)} className="ml-1 text-xs text-muted-foreground hover:text-foreground">
+                  <Filter className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
           <div className="overflow-auto">
             <Table>
               <TableHeader>
@@ -128,7 +152,9 @@ export default function ReportDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {attrResults.map((a) => (
+                {attrResults
+                  .filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter)
+                  .map((a) => (
                   <TableRow key={a.name}>
                     <TableCell className="font-medium text-sm">{a.name}</TableCell>
                     <TableCell className="text-right tabular-nums">{a.totalSKUs.toLocaleString()}</TableCell>
