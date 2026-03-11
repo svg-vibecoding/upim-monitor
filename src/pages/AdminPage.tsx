@@ -402,6 +402,92 @@ export default function AdminPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* HISTÓRICO DE BASES PIM */}
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <History className="h-5 w-5 text-primary" />
+                  Histórico de Bases PIM
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Registro de las cargas realizadas. La versión más reciente se marca como activa.
+                </p>
+              </div>
+
+              {historyLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Cargando histórico...
+                </div>
+              ) : uploadHistory.length === 0 ? (
+                <div className="text-sm text-muted-foreground border rounded-lg p-6 text-center">
+                  No se han registrado cargas todavía. Sube un archivo Excel para ver el histórico aquí.
+                </div>
+              ) : (
+                <div className="border rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Estado</TableHead>
+                        <TableHead>Archivo</TableHead>
+                        <TableHead>Fecha y hora</TableHead>
+                        <TableHead className="text-right">Filas</TableHead>
+                        <TableHead className="text-right">Únicos</TableHead>
+                        <TableHead className="text-right">Insertados</TableHead>
+                        <TableHead className="text-right">Actualizados</TableHead>
+                        <TableHead className="text-right">Errores</TableHead>
+                        <TableHead className="w-24">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {uploadHistory.map((entry) => (
+                        <TableRow key={entry.id} className={entry.is_active ? "bg-primary/5" : ""}>
+                          <TableCell>
+                            {entry.is_active ? (
+                              <Badge variant="default" className="text-xs">Activa</Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-xs text-muted-foreground">Anterior</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="font-medium text-sm max-w-[200px] truncate" title={entry.file_name}>
+                            {entry.file_name}
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                            {new Date(entry.uploaded_at).toLocaleString("es-CO", {
+                              year: "numeric", month: "short", day: "numeric",
+                              hour: "2-digit", minute: "2-digit",
+                            })}
+                          </TableCell>
+                          <TableCell className="text-right text-sm">{entry.total_rows}</TableCell>
+                          <TableCell className="text-right text-sm">{entry.unique_rows}</TableCell>
+                          <TableCell className="text-right text-sm text-success">{entry.inserted}</TableCell>
+                          <TableCell className="text-right text-sm text-primary">{entry.updated}</TableCell>
+                          <TableCell className="text-right text-sm text-destructive">{entry.errors}</TableCell>
+                          <TableCell>
+                            {!entry.is_active && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground" disabled>
+                                      <RotateCcw className="h-3 w-3" /> Restablecer
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Disponible próximamente</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* ATTRIBUTES */}
