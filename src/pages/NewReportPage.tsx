@@ -60,18 +60,28 @@ export default function NewReportPage() {
 
   const avgCompleteness = attrResults.length > 0 ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length) : 0;
 
-  const handleCSVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    setUploadedFileName(file.name);
     const reader = new FileReader();
     reader.onload = (ev) => {
-      const text = ev.target?.result as string;
-      const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-      // Skip header if present
-      const codes = lines.filter((l) => l.startsWith("JAV-"));
+      const data = new Uint8Array(ev.target?.result as ArrayBuffer);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const rows: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      // Extract codes starting with JAV- from first column
+      const codes = rows
+        .map((row) => String(row[0] || "").trim())
+        .filter((val) => val.startsWith("JAV-"));
       setCsvCodes(codes);
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
+  };
+
+  const handleClearFile = () => {
+    setCsvCodes([]);
+    setUploadedFileName("");
   };
 
   const canGenerate = selectedAttrs.length > 0;
