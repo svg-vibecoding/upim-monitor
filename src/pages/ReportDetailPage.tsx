@@ -12,12 +12,44 @@ import {
   filterRealAttributes, getEvaluableAttributes,
 } from "@/hooks/usePimData";
 import { downloadCSV } from "@/data/mockData";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft, Download, Filter } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+/* ── Severity helpers ─────────────────────────────────────────── */
+type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
+
+function getSeverity(pct: number): SeverityLevel {
+  if (pct <= 10) return "critical";
+  if (pct <= 25) return "low";
+  if (pct <= 50) return "medium";
+  return "acceptable";
+}
+
+function severityLabel(s: SeverityLevel) {
+  switch (s) {
+    case "critical": return "0–10 %";
+    case "low": return "10–25 %";
+    case "medium": return "25–50 %";
+    case "acceptable": return "50 %+";
+  }
+}
+
+function severityDot(s: SeverityLevel) {
+  switch (s) {
+    case "critical": return "bg-destructive";
+    case "low": return "bg-warning";
+    case "medium": return "bg-info";
+    case "acceptable": return "bg-success";
+  }
+}
+
+const severityLevels: SeverityLevel[] = ["critical", "low", "medium", "acceptable"];
 
 export default function ReportDetailPage() {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
   const [selectedDimension, setSelectedDimension] = useState<string>("");
+  const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
 
   const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
