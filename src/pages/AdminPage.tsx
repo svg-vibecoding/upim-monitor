@@ -245,6 +245,21 @@ export default function AdminPage() {
         errorDetails: allErrorDetails.slice(0, 20),
         columnsDetected,
       });
+
+      // Register in upload history
+      try {
+        await supabase.from("pim_upload_history" as any).insert({
+          file_name: file.name,
+          total_rows: allRows.length,
+          unique_rows: totalUnique,
+          inserted: totalInserted,
+          updated: totalUpdated,
+          errors: totalErrors,
+        });
+        invalidatePimData();
+      } catch {
+        // Non-blocking: history registration failure shouldn't break the upload flow
+      }
     } catch (err) {
       setCsvResult({ success: false, error: `Error: ${(err as Error).message}` });
     } finally {
