@@ -303,6 +303,9 @@ export default function AdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [csvUploading, setCsvUploading] = useState(false);
   const [csvProgress, setCsvProgress] = useState("");
+  const [pendingUploadId, setPendingUploadId] = useState<string | null>(null);
+  const [pendingAttributeOrder, setPendingAttributeOrder] = useState<string[]>([]);
+  const [activating, setActivating] = useState(false);
   const [csvResult, setCsvResult] = useState<{
     success: boolean;
     totalRows?: number;
@@ -312,8 +315,25 @@ export default function AdminPage() {
     errors?: number;
     errorDetails?: string[];
     columnsDetected?: { fixed: string[]; attributes: string[] };
+    attributeOrder?: string[];
+    uploadId?: string;
     error?: string;
   } | null>(null);
+
+  // Mandatory attributes validation (same as server-side)
+  const MANDATORY_ATTRIBUTES = [
+    "Estado (Global)",
+    "Código SumaGo",
+    "Visibilidad Adobe B2B",
+    "Visibilidad Adobe B2C",
+  ];
+
+  const missingMandatory = useMemo(() => {
+    if (!csvResult?.success || !csvResult.attributeOrder) return [];
+    return MANDATORY_ATTRIBUTES.filter((a) => !csvResult.attributeOrder!.includes(a));
+  }, [csvResult]);
+
+  const canActivate = csvResult?.success && missingMandatory.length === 0 && (csvResult.uniqueRows || 0) > 0 && !!pendingUploadId;
 
   const CHUNK_SIZE = 2000;
 
