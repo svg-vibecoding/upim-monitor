@@ -114,29 +114,47 @@ export default function NewReportPage() {
           <Card>
             <CardContent className="pt-4 space-y-3">
               <Label className="text-sm font-semibold">1. Seleccionar fuente</Label>
-              <RadioGroup value={source} onValueChange={(v) => setSource(v as "general" | "csv")} className="flex gap-4">
+              <RadioGroup value={source} onValueChange={(v) => setSource(v as "general" | "file")} className="flex gap-4">
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="general" id="src-gen" />
                   <Label htmlFor="src-gen" className="text-sm cursor-pointer">Base general del PIM</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="csv" id="src-csv" />
-                  <Label htmlFor="src-csv" className="text-sm cursor-pointer">Cargar CSV</Label>
+                  <RadioGroupItem value="file" id="src-file" />
+                  <Label htmlFor="src-file" className="text-sm cursor-pointer">Cargar archivo Excel</Label>
                 </div>
               </RadioGroup>
-              {source === "csv" && (
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">El CSV debe tener una sola columna con Código Jaivaná.</p>
-                  <div className="flex items-center gap-2">
-                    <label className="flex items-center gap-2 cursor-pointer border border-input rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors">
-                      <Upload className="h-4 w-4" />
-                      Seleccionar archivo
-                      <input type="file" accept=".csv" onChange={handleCSVUpload} className="hidden" />
+              {source === "file" && (
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">El archivo debe tener una columna con Código Jaivaná (formato JAV-XXXXX). Se aceptan archivos .xlsx y .xls.</p>
+                  {csvCodes.length === 0 ? (
+                    <label className="flex items-center gap-2 cursor-pointer border border-dashed border-input rounded-md px-4 py-3 text-sm hover:bg-accent transition-colors w-fit">
+                      <Upload className="h-4 w-4 text-muted-foreground" />
+                      <span>Seleccionar archivo</span>
+                      <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
                     </label>
-                    {csvCodes.length > 0 && (
-                      <span className="text-sm text-muted-foreground">{csvCodes.length} códigos cargados</span>
-                    )}
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-3 border border-input rounded-md px-4 py-3 bg-muted/30">
+                      <FileSpreadsheet className="h-5 w-5 text-success shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{uploadedFileName}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <CheckCircle2 className="h-3 w-3 text-success" />
+                          <span className="text-xs text-muted-foreground">
+                            {csvCodes.length} código{csvCodes.length !== 1 ? "s" : ""} Jaivaná encontrado{csvCodes.length !== 1 ? "s" : ""}
+                          </span>
+                          {allRecords.length > 0 && (
+                            <span className="text-xs text-muted-foreground">
+                              · {allRecords.filter((r) => csvCodes.includes(r.codigoJaivana)).length} coinciden en la base
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClearFile}>
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
