@@ -25,6 +25,7 @@ import {
   NON_EVALUABLE_FIELDS,
   DIMENSION_FIELDS,
   getEvaluableAttributes,
+  getFullAttributeList,
 } from "@/hooks/usePimData";
 import { toast } from "sonner";
 
