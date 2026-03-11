@@ -157,6 +157,17 @@ export default function AdminPage() {
     }
   };
 
+  // Report edit state
+  const [reportDialog, setReportDialog] = useState(false);
+  const [editingReportId, setEditingReportId] = useState<string | null>(null);
+  const [reportAttrs, setReportAttrs] = useState<string[]>([]);
+  const [attrSearch, setAttrSearch] = useState("");
+
+  // Dimension form
+  const [dimDialog, setDimDialog] = useState(false);
+  const [dimName, setDimName] = useState("");
+  const [dimField, setDimField] = useState("");
+
   // --- Reports: open edit dialog with current attrs from DB ---
   const openReportDialog = (reportId: string) => {
     const report = dbReports.find((r) => r.id === reportId);
