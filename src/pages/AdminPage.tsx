@@ -664,7 +664,7 @@ export default function AdminPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {dbReports.map((r) => (
+                      {sortReportsByDisplayOrder(dbReports).map((r) => (
                         <TableRow key={r.id}>
                           <TableCell className="font-medium">{r.name}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">{r.universe}</TableCell>
