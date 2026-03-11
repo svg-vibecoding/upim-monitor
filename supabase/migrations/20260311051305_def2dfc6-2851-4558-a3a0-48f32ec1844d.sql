@@ -1,0 +1,1 @@
+UPDATE predefined_reports SET universe_key = 'active', universe = 'Todos los SKUs activos del PIM' WHERE name = 'Compras';
