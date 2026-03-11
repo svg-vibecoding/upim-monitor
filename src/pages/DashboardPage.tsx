@@ -70,7 +70,6 @@ function severityBarColor(s: SeverityLevel) {
 }
 
 /* ── Focus report order ───────────────────────────────────────── */
-const FOCUS_REPORT_ORDER = ["PIM General", "SumaGO B2B", "SumaGO B2C", "Compras"];
 
 /* ── Dashboard ──────────────────────────────────────────────────── */
 
