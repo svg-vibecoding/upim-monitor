@@ -49,7 +49,7 @@ export default function NewReportPage() {
     return computeAttributeResults(records, selectedAttrs);
   }, [step, records, selectedAttrs]);
 
-  const dimension = mockDimensions.find((d) => d.id === dimensionId);
+  const dimension = dimensionsData.find((d) => d.id === dimensionId);
   const dimensionResults = useMemo(() => {
     if (step !== "results" || !dimension) return [];
     return computeDimensionResults(records, selectedAttrs, dimension.field);
