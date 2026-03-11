@@ -495,24 +495,18 @@ export default function AdminPage() {
                       </Button>
                     </div>
                     <div className="border rounded-md p-2 overflow-auto flex-1 min-h-0 max-h-[50vh]">
-                      {filteredAttrs.map((attr) => {
-                        const isStructural = STRUCTURAL_ATTRIBUTES.includes(attr);
-                        return (
+                      {filteredAttrs.map((attr) => (
                           <label
                             key={attr}
-                            className={`flex items-center gap-2 text-sm cursor-pointer py-1 px-1 rounded hover:bg-muted/50 ${isStructural ? "opacity-60" : ""}`}
+                            className="flex items-center gap-2 text-sm cursor-pointer py-1 px-1 rounded hover:bg-muted/50"
                           >
                             <Checkbox
                               checked={reportAttrs.includes(attr)}
                               onCheckedChange={() => toggleReportAttr(attr)}
                             />
                             <span className="truncate">{attr}</span>
-                            {isStructural && (
-                              <Badge variant="outline" className="text-[10px] ml-auto shrink-0">estructural</Badge>
-                            )}
                           </label>
-                        );
-                      })}
+                        ))}
                       {filteredAttrs.length === 0 && (
                         <p className="text-sm text-muted-foreground text-center py-4">No se encontraron atributos</p>
                       )}
