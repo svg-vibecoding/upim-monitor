@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   usePimRecords, usePredefinedReports, useDimensions, useAttributeOrder,
   computeAttributeResults, computeDimensionResults, getRecordsForReport,
-  filterRealAttributes,
+  filterRealAttributes, getEvaluableAttributes,
 } from "@/hooks/usePimData";
 import { downloadCSV } from "@/data/mockData";
 import { ArrowLeft, Download } from "lucide-react";
