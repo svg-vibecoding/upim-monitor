@@ -236,6 +236,7 @@ export function usePredefinedReports() {
         name: r.name,
         description: r.description,
         universe: r.universe,
+        universeKey: ((r as any).universe_key || "all") as UniverseKey,
         attributes: r.attributes || [],
       }));
     },
