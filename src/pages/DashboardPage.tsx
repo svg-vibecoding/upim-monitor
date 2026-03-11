@@ -170,10 +170,10 @@ export default function DashboardPage() {
                 <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
                   Catálogo
                 </span>
+                <p className="text-xs text-muted-foreground mt-1">SKUs totales</p>
                 <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-2">
                   {kpis!.total.toLocaleString()}
                 </p>
-                <p className="text-xs text-muted-foreground mt-1">SKUs totales</p>
                 <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
