@@ -419,7 +419,8 @@ export interface PimUploadRecord {
   inserted: number;
   updated: number;
   errors: number;
-  is_active: boolean;
+  status: "pending" | "active" | "discarded";
+  attribute_order: string[];
 }
 
 export function usePimUploadHistory() {
