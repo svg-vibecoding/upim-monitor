@@ -75,9 +75,13 @@
   }
   .completeness-fill-medium {
     @apply h-full rounded-full;
-    background-color: hsl(var(--warning));
+    background-color: hsl(var(--info));
   }
   .completeness-fill-low {
+    @apply h-full rounded-full;
+    background-color: hsl(var(--warning));
+  }
+  .completeness-fill-critical {
     @apply h-full rounded-full;
     background-color: hsl(var(--destructive));
   }
