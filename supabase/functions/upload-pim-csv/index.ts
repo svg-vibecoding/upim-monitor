@@ -102,14 +102,15 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Save attribute order on first chunk
+    // Save full attribute order on first chunk (preserving Excel column order)
     if (isFirstChunk) {
-      const attrOrder = columnMap
-        .filter((c) => c.attrName)
-        .map((c) => c.attrName!);
+      const fullOrder = columnMap
+        .filter((c) => c.dbColumn !== "codigo_jaivana") // exclude PK
+        .map((c) => c.attrName || FIXED_DISPLAY_NAMES[c.dbColumn!])
+        .filter(Boolean) as string[];
       await supabase
         .from("pim_metadata")
-        .upsert({ id: "singleton", attribute_order: attrOrder, updated_at: new Date().toISOString() });
+        .upsert({ id: "singleton", attribute_order: fullOrder, updated_at: new Date().toISOString() });
     }
 
     let inserted = 0;
