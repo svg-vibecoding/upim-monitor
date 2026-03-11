@@ -111,19 +111,13 @@ export function useAttributeOrder() {
 /** Functional fields: always available but NOT part of completeness calculation */
 export const FUNCTIONAL_FIELDS = [
   "Estado (Global)",
-  "SumaGO",
-  "Visibilidad Adobe B2B",
-  "Visibilidad Adobe B2C",
 ];
 
 /** Dimension fields: used for distribution, NOT part of completeness */
-export const DIMENSION_FIELDS = [
-  "Categoría N1 Comercial",
-  "Clasificación del Producto",
-];
+export const DIMENSION_FIELDS: string[] = [];
 
-/** All non-evaluable fields (functional + dimensions) */
-export const NON_EVALUABLE_FIELDS = [...FUNCTIONAL_FIELDS, ...DIMENSION_FIELDS];
+/** All non-evaluable fields (functional + dimensions + Código Jaivaná) */
+export const NON_EVALUABLE_FIELDS = [...FUNCTIONAL_FIELDS];
 
 /** Legacy alias kept for backward compat */
 export const STRUCTURAL_ATTRIBUTES = FUNCTIONAL_FIELDS;
