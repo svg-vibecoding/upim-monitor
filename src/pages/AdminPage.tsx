@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { mockDimensions, Dimension } from "@/data/mockData";
-import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw, UserPlus } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw, UserPlus, Trash2, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
@@ -25,6 +26,8 @@ import {
   getAttributeClassification,
   isNonEvaluable,
   usePimUploadHistory,
+  usePimRecords,
+  useDimensions,
   sortReportsByDisplayOrder,
 } from "@/hooks/usePimData";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -78,9 +81,9 @@ export default function AdminPage() {
   const { data: attributeOrder = [], isLoading: attrsLoading } = useAttributeOrder();
   const { data: uploadHistory = [], isLoading: historyLoading } = usePimUploadHistory();
   const { data: dbUsers = [], isLoading: usersLoading } = useUsers();
+  const { data: dbDimensions = [], isLoading: dimensionsLoading } = useDimensions();
+  const { data: pimRecords = [] } = usePimRecords();
   const updateReportAttrs = useUpdateReportAttributes();
-
-  const [dimensions, setDimensions] = useState<Dimension[]>([...mockDimensions]);
 
   // User form
   const [userDialog, setUserDialog] = useState(false);
@@ -163,25 +166,17 @@ export default function AdminPage() {
   const [reportAttrs, setReportAttrs] = useState<string[]>([]);
   const [attrSearch, setAttrSearch] = useState("");
 
-  // Dimension form
-  const [dimDialog, setDimDialog] = useState(false);
-  const [dimName, setDimName] = useState("");
-  const [dimField, setDimField] = useState("");
-
   // --- Reports: open edit dialog with current attrs from DB ---
   const openReportDialog = (reportId: string) => {
     const report = dbReports.find((r) => r.id === reportId);
     if (!report) return;
     setEditingReportId(reportId);
     setAttrSearch("");
-
-    // For PIM General, default to all evaluable attrs if empty
     const isPimGeneral = report.name.toLowerCase().includes("general");
     const evaluableAttrs = getEvaluableAttributes(attributeOrder);
     if (isPimGeneral && (report.attributes.length === 0 || report.attributes.some((a) => !attributeOrder.includes(a)))) {
       setReportAttrs([...evaluableAttrs]);
     } else {
-      // Only keep evaluable attrs from saved selection
       setReportAttrs(report.attributes.filter((a) => evaluableAttrs.includes(a)));
     }
     setReportDialog(true);
@@ -210,10 +205,8 @@ export default function AdminPage() {
     setReportAttrs([]);
   };
 
-  // Full attribute list including fixed-column fields
   const fullAttributeList = useMemo(() => getFullAttributeList(attributeOrder), [attributeOrder]);
 
-  // Filtered attributes for search in dialog — show all, tag non-evaluable
   const filteredAttrs = useMemo(() => {
     if (!attrSearch.trim()) return fullAttributeList;
     const q = attrSearch.toLowerCase();
@@ -222,15 +215,88 @@ export default function AdminPage() {
 
   const editingReport = dbReports.find((r) => r.id === editingReportId);
 
-  const openDimDialog = () => {
-    setDimName("");
-    setDimField("");
+  const [dimDialog, setDimDialog] = useState(false);
+  const [dimName, setDimName] = useState("");
+  const [dimField, setDimField] = useState("");
+  const [editingDimId, setEditingDimId] = useState<string | null>(null);
+  const [dimSaving, setDimSaving] = useState(false);
+
+  const openDimDialog = (dim?: { id: string; name: string; field: string }) => {
+    if (dim) {
+      setEditingDimId(dim.id);
+      setDimName(dim.name);
+      setDimField(dim.field);
+    } else {
+      setEditingDimId(null);
+      setDimName("");
+      setDimField("");
+    }
     setDimDialog(true);
   };
 
-  const saveDimension = () => {
-    setDimensions((prev) => [...prev, { id: String(Date.now()), name: dimName, field: dimField }]);
-    setDimDialog(false);
+  // Attributes available for dimensions (all real attributes from PIM)
+  const availableAttrsForDim = useMemo(() => {
+    const full = getFullAttributeList(attributeOrder);
+    // Exclude Código Jaivaná (it's the PK, not useful as dimension)
+    return full.filter((a) => a !== "Código Jaivaná");
+  }, [attributeOrder]);
+
+  // Compute unique values per dimension field from pim_records
+  const dimensionUniqueValues = useMemo(() => {
+    const result: Record<string, string[]> = {};
+    for (const dim of dbDimensions) {
+      const valuesSet = new Set<string>();
+      for (const rec of pimRecords) {
+        const rawVal = rec[dim.field] as string | null;
+        if (rawVal && rawVal.trim() !== "") {
+          valuesSet.add(rawVal.trim());
+        }
+      }
+      const sorted = [...valuesSet].sort((a, b) => a.localeCompare(b));
+      result[dim.id] = sorted;
+    }
+    return result;
+  }, [dbDimensions, pimRecords]);
+
+  const saveDimension = async () => {
+    if (!dimName || !dimField) {
+      toast.error("Selecciona un nombre y un atributo");
+      return;
+    }
+    setDimSaving(true);
+    try {
+      if (editingDimId) {
+        const { error } = await supabase
+          .from("dimensions")
+          .update({ name: dimName, field: dimField })
+          .eq("id", editingDimId);
+        if (error) throw error;
+        toast.success("Dimensión actualizada");
+      } else {
+        const { error } = await supabase
+          .from("dimensions")
+          .insert({ name: dimName, field: dimField });
+        if (error) throw error;
+        toast.success("Dimensión creada");
+      }
+      setDimDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["dimensions"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error guardando dimensión");
+    } finally {
+      setDimSaving(false);
+    }
+  };
+
+  const deleteDimension = async (dimId: string) => {
+    try {
+      const { error } = await supabase.from("dimensions").delete().eq("id", dimId);
+      if (error) throw error;
+      toast.success("Dimensión eliminada");
+      queryClient.invalidateQueries({ queryKey: ["dimensions"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error eliminando dimensión");
+    }
   };
 
   // CSV upload state
@@ -776,40 +842,107 @@ export default function AdminPage() {
         {/* DIMENSIONS */}
         <TabsContent value="dimensions" className="space-y-4">
           <div className="flex justify-end">
-            <Dialog open={dimDialog} onOpenChange={setDimDialog}>
-              <DialogTrigger asChild>
-                <Button onClick={openDimDialog} className="gap-2"><Plus className="h-4 w-4" /> Nueva dimensión</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Nueva dimensión</DialogTitle></DialogHeader>
-                <div className="space-y-3 pt-2">
-                  <div><Label>Nombre</Label><Input value={dimName} onChange={(e) => setDimName(e.target.value)} /></div>
-                  <div><Label>Campo asociado</Label><Input value={dimField} onChange={(e) => setDimField(e.target.value)} placeholder="ej: categoriaN1Comercial" /></div>
-                  <Button onClick={saveDimension} className="w-full">Guardar</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => openDimDialog()} className="gap-2"><Plus className="h-4 w-4" /> Nueva dimensión</Button>
           </div>
-          <Card>
-            <CardContent className="pt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Campo</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dimensions.map((d) => (
-                    <TableRow key={d.id}>
-                      <TableCell className="font-medium">{d.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{d.field}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+
+          {/* Dimension create/edit dialog */}
+          <Dialog open={dimDialog} onOpenChange={setDimDialog}>
+            <DialogContent>
+              <DialogHeader><DialogTitle>{editingDimId ? "Editar dimensión" : "Nueva dimensión"}</DialogTitle></DialogHeader>
+              <div className="space-y-3 pt-2">
+                <div>
+                  <Label>Nombre de la dimensión</Label>
+                  <Input value={dimName} onChange={(e) => setDimName(e.target.value)} placeholder="Ej: Categoría Comercial" />
+                </div>
+                <div>
+                  <Label>Atributo asociado</Label>
+                  <Select value={dimField} onValueChange={setDimField}>
+                    <SelectTrigger><SelectValue placeholder="Selecciona un atributo del PIM" /></SelectTrigger>
+                    <SelectContent>
+                      {availableAttrsForDim.map((attr) => (
+                        <SelectItem key={attr} value={attr}>{attr}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">Este atributo se usará como eje de distribución en los informes.</p>
+                </div>
+                <Button onClick={saveDimension} className="w-full" disabled={dimSaving}>
+                  {dimSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Guardando...</> : editingDimId ? "Guardar cambios" : "Crear dimensión"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {dimensionsLoading ? (
+            <div className="flex items-center gap-2 p-8 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Cargando dimensiones...
+            </div>
+          ) : dbDimensions.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center text-muted-foreground">
+                <p>No hay dimensiones definidas.</p>
+                <p className="text-sm mt-1">Crea una dimensión para agrupar los informes por un atributo del PIM.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Accordion type="multiple" className="space-y-2">
+              {dbDimensions.map((dim) => {
+                const uniqueVals = dimensionUniqueValues[dim.id] || [];
+                return (
+                  <AccordionItem key={dim.id} value={dim.id} className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-3 text-left">
+                        <span className="font-medium text-foreground">{dim.name}</span>
+                        <Badge variant="outline" className="text-xs">{dim.field}</Badge>
+                        <Badge variant="secondary" className="text-xs">{uniqueVals.length + 1} grupos</Badge>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => openDimDialog(dim)}>
+                            <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-3.5 w-3.5 mr-1" /> Eliminar
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar dimensión "{dim.name}"?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta acción no se puede deshacer. La dimensión dejará de estar disponible en los informes.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteDimension(dim.id)}>Eliminar</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-medium text-foreground mb-2">Valores únicos encontrados en la base ({uniqueVals.length + 1})</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {uniqueVals.map((val) => (
+                              <Badge key={val} variant="outline" className="text-xs font-normal">{val}</Badge>
+                            ))}
+                            <Badge variant="secondary" className="text-xs font-normal italic">Sin valor asignado</Badge>
+                          </div>
+                          {uniqueVals.length === 0 && (
+                            <p className="text-xs text-muted-foreground mt-1">No se encontraron valores poblados para este atributo en la base actual.</p>
+                          )}
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          )}
         </TabsContent>
 
         {/* USERS */}
