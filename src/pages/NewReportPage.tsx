@@ -251,20 +251,22 @@ export default function NewReportPage() {
           {/* Step 2: Attributes */}
           <Card>
             <CardContent className="pt-4 space-y-3">
-              <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
-                <Select onValueChange={handleApplyTemplate}>
-                  <SelectTrigger className="w-56 h-8 text-xs">
-                    <SelectValue placeholder="Ninguna" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Ninguna</SelectItem>
-                    {sortedReports.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
+                  <Select onValueChange={handleApplyTemplate}>
+                    <SelectTrigger className="w-56 h-8 text-xs">
+                      <SelectValue placeholder="Ninguna" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Ninguna</SelectItem>
+                      {sortedReports.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <input
                 type="text"
