@@ -135,12 +135,12 @@ export default function DashboardPage() {
   const pctDigitalBase = kpis && kpis.total > 0 ? Math.round((kpis.digitalBase / kpis.total) * 100) : 0;
 
   return (
-    <div className="space-y-5 max-w-6xl">
+    <div className="space-y-8 max-w-6xl">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Inicio</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Última actualización: {lastUpdateFormatted}
           </p>
         </div>
@@ -151,7 +151,7 @@ export default function DashboardPage() {
 
       {isLoading ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
           </div>
           <Skeleton className="h-64 w-full" />
@@ -167,44 +167,45 @@ export default function DashboardPage() {
       ) : (
         <>
           {/* ═══ KPI CARDS ═══ */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {/* A) Catálogo */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Catálogo
-                  </span>
-                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                    <Layers className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </div>
-                <p className="text-4xl font-bold text-foreground tabular-nums leading-none">
+                <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+                  Catálogo
+                </span>
+                <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-2">
                   {kpis!.total.toLocaleString()}
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">SKUs totales</p>
+                <p className="text-xs text-muted-foreground mt-1">SKUs totales</p>
                 <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-bold text-foreground tabular-nums">
+                      <span className="text-lg font-bold text-foreground tabular-nums">
                         {kpis!.active.toLocaleString()}
                       </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        ({Math.round((kpis!.active / kpis!.total) * 100)}%)
+                      <span className="text-[11px] text-muted-foreground tabular-nums">
+                        {Math.round((kpis!.active / kpis!.total) * 100)}%
                       </span>
                     </div>
-                    <p className="text-xs font-medium text-success mt-0.5">Activos</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
+                      <p className="text-[10px] text-muted-foreground">Activos</p>
+                    </div>
                   </div>
                   <div>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-bold text-foreground tabular-nums">
+                      <span className="text-lg font-bold text-foreground tabular-nums">
                         {kpis!.inactive.toLocaleString()}
                       </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        ({Math.round((kpis!.inactive / kpis!.total) * 100)}%)
+                      <span className="text-[11px] text-muted-foreground tabular-nums">
+                        {Math.round((kpis!.inactive / kpis!.total) * 100)}%
                       </span>
                     </div>
-                    <p className="text-xs font-medium text-destructive mt-0.5">Inactivos</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
+                      <p className="text-[10px] text-muted-foreground">Inactivos</p>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -213,43 +214,44 @@ export default function DashboardPage() {
             {/* B) Base Digital */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Base Digital
-                  </span>
-                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                    <Settings2 className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <p className="text-4xl font-bold text-foreground tabular-nums leading-none">
+                <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+                  Base Digital
+                </span>
+                <div className="flex items-baseline gap-2 mt-2">
+                  <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
                     {kpis!.digitalBase.toLocaleString()}
                   </p>
-                  <span className="text-sm text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-1">SKUs con Código SumaGo</p>
+                <p className="text-xs text-muted-foreground mt-1">SKUs con Código SumaGo</p>
                 <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-bold text-foreground tabular-nums">
+                      <span className="text-lg font-bold text-foreground tabular-nums">
                         {kpis!.visibleB2B.toLocaleString()}
                       </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        ({kpis!.digitalBase > 0 ? Math.round((kpis!.visibleB2B / kpis!.digitalBase) * 100) : 0}%)
+                      <span className="text-[11px] text-muted-foreground tabular-nums">
+                        {kpis!.digitalBase > 0 ? Math.round((kpis!.visibleB2B / kpis!.digitalBase) * 100) : 0}%
                       </span>
                     </div>
-                    <p className="text-xs font-medium text-muted-foreground mt-0.5">Visibles B2B</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-info shrink-0" />
+                      <p className="text-[10px] text-muted-foreground">Visibles B2B</p>
+                    </div>
                   </div>
                   <div>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-bold text-foreground tabular-nums">
+                      <span className="text-lg font-bold text-foreground tabular-nums">
                         {kpis!.visibleB2C.toLocaleString()}
                       </span>
-                      <span className="text-xs text-muted-foreground tabular-nums">
-                        ({kpis!.digitalBase > 0 ? Math.round((kpis!.visibleB2C / kpis!.digitalBase) * 100) : 0}%)
+                      <span className="text-[11px] text-muted-foreground tabular-nums">
+                        {kpis!.digitalBase > 0 ? Math.round((kpis!.visibleB2C / kpis!.digitalBase) * 100) : 0}%
                       </span>
                     </div>
-                    <p className="text-xs font-medium text-muted-foreground mt-0.5">Visibles B2C</p>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-info shrink-0" />
+                      <p className="text-[10px] text-muted-foreground">Visibles B2C</p>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -258,85 +260,58 @@ export default function DashboardPage() {
             {/* C) Completitud General */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Completitud General
-                  </span>
-                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  </div>
-                </div>
+                <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+                  Completitud General
+                </span>
                 {pimGeneralCompleteness !== null ? (
                   <>
-                    <p className="text-4xl font-bold text-foreground tabular-nums leading-none">
+                    <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-2">
                       {pimGeneralCompleteness}%
                     </p>
-                    <p className="text-sm text-muted-foreground mt-1">Progreso PIM General</p>
+                    <p className="text-xs text-muted-foreground mt-1">Progreso PIM General</p>
                     <div className="mt-4 pt-4 border-t border-border">
                       <CompletenessBar value={pimGeneralCompleteness} showLabel={false} size="sm" />
                     </div>
                   </>
                 ) : (
                   <>
-                    <p className="text-4xl font-bold text-muted-foreground/40 tabular-nums leading-none">—</p>
-                    <p className="text-sm text-muted-foreground mt-1">Sin datos de completitud</p>
+                    <p className="text-5xl font-bold text-muted-foreground/30 tabular-nums leading-none mt-2">—</p>
+                    <p className="text-xs text-muted-foreground mt-1">Sin datos de completitud</p>
                   </>
                 )}
               </CardContent>
             </Card>
           </div>
 
-          {/* ═══ REPORTS + FOCUS ═══ */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-            {/* ── Informes Predefinidos ── */}
-            <div className="flex flex-col">
-              <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                Informes Predefinidos
-              </h2>
-              <Card className="h-full">
-                <CardContent className="py-2 px-2">
-                  {reports &&
-                    sortReportsByDisplayOrder(reports).map((r, idx) => (
-                      <div
-                        key={r.id}
-                        className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/60 cursor-pointer transition-colors group"
-                        onClick={() => navigate(`/informes/${r.id}`)}
-                      >
-                        <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          <FileText className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">
-                            {idx + 1}. {r.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground line-clamp-1">{r.description}</p>
-                        </div>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                      </div>
-                    ))}
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* ── Focos de atención ── */}
-            <div className="flex flex-col">
+          {/* ═══ FOCOS + REPORTS (asymmetric) ═══ */}
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
+            {/* ── Focos de atención (wider, left) ── */}
+            <div className="lg:col-span-3 flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-warning" />
                   Focos de atención
                 </h2>
                 <div className="flex items-center gap-2">
-                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Filter className="h-3 w-3 text-muted-foreground/50" />
                   {(["critical", "low", "medium", "acceptable"] as SeverityLevel[]).map((s) => (
                     <button
                       key={s}
                       onClick={() => setSeverityFilter(severityFilter === s ? null : s)}
-                      className={`h-3 w-3 rounded-full transition-all ${severityDot(s)} ${
-                        severityFilter === s ? "ring-2 ring-offset-2 ring-foreground/30" : "opacity-60 hover:opacity-100"
+                      className={`flex items-center gap-1 transition-all ${
+                        severityFilter === s ? "opacity-100" : "opacity-50 hover:opacity-80"
                       }`}
                       title={severityLabel(s)}
-                    />
+                    >
+                      <span className={`h-2.5 w-2.5 rounded-full ${severityDot(s)} ${
+                        severityFilter === s ? "ring-2 ring-offset-1 ring-foreground/20" : ""
+                      }`} />
+                      {severityCounts[s] > 0 && (
+                        <span className="text-[10px] tabular-nums text-muted-foreground font-medium">
+                          {severityCounts[s]}
+                        </span>
+                      )}
+                    </button>
                   ))}
                 </div>
               </div>
@@ -402,6 +377,31 @@ export default function DashboardPage() {
                         : "Sin datos suficientes para calcular focos."}
                     </p>
                   )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* ── Informes Predefinidos (narrower, right) ── */}
+            <div className="lg:col-span-2 flex flex-col">
+              <h2 className="text-xs font-medium text-muted-foreground mb-3">
+                Informes Predefinidos
+              </h2>
+              <Card className="h-full">
+                <CardContent className="py-1.5 px-1.5">
+                  {reports &&
+                    sortReportsByDisplayOrder(reports).map((r) => (
+                      <div
+                        key={r.id}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted/60 cursor-pointer transition-colors group"
+                        onClick={() => navigate(`/informes/${r.id}`)}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground">{r.name}</p>
+                          <p className="text-[11px] text-muted-foreground line-clamp-1">{r.description}</p>
+                        </div>
+                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                      </div>
+                    ))}
                 </CardContent>
               </Card>
             </div>
