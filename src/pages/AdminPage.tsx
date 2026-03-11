@@ -359,31 +359,10 @@ export default function AdminPage() {
                           className="gap-2"
                           onClick={() => {
                             invalidatePimData();
-                            navigate("/");
+                            toast.success("Datos actualizados correctamente");
                           }}
                         >
-                          <ArrowRight className="h-4 w-4" /> Ir al dashboard actualizado
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => {
-                            invalidatePimData();
-                            navigate("/informes");
-                          }}
-                        >
-                          <ArrowRight className="h-4 w-4" /> Ver informes actualizados
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => {
-                            invalidatePimData();
-                          }}
-                        >
-                          <RefreshCw className="h-4 w-4" /> Refrescar datos
+                          <RefreshCw className="h-4 w-4" /> Actualizar datos de la app
                         </Button>
                       </div>
                     </>
