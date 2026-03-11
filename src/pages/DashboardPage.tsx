@@ -265,14 +265,14 @@ export default function DashboardPage() {
           </div>
 
           {/* ═══ REPORTS + FOCUS ═══ */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
             {/* ── Informes Predefinidos ── */}
-            <div>
+            <div className="flex flex-col">
               <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                 <FileText className="h-4 w-4 text-primary" />
                 Informes Predefinidos
               </h2>
-              <Card>
+              <Card className="h-full">
                 <CardContent className="py-2 px-2">
                   {reports &&
                     reports.map((r, idx) => (
@@ -298,7 +298,7 @@ export default function DashboardPage() {
             </div>
 
             {/* ── Focos de atención ── */}
-            <div>
+            <div className="flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-warning" />
@@ -318,10 +318,10 @@ export default function DashboardPage() {
                   ))}
                 </div>
               </div>
-              <Card>
-                <CardContent className="pt-4 pb-4 px-4">
+              <Card className="h-full flex flex-col">
+                <CardContent className="pt-4 pb-4 px-4 flex flex-col flex-1 overflow-hidden">
                   {/* Report tabs */}
-                  <div className="flex border-b border-border mb-4">
+                  <div className="flex border-b border-border mb-4 shrink-0">
                     {focusReports.map((r) => (
                       <button
                         key={r.id}
@@ -342,7 +342,7 @@ export default function DashboardPage() {
 
                   {/* Focus list */}
                   {filteredFocusItems.length > 0 ? (
-                    <ScrollArea className="max-h-[220px]">
+                    <ScrollArea className="flex-1">
                       <div className="space-y-3 pr-2">
                         {filteredFocusItems.map((fp) => {
                           const severity = getSeverity(fp.completeness);
