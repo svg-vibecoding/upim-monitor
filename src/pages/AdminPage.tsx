@@ -794,40 +794,107 @@ export default function AdminPage() {
         {/* DIMENSIONS */}
         <TabsContent value="dimensions" className="space-y-4">
           <div className="flex justify-end">
-            <Dialog open={dimDialog} onOpenChange={setDimDialog}>
-              <DialogTrigger asChild>
-                <Button onClick={openDimDialog} className="gap-2"><Plus className="h-4 w-4" /> Nueva dimensión</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>Nueva dimensión</DialogTitle></DialogHeader>
-                <div className="space-y-3 pt-2">
-                  <div><Label>Nombre</Label><Input value={dimName} onChange={(e) => setDimName(e.target.value)} /></div>
-                  <div><Label>Campo asociado</Label><Input value={dimField} onChange={(e) => setDimField(e.target.value)} placeholder="ej: categoriaN1Comercial" /></div>
-                  <Button onClick={saveDimension} className="w-full">Guardar</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => openDimDialog()} className="gap-2"><Plus className="h-4 w-4" /> Nueva dimensión</Button>
           </div>
-          <Card>
-            <CardContent className="pt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Campo</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dimensions.map((d) => (
-                    <TableRow key={d.id}>
-                      <TableCell className="font-medium">{d.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{d.field}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+
+          {/* Dimension create/edit dialog */}
+          <Dialog open={dimDialog} onOpenChange={setDimDialog}>
+            <DialogContent>
+              <DialogHeader><DialogTitle>{editingDimId ? "Editar dimensión" : "Nueva dimensión"}</DialogTitle></DialogHeader>
+              <div className="space-y-3 pt-2">
+                <div>
+                  <Label>Nombre de la dimensión</Label>
+                  <Input value={dimName} onChange={(e) => setDimName(e.target.value)} placeholder="Ej: Categoría Comercial" />
+                </div>
+                <div>
+                  <Label>Atributo asociado</Label>
+                  <Select value={dimField} onValueChange={setDimField}>
+                    <SelectTrigger><SelectValue placeholder="Selecciona un atributo del PIM" /></SelectTrigger>
+                    <SelectContent>
+                      {availableAttrsForDim.map((attr) => (
+                        <SelectItem key={attr} value={attr}>{attr}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">Este atributo se usará como eje de distribución en los informes.</p>
+                </div>
+                <Button onClick={saveDimension} className="w-full" disabled={dimSaving}>
+                  {dimSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Guardando...</> : editingDimId ? "Guardar cambios" : "Crear dimensión"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {dimensionsLoading ? (
+            <div className="flex items-center gap-2 p-8 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Cargando dimensiones...
+            </div>
+          ) : dbDimensions.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center text-muted-foreground">
+                <p>No hay dimensiones definidas.</p>
+                <p className="text-sm mt-1">Crea una dimensión para agrupar los informes por un atributo del PIM.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Accordion type="multiple" className="space-y-2">
+              {dbDimensions.map((dim) => {
+                const uniqueVals = dimensionUniqueValues[dim.id] || [];
+                return (
+                  <AccordionItem key={dim.id} value={dim.id} className="border rounded-lg px-4">
+                    <AccordionTrigger className="hover:no-underline">
+                      <div className="flex items-center gap-3 text-left">
+                        <span className="font-medium text-foreground">{dim.name}</span>
+                        <Badge variant="outline" className="text-xs">{dim.field}</Badge>
+                        <Badge variant="secondary" className="text-xs">{uniqueVals.length + 1} grupos</Badge>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-3">
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => openDimDialog(dim)}>
+                            <Pencil className="h-3.5 w-3.5 mr-1" /> Editar
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-3.5 w-3.5 mr-1" /> Eliminar
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>¿Eliminar dimensión "{dim.name}"?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Esta acción no se puede deshacer. La dimensión dejará de estar disponible en los informes.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteDimension(dim.id)}>Eliminar</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+
+                        <div>
+                          <p className="text-sm font-medium text-foreground mb-2">Valores únicos encontrados en la base ({uniqueVals.length + 1})</p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {uniqueVals.map((val) => (
+                              <Badge key={val} variant="outline" className="text-xs font-normal">{val}</Badge>
+                            ))}
+                            <Badge variant="secondary" className="text-xs font-normal italic">Sin valor asignado</Badge>
+                          </div>
+                          {uniqueVals.length === 0 && (
+                            <p className="text-xs text-muted-foreground mt-1">No se encontraron valores poblados para este atributo en la base actual.</p>
+                          )}
+                        </div>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          )}
         </TabsContent>
 
         {/* USERS */}
