@@ -295,7 +295,7 @@ export function computeAttributeResults(records: PIMRecord[], attributes: string
 export function computeDimensionResults(records: PIMRecord[], attributes: string[], dimensionField: string): DimensionResult[] {
   const groups: Record<string, PIMRecord[]> = {};
   for (const r of records) {
-    const val = (r[dimensionField] as string) || "Sin valor";
+    const val = (r[dimensionField] as string) || "Sin valor asignado";
     if (!groups[val]) groups[val] = [];
     groups[val].push(r);
   }
