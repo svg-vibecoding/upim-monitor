@@ -92,13 +92,14 @@ export default function AdminPage() {
     setEditingReportId(reportId);
     setAttrSearch("");
 
-    // For PIM General (first report or name contains "General"), default to all non-structural attrs if empty
+    // For PIM General, default to all evaluable attrs if empty
     const isPimGeneral = report.name.toLowerCase().includes("general");
+    const evaluableAttrs = getEvaluableAttributes(attributeOrder);
     if (isPimGeneral && (report.attributes.length === 0 || report.attributes.some((a) => !attributeOrder.includes(a)))) {
-      // Preselect all except structural
-      setReportAttrs(attributeOrder.filter((a) => !STRUCTURAL_ATTRIBUTES.includes(a)));
+      setReportAttrs([...evaluableAttrs]);
     } else {
-      setReportAttrs([...report.attributes]);
+      // Only keep evaluable attrs from saved selection
+      setReportAttrs(report.attributes.filter((a) => evaluableAttrs.includes(a)));
     }
     setReportDialog(true);
   };
