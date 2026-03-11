@@ -61,11 +61,11 @@ export type Database = {
           codigo_jaivana: string
           codigo_sumago: string | null
           created_at: string
-          estado_global: string
+          estado_global: string | null
           id: string
           updated_at: string
-          visibilidad_b2b: string
-          visibilidad_b2c: string
+          visibilidad_b2b: string | null
+          visibilidad_b2c: string | null
         }
         Insert: {
           attributes?: Json
@@ -74,11 +74,11 @@ export type Database = {
           codigo_jaivana: string
           codigo_sumago?: string | null
           created_at?: string
-          estado_global?: string
+          estado_global?: string | null
           id?: string
           updated_at?: string
-          visibilidad_b2b?: string
-          visibilidad_b2c?: string
+          visibilidad_b2b?: string | null
+          visibilidad_b2c?: string | null
         }
         Update: {
           attributes?: Json
@@ -87,11 +87,11 @@ export type Database = {
           codigo_jaivana?: string
           codigo_sumago?: string | null
           created_at?: string
-          estado_global?: string
+          estado_global?: string | null
           id?: string
           updated_at?: string
-          visibilidad_b2b?: string
-          visibilidad_b2c?: string
+          visibilidad_b2b?: string | null
+          visibilidad_b2c?: string | null
         }
         Relationships: []
       }
