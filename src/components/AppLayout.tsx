@@ -10,7 +10,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   // Block PIM Managers from admin
-  if (user?.role === "PIM Manager" && location.pathname.startsWith("/admin")) {
+  if (user?.role !== "usuario_pro" && location.pathname.startsWith("/admin")) {
     return <Navigate to="/" replace />;
   }
 

@@ -23,7 +23,7 @@ export function AppSidebar() {
     { title: "Nuevo Informe", url: "/nuevo-informe", icon: PlusCircle },
   ];
 
-  if (user?.role === "UsuarioPRO") {
+  if (user?.role === "usuario_pro") {
     items.push({ title: "Administración", url: "/admin", icon: Settings });
   }
 
