@@ -54,10 +54,10 @@ function dbRowToPIMRecord(row: {
 
   return {
     codigoJaivana: row.codigo_jaivana,
-    estadoGlobal: estado,
+    estadoGlobal: estado as any,
     codigoSumaGo: sumaGo,
-    visibilidadB2B: visB2B,
-    visibilidadB2C: visB2C,
+    visibilidadB2B: visB2B as any,
+    visibilidadB2C: visB2C as any,
     categoriaN1Comercial: row.categoria_n1_comercial || attrs["Categoría N1 Comercial"] || "",
     clasificacionProducto: row.clasificacion_producto || attrs["Clasificación del Producto"] || "",
     ...cleanAttrs,
