@@ -133,30 +133,36 @@ export type Database = {
       }
       pim_upload_history: {
         Row: {
+          attribute_order: string[]
           errors: number
           file_name: string
           id: string
           inserted: number
+          status: string
           total_rows: number
           unique_rows: number
           updated: number
           uploaded_at: string
         }
         Insert: {
+          attribute_order?: string[]
           errors?: number
           file_name: string
           id?: string
           inserted?: number
+          status?: string
           total_rows?: number
           unique_rows?: number
           updated?: number
           uploaded_at?: string
         }
         Update: {
+          attribute_order?: string[]
           errors?: number
           file_name?: string
           id?: string
           inserted?: number
+          status?: string
           total_rows?: number
           unique_rows?: number
           updated?: number
