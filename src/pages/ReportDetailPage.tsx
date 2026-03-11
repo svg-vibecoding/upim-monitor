@@ -19,18 +19,18 @@ import { Badge } from "@/components/ui/badge";
 type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
 
 function getSeverity(pct: number): SeverityLevel {
-  if (pct <= 10) return "critical";
-  if (pct <= 25) return "low";
-  if (pct <= 50) return "medium";
+  if (pct <= 25) return "critical";
+  if (pct <= 50) return "low";
+  if (pct <= 75) return "medium";
   return "acceptable";
 }
 
 function severityLabel(s: SeverityLevel) {
   switch (s) {
-    case "critical": return "0–10 %";
-    case "low": return "10–25 %";
-    case "medium": return "25–50 %";
-    case "acceptable": return "50 %+";
+    case "critical": return "0–25 %";
+    case "low": return "25–50 %";
+    case "medium": return "50–75 %";
+    case "acceptable": return "75 %+";
   }
 }
 
