@@ -203,6 +203,13 @@ export function useDimensions() {
 
 // --- Pure computation functions ---
 
+/** Filter attributes to only those that actually exist in the PIM data */
+export function filterRealAttributes(attributes: string[], realAttributeKeys: string[]): string[] {
+  if (realAttributeKeys.length === 0) return attributes;
+  const realSet = new Set(realAttributeKeys);
+  return attributes.filter((a) => realSet.has(a));
+}
+
 export function computeAttributeResults(records: PIMRecord[], attributes: string[]): AttributeResult[] {
   return attributes.map((attr) => {
     const total = records.length;
@@ -247,11 +254,12 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
   return allRecords;
 }
 
-export function computeFocusPoints(records: PIMRecord[], reports: PredefinedReport[]): AttributeResult[] {
+export function computeFocusPoints(records: PIMRecord[], reports: PredefinedReport[], realAttributeKeys: string[] = []): AttributeResult[] {
   const activeRecords = records.filter((r) => r.estadoGlobal === "Activo");
   const allAttrs = [...new Set(reports.flatMap((r) => r.attributes))];
-  if (allAttrs.length === 0 || activeRecords.length === 0) return [];
-  const results = computeAttributeResults(activeRecords, allAttrs);
+  const validAttrs = realAttributeKeys.length > 0 ? filterRealAttributes(allAttrs, realAttributeKeys) : allAttrs;
+  if (validAttrs.length === 0 || activeRecords.length === 0) return [];
+  const results = computeAttributeResults(activeRecords, validAttrs);
   return results.sort((a, b) => a.completeness - b.completeness).slice(0, 5);
 }
 
