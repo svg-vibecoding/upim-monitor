@@ -12,12 +12,44 @@ import {
   filterRealAttributes, getEvaluableAttributes,
 } from "@/hooks/usePimData";
 import { downloadCSV } from "@/data/mockData";
-import { ArrowLeft, Download } from "lucide-react";
+import { ArrowLeft, Download, Filter } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+/* ── Severity helpers ─────────────────────────────────────────── */
+type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
+
+function getSeverity(pct: number): SeverityLevel {
+  if (pct <= 10) return "critical";
+  if (pct <= 25) return "low";
+  if (pct <= 50) return "medium";
+  return "acceptable";
+}
+
+function severityLabel(s: SeverityLevel) {
+  switch (s) {
+    case "critical": return "0–10 %";
+    case "low": return "10–25 %";
+    case "medium": return "25–50 %";
+    case "acceptable": return "50 %+";
+  }
+}
+
+function severityDot(s: SeverityLevel) {
+  switch (s) {
+    case "critical": return "bg-destructive";
+    case "low": return "bg-warning";
+    case "medium": return "bg-info";
+    case "acceptable": return "bg-success";
+  }
+}
+
+const severityLevels: SeverityLevel[] = ["critical", "low", "medium", "acceptable"];
 
 export default function ReportDetailPage() {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
   const [selectedDimension, setSelectedDimension] = useState<string>("");
+  const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
 
   const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
@@ -84,7 +116,31 @@ export default function ReportDetailPage() {
       {/* Attribute table */}
       <Card>
         <CardContent className="pt-4">
-          <h2 className="text-sm font-semibold mb-3 text-foreground">Detalle por atributo</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold text-foreground">Detalle por atributo</h2>
+            <div className="flex items-center gap-1.5">
+              {severityLevels.map((level) => {
+                const count = attrResults.filter((a) => getSeverity(a.completeness) === level).length;
+                const isActive = severityFilter === level;
+                return (
+                  <button
+                    key={level}
+                    onClick={() => setSeverityFilter(isActive ? null : level)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors ${isActive ? "bg-accent ring-1 ring-ring" : "hover:bg-muted"}`}
+                    title={severityLabel(level)}
+                  >
+                    <span className={`inline-block h-2.5 w-2.5 rounded-full ${severityDot(level)}`} />
+                    <span className="tabular-nums text-muted-foreground">{count}</span>
+                  </button>
+                );
+              })}
+              {severityFilter && (
+                <button onClick={() => setSeverityFilter(null)} className="ml-1 text-xs text-muted-foreground hover:text-foreground">
+                  <Filter className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
           <div className="overflow-auto">
             <Table>
               <TableHeader>
@@ -96,7 +152,9 @@ export default function ReportDetailPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {attrResults.map((a) => (
+                {attrResults
+                  .filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter)
+                  .map((a) => (
                   <TableRow key={a.name}>
                     <TableCell className="font-medium text-sm">{a.name}</TableCell>
                     <TableCell className="text-right tabular-nums">{a.totalSKUs.toLocaleString()}</TableCell>
