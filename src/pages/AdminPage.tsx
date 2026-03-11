@@ -13,7 +13,7 @@ import {
   mockUsers, mockDimensions,
   AppUser, UserRole, Dimension,
 } from "@/data/mockData";
-import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, ArrowRight, RefreshCw, Search, CheckSquare, Square } from "lucide-react";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +22,8 @@ import {
   usePredefinedReports,
   useAttributeOrder,
   useUpdateReportAttributes,
-  STRUCTURAL_ATTRIBUTES,
+  NON_EVALUABLE_FIELDS,
+  getEvaluableAttributes,
 } from "@/hooks/usePimData";
 import { toast } from "sonner";
 
@@ -91,13 +92,14 @@ export default function AdminPage() {
     setEditingReportId(reportId);
     setAttrSearch("");
 
-    // For PIM General (first report or name contains "General"), default to all non-structural attrs if empty
+    // For PIM General, default to all evaluable attrs if empty
     const isPimGeneral = report.name.toLowerCase().includes("general");
+    const evaluableAttrs = getEvaluableAttributes(attributeOrder);
     if (isPimGeneral && (report.attributes.length === 0 || report.attributes.some((a) => !attributeOrder.includes(a)))) {
-      // Preselect all except structural
-      setReportAttrs(attributeOrder.filter((a) => !STRUCTURAL_ATTRIBUTES.includes(a)));
+      setReportAttrs([...evaluableAttrs]);
     } else {
-      setReportAttrs([...report.attributes]);
+      // Only keep evaluable attrs from saved selection
+      setReportAttrs(report.attributes.filter((a) => evaluableAttrs.includes(a)));
     }
     setReportDialog(true);
   };
@@ -118,19 +120,20 @@ export default function AdminPage() {
   };
 
   const selectAllAttrs = () => {
-    setReportAttrs(attributeOrder.filter((a) => !STRUCTURAL_ATTRIBUTES.includes(a)));
+    setReportAttrs(getEvaluableAttributes(attributeOrder));
   };
 
   const deselectAllAttrs = () => {
     setReportAttrs([]);
   };
 
-  // Filtered attributes for search in dialog
+  // Filtered attributes for search in dialog — only evaluable attrs
+  const evaluableAttrsOrdered = useMemo(() => getEvaluableAttributes(attributeOrder), [attributeOrder]);
   const filteredAttrs = useMemo(() => {
-    if (!attrSearch.trim()) return attributeOrder;
+    if (!attrSearch.trim()) return evaluableAttrsOrdered;
     const q = attrSearch.toLowerCase();
-    return attributeOrder.filter((a) => a.toLowerCase().includes(q));
-  }, [attributeOrder, attrSearch]);
+    return evaluableAttrsOrdered.filter((a) => a.toLowerCase().includes(q));
+  }, [evaluableAttrsOrdered, attrSearch]);
 
   const editingReport = dbReports.find((r) => r.id === editingReportId);
 
@@ -356,31 +359,10 @@ export default function AdminPage() {
                           className="gap-2"
                           onClick={() => {
                             invalidatePimData();
-                            navigate("/");
+                            toast.success("Datos actualizados correctamente");
                           }}
                         >
-                          <ArrowRight className="h-4 w-4" /> Ir al dashboard actualizado
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => {
-                            invalidatePimData();
-                            navigate("/informes");
-                          }}
-                        >
-                          <ArrowRight className="h-4 w-4" /> Ver informes actualizados
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="gap-2"
-                          onClick={() => {
-                            invalidatePimData();
-                          }}
-                        >
-                          <RefreshCw className="h-4 w-4" /> Refrescar datos
+                          <RefreshCw className="h-4 w-4" /> Actualizar datos de la app
                         </Button>
                       </div>
                     </>
@@ -513,24 +495,18 @@ export default function AdminPage() {
                       </Button>
                     </div>
                     <div className="border rounded-md p-2 overflow-auto flex-1 min-h-0 max-h-[50vh]">
-                      {filteredAttrs.map((attr) => {
-                        const isStructural = STRUCTURAL_ATTRIBUTES.includes(attr);
-                        return (
+                      {filteredAttrs.map((attr) => (
                           <label
                             key={attr}
-                            className={`flex items-center gap-2 text-sm cursor-pointer py-1 px-1 rounded hover:bg-muted/50 ${isStructural ? "opacity-60" : ""}`}
+                            className="flex items-center gap-2 text-sm cursor-pointer py-1 px-1 rounded hover:bg-muted/50"
                           >
                             <Checkbox
                               checked={reportAttrs.includes(attr)}
                               onCheckedChange={() => toggleReportAttr(attr)}
                             />
                             <span className="truncate">{attr}</span>
-                            {isStructural && (
-                              <Badge variant="outline" className="text-[10px] ml-auto shrink-0">estructural</Badge>
-                            )}
                           </label>
-                        );
-                      })}
+                        ))}
                       {filteredAttrs.length === 0 && (
                         <p className="text-sm text-muted-foreground text-center py-4">No se encontraron atributos</p>
                       )}
@@ -564,8 +540,8 @@ export default function AdminPage() {
                           <TableCell className="font-medium">{r.name}</TableCell>
                           <TableCell className="text-sm text-muted-foreground">{r.universe}</TableCell>
                           <TableCell className="text-right">
-                            <Badge variant={r.attributes.length > 0 ? "secondary" : "destructive"}>
-                              {r.attributes.length}
+                            <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
+                              {getEvaluableAttributes(r.attributes).length}
                             </Badge>
                           </TableCell>
                           <TableCell>

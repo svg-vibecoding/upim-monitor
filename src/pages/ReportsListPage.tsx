@@ -4,7 +4,7 @@ import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   usePimRecords, usePredefinedReports, useAttributeOrder,
-  computeAttributeResults, getRecordsForReport, filterRealAttributes,
+  computeAttributeResults, getRecordsForReport, filterRealAttributes, getEvaluableAttributes,
 } from "@/hooks/usePimData";
 import { FileText } from "lucide-react";
 
@@ -35,7 +35,7 @@ export default function ReportsListPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {reports!.map((report) => {
             const records = getRecordsForReport(allRecords!, report);
-            const validAttrs = filterRealAttributes(report.attributes, attributeOrder || []);
+            const validAttrs = getEvaluableAttributes(filterRealAttributes(report.attributes, attributeOrder || []));
             const attrResults = computeAttributeResults(records, validAttrs);
             const avgCompleteness = attrResults.length > 0
               ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
