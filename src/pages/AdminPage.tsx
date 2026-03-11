@@ -122,7 +122,7 @@ export default function AdminPage() {
   };
 
   const selectAllAttrs = () => {
-    setReportAttrs(getEvaluableAttributes(attributeOrder));
+    setReportAttrs(getEvaluableAttributes(getFullAttributeList(attributeOrder)));
   };
 
   const deselectAllAttrs = () => {
