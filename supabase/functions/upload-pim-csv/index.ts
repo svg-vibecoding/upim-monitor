@@ -35,6 +35,16 @@ const FIXED_COLUMNS: Record<string, string> = {
   "clasificación del producto": "clasificacion_producto",
 };
 
+// Reverse map: DB column → canonical display name (for attribute_order storage)
+const FIXED_DISPLAY_NAMES: Record<string, string> = {
+  estado_global: "Estado (Global)",
+  codigo_sumago: "SumaGO",
+  visibilidad_b2b: "Visibilidad Adobe B2B",
+  visibilidad_b2c: "Visibilidad Adobe B2C",
+  categoria_n1_comercial: "Categoría N1 Comercial",
+  clasificacion_producto: "Clasificación del Producto",
+};
+
 const REQUIRED_COLUMN = "codigo_jaivana";
 
 function normalizeHeader(h: string): string {
@@ -92,14 +102,15 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Save attribute order on first chunk
+    // Save full attribute order on first chunk (preserving Excel column order)
     if (isFirstChunk) {
-      const attrOrder = columnMap
-        .filter((c) => c.attrName)
-        .map((c) => c.attrName!);
+      const fullOrder = columnMap
+        .filter((c) => c.dbColumn !== "codigo_jaivana") // exclude PK
+        .map((c) => c.attrName || FIXED_DISPLAY_NAMES[c.dbColumn!])
+        .filter(Boolean) as string[];
       await supabase
         .from("pim_metadata")
-        .upsert({ id: "singleton", attribute_order: attrOrder, updated_at: new Date().toISOString() });
+        .upsert({ id: "singleton", attribute_order: fullOrder, updated_at: new Date().toISOString() });
     }
 
     let inserted = 0;

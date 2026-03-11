@@ -169,8 +169,16 @@ export const FIXED_COLUMN_FIELDS = [
   "Clasificación del Producto",
 ];
 
-/** Build full attribute list by prepending fixed-column fields to the JSONB attribute order */
+/** Build full attribute list from attribute_order.
+ *  If attributeOrder already includes fixed-column fields (new upload format), use as-is.
+ *  Otherwise (legacy format), prepend fixed-column fields for backward compat. */
 export function getFullAttributeList(attributeOrder: string[]): string[] {
+  const hasFixedInOrder = FIXED_COLUMN_FIELDS.some((f) => attributeOrder.includes(f));
+  if (hasFixedInOrder) {
+    // New format: attributeOrder already has everything in Excel order
+    return attributeOrder;
+  }
+  // Legacy format: prepend fixed columns, then JSONB attrs
   const result = [...FIXED_COLUMN_FIELDS];
   for (const attr of attributeOrder) {
     if (!FIXED_COLUMN_FIELDS.includes(attr)) {
