@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, PlusCircle, Settings } from "lucide-react";
+import { BarChart3, FileText, PlusCircle, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/contexts/AuthContext";
 import {
