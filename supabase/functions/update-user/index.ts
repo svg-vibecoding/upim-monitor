@@ -27,15 +27,15 @@ Deno.serve(async (req) => {
     );
 
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: userError } = await anonClient.auth.getUser(token);
-    if (userError || !user) {
+    const { data, error: claimsError } = await anonClient.auth.getClaims(token);
+    if (claimsError || !data?.claims) {
       return new Response(JSON.stringify({ error: "Token inválido" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const callerId = user.id;
+    const callerId = data.claims.sub;
 
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
