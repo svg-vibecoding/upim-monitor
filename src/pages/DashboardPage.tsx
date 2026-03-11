@@ -78,7 +78,7 @@ export default function DashboardPage() {
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
 
   // Server-side completeness for active report tab
-  const { data: rawFocusItems } = useReportCompleteness(activeReport?.id);
+  const { data: rawFocusItems, isLoading: loadingFocus } = useReportCompleteness(activeReport?.id);
 
   // Server-side completeness for PIM General
   const pimGeneralReport = useMemo(() => reports?.find((r) => r.name === "PIM General"), [reports]);
