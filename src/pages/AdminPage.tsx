@@ -656,12 +656,14 @@ export default function AdminPage() {
                     </TableHeader>
                     <TableBody>
                       {uploadHistory.map((entry) => (
-                        <TableRow key={entry.id} className={entry.is_active ? "bg-primary/5" : ""}>
+                        <TableRow key={entry.id} className={entry.status === "active" ? "bg-primary/5" : ""}>
                           <TableCell>
-                            {entry.is_active ? (
+                            {entry.status === "active" ? (
                               <Badge variant="default" className="text-xs">Activa</Badge>
+                            ) : entry.status === "pending" ? (
+                              <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">Pendiente</Badge>
                             ) : (
-                              <Badge variant="outline" className="text-xs text-muted-foreground">Anterior</Badge>
+                              <Badge variant="outline" className="text-xs text-muted-foreground">Descartada</Badge>
                             )}
                           </TableCell>
                           <TableCell className="font-medium text-sm max-w-[200px] truncate" title={entry.file_name}>
@@ -679,20 +681,7 @@ export default function AdminPage() {
                           <TableCell className="text-right text-sm text-primary">{entry.updated}</TableCell>
                           <TableCell className="text-right text-sm text-destructive">{entry.errors}</TableCell>
                           <TableCell>
-                            {!entry.is_active && (
-                              <TooltipProvider>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground" disabled>
-                                      <RotateCcw className="h-3 w-3" /> Restablecer a esta versión
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>Disponible próximamente</p>
-                                  </TooltipContent>
-                                </Tooltip>
-                              </TooltipProvider>
-                            )}
+                            {/* Empty - actions removed for V1 */}
                           </TableCell>
                         </TableRow>
                       ))}
