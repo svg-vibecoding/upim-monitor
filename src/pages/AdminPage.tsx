@@ -331,6 +331,42 @@ export default function AdminPage() {
                           </ul>
                         </div>
                       )}
+
+                      {/* Post-upload actions */}
+                      <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            invalidatePimData();
+                            navigate("/");
+                          }}
+                        >
+                          <ArrowRight className="h-4 w-4" /> Ir al dashboard actualizado
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            invalidatePimData();
+                            navigate("/informes");
+                          }}
+                        >
+                          <ArrowRight className="h-4 w-4" /> Ver informes actualizados
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            invalidatePimData();
+                          }}
+                        >
+                          <RefreshCw className="h-4 w-4" /> Refrescar datos
+                        </Button>
+                      </div>
                     </>
                   )}
                 </div>
