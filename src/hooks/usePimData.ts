@@ -123,7 +123,6 @@ export interface AttributeClassification {
 const ATTRIBUTE_CLASSIFICATION: Record<string, AttributeClassification> = {
   "Código Jaivaná":            { type: "base",      evaluable: false },
   "Estado (Global)":           { type: "funcional",  evaluable: false },
-  "SumaGO":                    { type: "funcional",  evaluable: true },
   "Visibilidad Adobe B2B":     { type: "funcional",  evaluable: true },
   "Visibilidad Adobe B2C":     { type: "funcional",  evaluable: true },
   "Categoría N1 Comercial":    { type: "dimensión",  evaluable: true },
