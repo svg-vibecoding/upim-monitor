@@ -171,12 +171,12 @@ export default function DashboardPage() {
         <>
           {/* ═══ KPI CARDS ═══ */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* A) Estado General */}
+            {/* A) Catálogo */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Estado General
+                    Catálogo
                   </span>
                   <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
                     <Layers className="h-4 w-4 text-muted-foreground" />
@@ -185,81 +185,106 @@ export default function DashboardPage() {
                 <p className="text-4xl font-bold text-foreground tabular-nums leading-none">
                   {kpis!.total.toLocaleString()}
                 </p>
-                <p className="text-sm text-muted-foreground mt-1">SKUs totales en sistema</p>
-                {pimGeneralCompleteness !== null && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
-                      <span>Progreso total</span>
-                      <span className="font-semibold tabular-nums text-foreground">{pimGeneralCompleteness}%</span>
+                <p className="text-sm text-muted-foreground mt-1">SKUs totales</p>
+                <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
+                  <div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-bold text-foreground tabular-nums">
+                        {kpis!.active.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        ({Math.round((kpis!.active / kpis!.total) * 100)}%)
+                      </span>
                     </div>
-                    <CompletenessBar value={pimGeneralCompleteness} showLabel={false} size="sm" />
+                    <p className="text-xs font-medium text-success mt-0.5">Activos</p>
                   </div>
-                )}
+                  <div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-bold text-foreground tabular-nums">
+                        {kpis!.inactive.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        ({Math.round((kpis!.inactive / kpis!.total) * 100)}%)
+                      </span>
+                    </div>
+                    <p className="text-xs font-medium text-destructive mt-0.5">Inactivos</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 
-            {/* B) Estado Operativo */}
+            {/* B) Base Digital */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Estado Operativo
+                    Base Digital
                   </span>
                   <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
                     <Settings2 className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p className="text-3xl font-bold text-foreground tabular-nums leading-none">
-                      {kpis!.active.toLocaleString()}
-                    </p>
-                    <p className="text-xs font-medium text-success mt-1">Activos</p>
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold text-foreground tabular-nums leading-none">
-                      {kpis!.inactive.toLocaleString()}
-                    </p>
-                    <p className="text-xs font-medium text-destructive mt-1">Inactivos</p>
-                  </div>
+                <div className="flex items-baseline gap-2">
+                  <p className="text-4xl font-bold text-foreground tabular-nums leading-none">
+                    {kpis!.digitalBase.toLocaleString()}
+                  </p>
+                  <span className="text-sm text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
                 </div>
-                <div className="pt-3 border-t border-border">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Base Digital</p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-foreground tabular-nums">
-                      {kpis!.digitalBase.toLocaleString()}
-                    </span>
-                    <span className="text-xs text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
+                <p className="text-sm text-muted-foreground mt-1">SKUs con Código SumaGo</p>
+                <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-border">
+                  <div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-bold text-foreground tabular-nums">
+                        {kpis!.visibleB2B.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        ({kpis!.digitalBase > 0 ? Math.round((kpis!.visibleB2B / kpis!.digitalBase) * 100) : 0}%)
+                      </span>
+                    </div>
+                    <p className="text-xs font-medium text-muted-foreground mt-0.5">Visibles B2B</p>
+                  </div>
+                  <div>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-bold text-foreground tabular-nums">
+                        {kpis!.visibleB2C.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        ({kpis!.digitalBase > 0 ? Math.round((kpis!.visibleB2C / kpis!.digitalBase) * 100) : 0}%)
+                      </span>
+                    </div>
+                    <p className="text-xs font-medium text-muted-foreground mt-0.5">Visibles B2C</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* C) Visibilidad Digital */}
+            {/* C) Completitud General */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Visibilidad Digital
+                    Completitud General
                   </span>
                   <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
                     <Eye className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Visibles B2B</p>
-                    <p className="text-2xl font-bold text-foreground tabular-nums leading-none mt-0.5">
-                      {kpis!.visibleB2B.toLocaleString()}
+                {pimGeneralCompleteness !== null ? (
+                  <>
+                    <p className="text-4xl font-bold text-foreground tabular-nums leading-none">
+                      {pimGeneralCompleteness}%
                     </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Visibles B2C</p>
-                    <p className="text-2xl font-bold text-foreground tabular-nums leading-none mt-0.5">
-                      {kpis!.visibleB2C.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
+                    <p className="text-sm text-muted-foreground mt-1">Progreso PIM General</p>
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <CompletenessBar value={pimGeneralCompleteness} showLabel={false} size="sm" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <p className="text-4xl font-bold text-muted-foreground/40 tabular-nums leading-none">—</p>
+                    <p className="text-sm text-muted-foreground mt-1">Sin datos de completitud</p>
+                  </>
+                )}
               </CardContent>
             </Card>
           </div>
