@@ -32,6 +32,9 @@ const ALL_ATTRIBUTES = [
 ];
 
 export default function AdminPage() {
+  const navigate = useNavigate();
+  const invalidatePimData = useInvalidatePimData();
+
   const [users, setUsers] = useState<AppUser[]>([...mockUsers]);
   const [reports, setReports] = useState<PredefinedReport[]>([...mockPredefinedReports]);
   const [dimensions, setDimensions] = useState<Dimension[]>([...mockDimensions]);
