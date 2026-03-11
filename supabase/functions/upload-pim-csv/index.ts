@@ -7,31 +7,24 @@ const corsHeaders = {
 };
 
 const FIXED_COLUMNS: Record<string, string> = {
-  // Código Jaivaná variants
   "codigo jaivana": "codigo_jaivana",
   "código jaivaná": "codigo_jaivana",
   "codigo jaivaná": "codigo_jaivana",
   "código jaivana": "codigo_jaivana",
-  // Estado (Global) variants
   "estado global": "estado_global",
   "estado (global)": "estado_global",
-  // Visibilidad Adobe B2B variants
   "visibilidad b2b": "visibilidad_b2b",
   "visibilidad adobe b2b": "visibilidad_b2b",
-  // Visibilidad Adobe B2C variants
   "visibilidad b2c": "visibilidad_b2c",
   "visibilidad adobe b2c": "visibilidad_b2c",
-  // Categoría N1 Comercial
   "categoria n1 comercial": "categoria_n1_comercial",
   "categoría n1 comercial": "categoria_n1_comercial",
-  // Clasificación Producto
   "clasificacion producto": "clasificacion_producto",
   "clasificación producto": "clasificacion_producto",
   "clasificacion del producto": "clasificacion_producto",
   "clasificación del producto": "clasificacion_producto",
 };
 
-// Reverse map: DB column → canonical display name (for attribute_order storage)
 const FIXED_DISPLAY_NAMES: Record<string, string> = {
   estado_global: "Estado (Global)",
   visibilidad_b2b: "Visibilidad Adobe B2B",
@@ -46,7 +39,7 @@ function normalizeHeader(h: string): string {
   return h
     .toLowerCase()
     .replace(/[_\-]+/g, " ")
-    .replace(/[()]/g, "") // strip parentheses
+    .replace(/[()]/g, "")
     .replace(/\s+/g, " ")
     .trim();
 }
@@ -57,9 +50,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { rows: jsonRows, isFirstChunk } = await req.json() as {
+    const { rows: jsonRows, isFirstChunk, fileName } = await req.json() as {
       rows: Record<string, unknown>[];
       isFirstChunk?: boolean;
+      fileName?: string;
     };
 
     if (!jsonRows || jsonRows.length === 0) {
@@ -97,15 +91,45 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Save full attribute order on first chunk (preserving Excel column order)
+    // Build attribute_order (all columns except PK, in Excel order)
+    const fullOrder = columnMap
+      .filter((c) => c.dbColumn !== "codigo_jaivana")
+      .map((c) => c.attrName || FIXED_DISPLAY_NAMES[c.dbColumn!])
+      .filter(Boolean) as string[];
+
+    let uploadId: string | null = null;
+
     if (isFirstChunk) {
-      const fullOrder = columnMap
-        .filter((c) => c.dbColumn !== "codigo_jaivana") // exclude PK
-        .map((c) => c.attrName || FIXED_DISPLAY_NAMES[c.dbColumn!])
-        .filter(Boolean) as string[];
+      // Clear staging table
+      await supabase.from("pim_records_staging").delete().neq("codigo_jaivana", "");
+
+      // Discard any existing pending uploads
       await supabase
-        .from("pim_metadata")
-        .upsert({ id: "singleton", attribute_order: fullOrder, updated_at: new Date().toISOString() });
+        .from("pim_upload_history")
+        .update({ status: "discarded" })
+        .eq("status", "pending");
+
+      // Register new upload in history with status 'pending'
+      const { data: historyRow, error: historyErr } = await supabase
+        .from("pim_upload_history")
+        .insert({
+          file_name: fileName || "archivo.xlsx",
+          total_rows: 0,
+          unique_rows: 0,
+          inserted: 0,
+          updated: 0,
+          errors: 0,
+          status: "pending",
+          attribute_order: fullOrder,
+        })
+        .select("id")
+        .single();
+
+      if (historyErr) {
+        console.error("Error registering upload history:", historyErr.message);
+      } else {
+        uploadId = historyRow?.id || null;
+      }
     }
 
     let inserted = 0;
@@ -130,7 +154,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Skip rows with empty/null codigo_jaivana
       if (!record.codigo_jaivana || String(record.codigo_jaivana).trim() === "") {
         skipped++;
         continue;
@@ -143,32 +166,20 @@ Deno.serve(async (req) => {
 
     const allRows = Array.from(deduped.values());
 
+    // Write to staging (not pim_records)
     const BATCH_SIZE = 500;
     for (let batchStart = 0; batchStart < allRows.length; batchStart += BATCH_SIZE) {
       const upsertRows = allRows.slice(batchStart, batchStart + BATCH_SIZE);
-      const codes = upsertRows.map((r) => r.codigo_jaivana as string);
-      const { data: existing } = await supabase
-        .from("pim_records")
-        .select("codigo_jaivana")
-        .in("codigo_jaivana", codes);
-
-      const existingSet = new Set((existing || []).map((r: { codigo_jaivana: string }) => r.codigo_jaivana));
 
       const { error: upsertError } = await supabase
-        .from("pim_records")
+        .from("pim_records_staging")
         .upsert(upsertRows, { onConflict: "codigo_jaivana" });
 
       if (upsertError) {
         errors += upsertRows.length;
         errorDetails.push(`Batch ${Math.floor(batchStart / BATCH_SIZE) + 1}: ${upsertError.message}`);
       } else {
-        for (const r of upsertRows) {
-          if (existingSet.has(r.codigo_jaivana as string)) {
-            updated++;
-          } else {
-            inserted++;
-          }
-        }
+        inserted += upsertRows.length;
       }
     }
 
@@ -186,6 +197,8 @@ Deno.serve(async (req) => {
           fixed: columnMap.filter((c) => c.dbColumn).map((c) => c.dbColumn),
           attributes: columnMap.filter((c) => c.attrName).map((c) => c.attrName),
         },
+        attributeOrder: fullOrder,
+        uploadId,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
