@@ -195,7 +195,7 @@ export function computeKPIs() {
   const total = mockPIMData.length;
   const active = mockPIMData.filter((r) => r.estadoGlobal === "Activo").length;
   const inactive = total - active;
-  const digitalBase = mockPIMData.filter((r) => r.codigoSumaGo !== null).length;
+  const digitalBase = 0;
   const visibleB2B = mockPIMData.filter((r) => r.visibilidadB2B === "Visible").length;
   const visibleB2C = mockPIMData.filter((r) => r.visibilidadB2C === "Visible").length;
 
