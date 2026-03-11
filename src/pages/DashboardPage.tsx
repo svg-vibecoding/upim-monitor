@@ -177,7 +177,9 @@ export default function DashboardPage() {
                 <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
                   {kpis!.total.toLocaleString()}
                 </p>
-                <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-border">
+                <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-border" style={{ marginTop: 'auto', minHeight: 0 }}>
+                <div className="min-h-4" />
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
