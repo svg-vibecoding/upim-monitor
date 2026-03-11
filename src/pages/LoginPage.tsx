@@ -31,7 +31,6 @@ export default function LoginPage() {
           <img src={upimLogo} alt="UPIM" className="h-10 mx-auto" />
           <p className="text-sm text-muted-foreground mt-2">Monitor de Completitud PIM</p>
         </div>
-        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="email">Correo electrónico</Label>
