@@ -227,7 +227,8 @@ export default function DashboardPage() {
                   </p>
                   <span className="text-xs text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-border">
+                <div className="flex-1 min-h-6" />
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
