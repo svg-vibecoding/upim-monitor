@@ -10,23 +10,32 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
 } from "@/data/mockData";
-import { usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList, getAttributeClassification, isNonEvaluable } from "@/hooks/usePimData";
+import {
+  usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList,
+  getAttributeClassification, isNonEvaluable, usePredefinedReports,
+  sortReportsByDisplayOrder, getRecordsForReport,
+} from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, FileSpreadsheet, X, CheckCircle2 } from "lucide-react";
 import * as XLSX from "xlsx";
 
 type Step = "config" | "results";
+type Source = "general" | "file" | "report";
 
 export default function NewReportPage() {
   const { data: allRecords = [] } = usePimRecords();
   const { data: dimensionsData = [] } = useDimensions();
   const { data: attributeOrder = [] } = useAttributeOrder();
+  const { data: predefinedReports = [] } = usePredefinedReports();
+
+  const sortedReports = useMemo(() => sortReportsByDisplayOrder(predefinedReports), [predefinedReports]);
 
   const fullAttributes = useMemo(() => {
     return getFullAttributeList(attributeOrder);
   }, [attributeOrder]);
 
-  const [source, setSource] = useState<"general" | "file">("general");
+  const [source, setSource] = useState<Source>("general");
+  const [selectedReportId, setSelectedReportId] = useState<string>("");
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string>("");
   const [uploadedFileReady, setUploadedFileReady] = useState(false);
@@ -42,12 +51,17 @@ export default function NewReportPage() {
     setSelectedAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]);
   };
 
+  const selectedReport = sortedReports.find((r) => r.id === selectedReportId);
+
   const records = useMemo(() => {
     if (source === "file" && csvCodes.length > 0) {
       return allRecords.filter((r) => csvCodes.includes(r.codigoJaivana));
     }
+    if (source === "report" && selectedReport) {
+      return getRecordsForReport(allRecords, selectedReport);
+    }
     return allRecords;
-  }, [source, csvCodes, allRecords]);
+  }, [source, csvCodes, allRecords, selectedReport]);
 
   const attrResults = useMemo(() => {
     if (step !== "results") return [];
@@ -74,11 +88,8 @@ export default function NewReportPage() {
         const workbook = XLSX.read(data, { type: "array" });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const rows: string[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-        // Look for a column that contains Código Jaivaná values
         const dataRows = rows.filter((r) => r.length > 0);
-        setUploadedTotalRows(Math.max(0, dataRows.length - 1)); // minus header
-        
-        // Try to find JAV- codes in any column of first row to detect the right column
+        setUploadedTotalRows(Math.max(0, dataRows.length - 1));
         let codeColIndex = 0;
         if (dataRows.length > 0) {
           const headerRow = dataRows[0];
@@ -90,8 +101,6 @@ export default function NewReportPage() {
             }
           }
         }
-        
-        // Extract all non-empty values from the detected column (skip header)
         const codes = dataRows.slice(1)
           .map((row) => String(row[codeColIndex] || "").trim())
           .filter((val) => val.length > 0);
@@ -112,6 +121,17 @@ export default function NewReportPage() {
     setUploadedFileName("");
     setUploadedFileReady(false);
     setUploadedTotalRows(0);
+  };
+
+  const handleApplyTemplate = (reportId: string) => {
+    if (reportId === "none") {
+      setSelectedAttrs([]);
+      return;
+    }
+    const report = sortedReports.find((r) => r.id === reportId);
+    if (report) {
+      setSelectedAttrs(report.attributes);
+    }
   };
 
   const canGenerate = selectedAttrs.length > 0;
@@ -135,6 +155,7 @@ export default function NewReportPage() {
     setUploadedFileReady(false);
     setUploadedTotalRows(0);
     setSource("general");
+    setSelectedReportId("");
   };
 
   return (
@@ -143,11 +164,12 @@ export default function NewReportPage() {
 
       {step === "config" && (
         <div className="space-y-4">
-          {/* Source */}
+          {/* Step 1: Universe */}
           <Card>
             <CardContent className="pt-4 space-y-3">
-              <Label className="text-sm font-semibold">1. Seleccionar fuente</Label>
-              <RadioGroup value={source} onValueChange={(v) => setSource(v as "general" | "file")} className="flex gap-4">
+              <Label className="text-sm font-semibold">1. Seleccionar universo</Label>
+              <p className="text-xs text-muted-foreground">Selecciona el universo de productos sobre el cual se construirá el informe.</p>
+              <RadioGroup value={source} onValueChange={(v) => setSource(v as Source)} className="flex flex-wrap gap-4">
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="general" id="src-gen" />
                   <Label htmlFor="src-gen" className="text-sm cursor-pointer">Base general del PIM</Label>
@@ -156,7 +178,12 @@ export default function NewReportPage() {
                   <RadioGroupItem value="file" id="src-file" />
                   <Label htmlFor="src-file" className="text-sm cursor-pointer">Cargar archivo Excel</Label>
                 </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="report" id="src-report" />
+                  <Label htmlFor="src-report" className="text-sm cursor-pointer">Informe predefinido</Label>
+                </div>
               </RadioGroup>
+
               {source === "file" && (
                 <div className="space-y-3">
                   <p className="text-xs text-muted-foreground">El archivo debe tener una columna con Código Jaivaná. Se aceptan archivos .xlsx y .xls.</p>
@@ -200,13 +227,45 @@ export default function NewReportPage() {
                   )}
                 </div>
               )}
+
+              {source === "report" && (
+                <div className="space-y-2">
+                  <Select value={selectedReportId} onValueChange={setSelectedReportId}>
+                    <SelectTrigger className="w-72">
+                      <SelectValue placeholder="Seleccionar informe" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sortedReports.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedReport && (
+                    <p className="text-xs text-muted-foreground">{selectedReport.universe}</p>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Attributes */}
+          {/* Step 2: Attributes */}
           <Card>
             <CardContent className="pt-4 space-y-3">
               <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
+                <Select onValueChange={handleApplyTemplate}>
+                  <SelectTrigger className="w-56 h-8 text-xs">
+                    <SelectValue placeholder="Ninguna" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Ninguna</SelectItem>
+                    {sortedReports.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               <input
                 type="text"
                 placeholder="Buscar atributo..."
@@ -215,7 +274,6 @@ export default function NewReportPage() {
                 className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
               />
               <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
-                {/* Código Jaivaná — always selected, not removable */}
                 <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
                   <Checkbox checked={true} disabled />
                   <span className="truncate">Código Jaivaná</span>
@@ -249,7 +307,7 @@ export default function NewReportPage() {
             </CardContent>
           </Card>
 
-          {/* Dimension */}
+          {/* Step 3: Dimension */}
           <Card>
             <CardContent className="pt-4 space-y-3">
               <Label className="text-sm font-semibold">3. Dimensión (opcional)</Label>
