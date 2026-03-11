@@ -84,64 +84,76 @@ export default function AdminPage() {
 
   // User form
   const [userDialog, setUserDialog] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const [userPassword, setUserPassword] = useState("");
   const [userRole, setUserRole] = useState<AppRole>("pim_manager");
+  const [userActive, setUserActive] = useState(true);
   const [userSaving, setUserSaving] = useState(false);
 
-  // Report edit state
-  const [reportDialog, setReportDialog] = useState(false);
-  const [editingReportId, setEditingReportId] = useState<string | null>(null);
-  const [reportAttrs, setReportAttrs] = useState<string[]>([]);
-  const [attrSearch, setAttrSearch] = useState("");
-
-  // Dimension form
-  const [dimDialog, setDimDialog] = useState(false);
-  const [dimName, setDimName] = useState("");
-  const [dimField, setDimField] = useState("");
-
-  const openUserDialog = () => {
-    setUserName("");
-    setUserEmail("");
-    setUserPassword("");
-    setUserRole("pim_manager");
+  const openUserDialog = (user?: DBUser) => {
+    if (user) {
+      setEditingUserId(user.id);
+      setUserName(user.name);
+      setUserEmail(user.email);
+      setUserPassword("");
+      setUserRole(user.role);
+      setUserActive(user.active);
+    } else {
+      setEditingUserId(null);
+      setUserName("");
+      setUserEmail("");
+      setUserPassword("");
+      setUserRole("pim_manager");
+      setUserActive(true);
+    }
     setUserDialog(true);
   };
 
   const saveUser = async () => {
-    if (!userName || !userEmail || !userPassword) {
-      toast.error("Completa todos los campos");
-      return;
-    }
-    setUserSaving(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("create-user", {
-        body: { name: userName, email: userEmail, password: userPassword, role: userRole, active: true },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success(`Usuario ${userEmail} creado exitosamente`);
-      setUserDialog(false);
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-    } catch (err: any) {
-      toast.error(err.message || "Error creando usuario");
-    } finally {
-      setUserSaving(false);
-    }
-  };
-
-  const toggleUserActive = async (userId: string, currentActive: boolean) => {
-    try {
-      const { data, error } = await supabase.functions.invoke("toggle-user-active", {
-        body: { userId, active: !currentActive },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-      toast.success(currentActive ? "Usuario desactivado" : "Usuario activado");
-      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-    } catch (err: any) {
-      toast.error(err.message || "Error actualizando estado");
+    if (editingUserId) {
+      if (!userName || !userEmail) {
+        toast.error("Nombre y correo son obligatorios");
+        return;
+      }
+      setUserSaving(true);
+      try {
+        const body: Record<string, unknown> = {
+          userId: editingUserId, name: userName, email: userEmail, role: userRole, active: userActive,
+        };
+        if (userPassword) body.password = userPassword;
+        const { data, error } = await supabase.functions.invoke("update-user", { body });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        toast.success("Usuario actualizado");
+        setUserDialog(false);
+        queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      } catch (err: any) {
+        toast.error(err.message || "Error actualizando usuario");
+      } finally {
+        setUserSaving(false);
+      }
+    } else {
+      if (!userName || !userEmail || !userPassword) {
+        toast.error("Completa todos los campos");
+        return;
+      }
+      setUserSaving(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("create-user", {
+          body: { name: userName, email: userEmail, password: userPassword, role: userRole, active: true },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+        toast.success(`Usuario ${userEmail} creado exitosamente`);
+        setUserDialog(false);
+        queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      } catch (err: any) {
+        toast.error(err.message || "Error creando usuario");
+      } finally {
+        setUserSaving(false);
+      }
     }
   };
 
