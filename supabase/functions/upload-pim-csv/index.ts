@@ -7,17 +7,28 @@ const corsHeaders = {
 };
 
 const FIXED_COLUMNS: Record<string, string> = {
+  // Código Jaivaná variants
   "codigo jaivana": "codigo_jaivana",
   "código jaivaná": "codigo_jaivana",
   "codigo jaivaná": "codigo_jaivana",
   "código jaivana": "codigo_jaivana",
+  // Estado (Global) variants
   "estado global": "estado_global",
+  "estado (global)": "estado_global",
+  // Código SumaGo / SumaGO variants
   "codigo sumago": "codigo_sumago",
   "código sumago": "codigo_sumago",
+  "sumago": "codigo_sumago",
+  // Visibilidad Adobe B2B variants
   "visibilidad b2b": "visibilidad_b2b",
+  "visibilidad adobe b2b": "visibilidad_b2b",
+  // Visibilidad Adobe B2C variants
   "visibilidad b2c": "visibilidad_b2c",
+  "visibilidad adobe b2c": "visibilidad_b2c",
+  // Categoría N1 Comercial
   "categoria n1 comercial": "categoria_n1_comercial",
   "categoría n1 comercial": "categoria_n1_comercial",
+  // Clasificación Producto
   "clasificacion producto": "clasificacion_producto",
   "clasificación producto": "clasificacion_producto",
   "clasificacion del producto": "clasificacion_producto",
@@ -27,7 +38,12 @@ const FIXED_COLUMNS: Record<string, string> = {
 const REQUIRED_COLUMN = "codigo_jaivana";
 
 function normalizeHeader(h: string): string {
-  return h.toLowerCase().replace(/[_\-]+/g, " ").trim();
+  return h
+    .toLowerCase()
+    .replace(/[_\-]+/g, " ")
+    .replace(/[()]/g, "") // strip parentheses
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 Deno.serve(async (req) => {
@@ -36,7 +52,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Expect JSON body with { rows: Record<string, unknown>[] } parsed client-side
     const { rows: jsonRows } = await req.json() as { rows: Record<string, unknown>[] };
 
     if (!jsonRows || jsonRows.length === 0) {
@@ -77,6 +92,7 @@ Deno.serve(async (req) => {
     let inserted = 0;
     let updated = 0;
     let errors = 0;
+    let skipped = 0;
     const errorDetails: string[] = [];
 
     const deduped = new Map<string, Record<string, unknown>>();
@@ -95,13 +111,13 @@ Deno.serve(async (req) => {
         }
       }
 
-      if (!record.codigo_jaivana) {
-        errors++;
-        errorDetails.push(`Fila ${rowIdx + 2}: código Jaivaná vacío`);
+      // Skip rows with empty/null codigo_jaivana
+      if (!record.codigo_jaivana || String(record.codigo_jaivana).trim() === "") {
+        skipped++;
         continue;
       }
 
-      record.codigo_jaivana = String(record.codigo_jaivana);
+      record.codigo_jaivana = String(record.codigo_jaivana).trim();
       record.attributes = attributes;
       deduped.set(record.codigo_jaivana as string, record);
     }
@@ -142,6 +158,7 @@ Deno.serve(async (req) => {
         success: true,
         totalRows: jsonRows.length,
         uniqueRows: allRows.length,
+        skipped,
         inserted,
         updated,
         errors,
