@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
 } from "@/data/mockData";
-import { usePimRecords, useDimensions, useAttributeOrder, NON_EVALUABLE_FIELDS, DIMENSION_FIELDS, getFullAttributeList } from "@/hooks/usePimData";
+import { usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList, getAttributeClassification, isNonEvaluable } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText } from "lucide-react";
 
@@ -143,14 +143,21 @@ export default function NewReportPage() {
               />
               <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
                 {filteredAttrs.map((attr) => {
-                  const isNonEvaluable = NON_EVALUABLE_FIELDS.includes(attr);
+                  const classification = getAttributeClassification(attr);
+                  const nonEvaluable = !classification.evaluable;
+                  const showTypeBadge = classification.type !== "general";
                   return (
-                    <label key={attr} className={`flex items-center gap-2 py-1 px-1 text-sm cursor-pointer hover:bg-accent rounded ${isNonEvaluable ? "opacity-60" : ""}`}>
+                    <label key={attr} className={`flex items-center gap-2 py-1 px-1 text-sm cursor-pointer hover:bg-accent rounded ${nonEvaluable ? "opacity-60" : ""}`}>
                       <Checkbox checked={selectedAttrs.includes(attr)} onCheckedChange={() => toggleAttr(attr)} />
                       <span className="truncate">{attr}</span>
-                      {isNonEvaluable && (
+                      {showTypeBadge && (
                         <Badge variant="outline" className="text-[10px] shrink-0">
-                          {DIMENSION_FIELDS.includes(attr) ? "dimensión" : "funcional"}
+                          {classification.type}
+                        </Badge>
+                      )}
+                      {nonEvaluable && (
+                        <Badge variant="secondary" className="text-[10px] shrink-0">
+                          no evaluable
                         </Badge>
                       )}
                     </label>

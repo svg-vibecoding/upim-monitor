@@ -106,20 +106,57 @@ export function useAttributeOrder() {
   });
 }
 
-// --- Field classification ---
+// --- Attribute classification (type + evaluability as independent properties) ---
 
-/** Functional fields: always available but NOT part of completeness calculation */
-export const FUNCTIONAL_FIELDS = [
-  "Estado (Global)",
-];
+export type AttributeType = "base" | "funcional" | "dimensión" | "general";
 
-/** Dimension fields: used for distribution, NOT part of completeness */
-export const DIMENSION_FIELDS: string[] = [];
+export interface AttributeClassification {
+  type: AttributeType;
+  evaluable: boolean;
+}
 
-/** All non-evaluable fields (functional + dimensions + Código Jaivaná) */
-export const NON_EVALUABLE_FIELDS = [...FUNCTIONAL_FIELDS];
+/** Hardcoded classification map for this version. 
+ *  Any attribute not listed here defaults to { type: "general", evaluable: true }.
+ *  This map governs UI badges, completeness calculation, and functional logic.
+ *  It does NOT constitute a complete validation of PIM load obligations. */
+const ATTRIBUTE_CLASSIFICATION: Record<string, AttributeClassification> = {
+  "Código Jaivaná":            { type: "base",      evaluable: false },
+  "Estado (Global)":           { type: "funcional",  evaluable: false },
+  "SumaGO":                    { type: "funcional",  evaluable: true },
+  "Visibilidad Adobe B2B":     { type: "funcional",  evaluable: true },
+  "Visibilidad Adobe B2C":     { type: "funcional",  evaluable: true },
+  "Categoría N1 Comercial":    { type: "dimensión",  evaluable: true },
+  "Clasificación del Producto": { type: "dimensión", evaluable: true },
+};
 
-/** Legacy alias kept for backward compat */
+/** Get the classification for any attribute */
+export function getAttributeClassification(attr: string): AttributeClassification {
+  return ATTRIBUTE_CLASSIFICATION[attr] || { type: "general", evaluable: true };
+}
+
+/** Check if an attribute is non-evaluable */
+export function isNonEvaluable(attr: string): boolean {
+  return !getAttributeClassification(attr).evaluable;
+}
+
+// --- Legacy exports (derived from the map, for backward compat) ---
+
+/** @deprecated Use getAttributeClassification instead */
+export const FUNCTIONAL_FIELDS = Object.entries(ATTRIBUTE_CLASSIFICATION)
+  .filter(([, c]) => c.type === "funcional")
+  .map(([k]) => k);
+
+/** @deprecated Use getAttributeClassification instead */
+export const DIMENSION_FIELDS = Object.entries(ATTRIBUTE_CLASSIFICATION)
+  .filter(([, c]) => c.type === "dimensión")
+  .map(([k]) => k);
+
+/** @deprecated Use isNonEvaluable instead */
+export const NON_EVALUABLE_FIELDS = Object.entries(ATTRIBUTE_CLASSIFICATION)
+  .filter(([, c]) => !c.evaluable)
+  .map(([k]) => k);
+
+/** @deprecated Use FUNCTIONAL_FIELDS */
 export const STRUCTURAL_ATTRIBUTES = FUNCTIONAL_FIELDS;
 
 /** Fields stored as fixed DB columns (excluding Código Jaivaná which is handled separately) */
@@ -258,7 +295,7 @@ export function computeAttributeResults(records: PIMRecord[], attributes: string
 export function computeDimensionResults(records: PIMRecord[], attributes: string[], dimensionField: string): DimensionResult[] {
   const groups: Record<string, PIMRecord[]> = {};
   for (const r of records) {
-    const val = (r[dimensionField] as string) || "Sin valor";
+    const val = (r[dimensionField] as string) || "Sin valor asignado";
     if (!groups[val]) groups[val] = [];
     groups[val].push(r);
   }
