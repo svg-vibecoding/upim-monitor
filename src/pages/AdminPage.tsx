@@ -567,7 +567,7 @@ export default function AdminPage() {
 
                               if (pendingError) throw pendingError;
 
-                              const uploadIdToActivate = latestPending?.id || pendingUploadId;
+                              const uploadIdToActivate = (latestPending as { id: string } | null)?.id || pendingUploadId;
                               if (!uploadIdToActivate) {
                                 throw new Error("No hay una carga pendiente para activar");
                               }
