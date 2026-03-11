@@ -52,14 +52,17 @@ export default function ReportDetailPage() {
   const [selectedDimension, setSelectedDimension] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
 
-  const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
-  const { data: attributeOrder } = useAttributeOrder();
-
-  const isLoading = loadingRecords || loadingReports || loadingDimensions;
 
   const report = reports?.find((r) => r.id === reportId);
+  const { data: completenessData, isLoading: loadingCompleteness } = useReportCompleteness(report?.id);
+
+  // Only load all records when a dimension is selected (needed for dimension breakdown)
+  const needsRecords = !!selectedDimension;
+  const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
+
+  const isLoading = loadingReports || loadingDimensions || loadingCompleteness;
 
   if (isLoading) {
     return (
@@ -75,12 +78,12 @@ export default function ReportDetailPage() {
 
   if (!report) return <div className="p-6">Informe no encontrado.</div>;
 
-  const records = getRecordsForReport(allRecords || [], report);
-  const validAttrs = getEvaluableAttributes(filterRealAttributes(report.attributes, attributeOrder || []));
-  const attrResults = computeAttributeResults(records, validAttrs);
+  // Use server-side completeness data (already filtered by universe and evaluable)
+  const attrResults = (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name));
   const avgCompleteness = attrResults.length > 0
     ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
     : 0;
+  const totalSKUs = attrResults.length > 0 ? attrResults[0].totalSKUs : 0;
 
   const dimension = dimensions?.find((d) => d.id === selectedDimension);
   const dimensionResults = dimension ? computeDimensionResults(records, validAttrs, dimension.field) : [];
