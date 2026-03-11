@@ -12,10 +12,9 @@ export interface AppUser {
 
 export interface PIMRecord {
   codigoJaivana: string;
-  estadoGlobal: "Activo" | "Inactivo";
-  codigoSumaGo: string | null;
-  visibilidadB2B: "Visible" | "Oculto";
-  visibilidadB2C: "Visible" | "Oculto";
+  estadoGlobal: "Activo" | "Inactivo" | null;
+  visibilidadB2B: "Visible" | "Oculto" | null;
+  visibilidadB2C: "Visible" | "Oculto" | null;
   categoriaN1Comercial: string;
   clasificacionProducto: string;
   [key: string]: string | null;
