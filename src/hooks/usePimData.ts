@@ -306,7 +306,8 @@ export function computeAttributeResults(records: PIMRecord[], attributes: string
 export function computeDimensionResults(records: PIMRecord[], attributes: string[], dimensionField: string): DimensionResult[] {
   const groups: Record<string, PIMRecord[]> = {};
   for (const r of records) {
-    const val = (r[dimensionField] as string) || "Sin valor asignado";
+    const rawVal = r[dimensionField] as string | null;
+    const val = (rawVal && rawVal.trim() !== "") ? rawVal : "Sin valor asignado";
     if (!groups[val]) groups[val] = [];
     groups[val].push(r);
   }
@@ -316,7 +317,7 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
     for (const r of recs) {
       for (const attr of attributes) {
         totalChecks++;
-        if (r[attr] !== null && r[attr] !== "" && r[attr] !== undefined) populatedChecks++;
+        if (!isEmptyValue(r[attr])) populatedChecks++;
       }
     }
     return {
