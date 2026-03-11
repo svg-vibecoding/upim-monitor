@@ -129,12 +129,15 @@ export default function AdminPage() {
     setReportAttrs([]);
   };
 
+  // Full attribute list including fixed-column fields
+  const fullAttributeList = useMemo(() => getFullAttributeList(attributeOrder), [attributeOrder]);
+
   // Filtered attributes for search in dialog — show all, tag non-evaluable
   const filteredAttrs = useMemo(() => {
-    if (!attrSearch.trim()) return attributeOrder;
+    if (!attrSearch.trim()) return fullAttributeList;
     const q = attrSearch.toLowerCase();
-    return attributeOrder.filter((a) => a.toLowerCase().includes(q));
-  }, [attributeOrder, attrSearch]);
+    return fullAttributeList.filter((a) => a.toLowerCase().includes(q));
+  }, [fullAttributeList, attrSearch]);
 
   const editingReport = dbReports.find((r) => r.id === editingReportId);
 
