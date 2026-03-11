@@ -86,7 +86,9 @@ export default function ReportDetailPage() {
   const totalSKUs = attrResults.length > 0 ? attrResults[0].totalSKUs : 0;
 
   const dimension = dimensions?.find((d) => d.id === selectedDimension);
-  const dimensionResults = dimension ? computeDimensionResults(records, validAttrs, dimension.field) : [];
+  const records = needsRecords ? getRecordsForReport(allRecords || [], report) : [];
+  const validAttrs = attrResults.map(a => a.name);
+  const dimensionResults = dimension && needsRecords ? computeDimensionResults(records, validAttrs, dimension.field) : [];
 
   const handleDownload = () => {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
