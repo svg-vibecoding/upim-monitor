@@ -13,9 +13,11 @@ import {
   mockUsers, mockPredefinedReports, mockDimensions,
   AppUser, UserRole, PredefinedReport, Dimension,
 } from "@/data/mockData";
-import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, ArrowRight, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
+import { useNavigate } from "react-router-dom";
+import { useInvalidatePimData } from "@/hooks/usePimData";
 
 const ALL_ATTRIBUTES = [
   "Nombre Comercial", "Descripción Corta", "Descripción Larga", "Marca", "EAN",
@@ -30,6 +32,9 @@ const ALL_ATTRIBUTES = [
 ];
 
 export default function AdminPage() {
+  const navigate = useNavigate();
+  const invalidatePimData = useInvalidatePimData();
+
   const [users, setUsers] = useState<AppUser[]>([...mockUsers]);
   const [reports, setReports] = useState<PredefinedReport[]>([...mockPredefinedReports]);
   const [dimensions, setDimensions] = useState<Dimension[]>([...mockDimensions]);
@@ -326,6 +331,42 @@ export default function AdminPage() {
                           </ul>
                         </div>
                       )}
+
+                      {/* Post-upload actions */}
+                      <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            invalidatePimData();
+                            navigate("/");
+                          }}
+                        >
+                          <ArrowRight className="h-4 w-4" /> Ir al dashboard actualizado
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            invalidatePimData();
+                            navigate("/informes");
+                          }}
+                        >
+                          <ArrowRight className="h-4 w-4" /> Ver informes actualizados
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            invalidatePimData();
+                          }}
+                        >
+                          <RefreshCw className="h-4 w-4" /> Refrescar datos
+                        </Button>
+                      </div>
                     </>
                   )}
                 </div>
