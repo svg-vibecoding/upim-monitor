@@ -132,6 +132,8 @@ export default function NewReportPage() {
     setDimensionId("");
     setCsvCodes([]);
     setUploadedFileName("");
+    setUploadedFileReady(false);
+    setUploadedTotalRows(0);
     setSource("general");
   };
 
