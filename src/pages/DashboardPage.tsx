@@ -330,7 +330,11 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Focus list */}
-                  {filteredFocusItems.length > 0 ? (
+                  {loadingFocus ? (
+                    <p className="text-xs text-muted-foreground py-6 text-center">
+                      Informe en proceso…
+                    </p>
+                  ) : filteredFocusItems.length > 0 ? (
                     <ScrollArea className="flex-1">
                       <div className="space-y-3 pr-2">
                         {filteredFocusItems.map((fp) => {
@@ -366,7 +370,7 @@ export default function DashboardPage() {
                     <p className="text-xs text-muted-foreground py-6 text-center">
                       {focusItems.length > 0
                         ? "No hay atributos en este rango de severidad."
-                        : "Sin datos suficientes para calcular focos."}
+                        : "Sin datos de completitud para este informe."}
                     </p>
                   )}
                 </CardContent>
