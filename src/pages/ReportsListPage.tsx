@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  usePimRecords, usePredefinedReports,
-  computeAttributeResults, getRecordsForReport,
+  usePimRecords, usePredefinedReports, useAttributeOrder,
+  computeAttributeResults, getRecordsForReport, filterRealAttributes,
 } from "@/hooks/usePimData";
 import { FileText } from "lucide-react";
 
