@@ -142,12 +142,20 @@ export default function NewReportPage() {
                 className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
               />
               <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
-                {filteredAttrs.map((attr) => (
-                  <label key={attr} className="flex items-center gap-2 py-1 px-1 text-sm cursor-pointer hover:bg-accent rounded">
-                    <Checkbox checked={selectedAttrs.includes(attr)} onCheckedChange={() => toggleAttr(attr)} />
-                    <span className="truncate">{attr}</span>
-                  </label>
-                ))}
+                {filteredAttrs.map((attr) => {
+                  const isNonEvaluable = NON_EVALUABLE_FIELDS.includes(attr);
+                  return (
+                    <label key={attr} className={`flex items-center gap-2 py-1 px-1 text-sm cursor-pointer hover:bg-accent rounded ${isNonEvaluable ? "opacity-60" : ""}`}>
+                      <Checkbox checked={selectedAttrs.includes(attr)} onCheckedChange={() => toggleAttr(attr)} />
+                      <span className="truncate">{attr}</span>
+                      {isNonEvaluable && (
+                        <Badge variant="outline" className="text-[10px] shrink-0">
+                          {DIMENSION_FIELDS.includes(attr) ? "dimensión" : "funcional"}
+                        </Badge>
+                      )}
+                    </label>
+                  );
+                })}
               </div>
               {selectedAttrs.length > 0 && (
                 <p className="text-xs text-muted-foreground">{selectedAttrs.length} atributos seleccionados</p>
