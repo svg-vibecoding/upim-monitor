@@ -219,6 +219,7 @@ export function usePimRecords() {
       const { data, error } = await supabase
           .from("pim_records")
           .select("*")
+          .order("codigo_jaivana")
           .range(from, from + PAGE_SIZE - 1);
 
         if (error) throw error;
