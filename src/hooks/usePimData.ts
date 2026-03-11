@@ -102,6 +102,30 @@ export function usePimKPIs() {
   });
 }
 
+// --- Server-side report completeness (avoids loading all records) ---
+export interface AttributeCompleteness {
+  name: string;
+  totalSKUs: number;
+  populated: number;
+  completeness: number;
+}
+
+export function useReportCompleteness(reportId: string | null | undefined) {
+  return useQuery({
+    queryKey: ["report-completeness", reportId],
+    queryFn: async (): Promise<AttributeCompleteness[]> => {
+      if (!reportId) return [];
+      const { data, error } = await supabase.rpc("get_report_completeness" as any, {
+        p_report_id: reportId,
+      });
+      if (error) throw error;
+      return (data as AttributeCompleteness[]) || [];
+    },
+    enabled: !!reportId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 // --- Attribute order from pim_metadata ---
 export function useAttributeOrder() {
   return useQuery({
