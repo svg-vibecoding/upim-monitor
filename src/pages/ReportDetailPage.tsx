@@ -8,6 +8,7 @@ import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   usePimRecords, usePredefinedReports, useDimensions, useAttributeOrder,
+  useReportCompleteness, NON_EVALUABLE_FIELDS,
   computeAttributeResults, computeDimensionResults, getRecordsForReport,
   filterRealAttributes, getEvaluableAttributes,
 } from "@/hooks/usePimData";
@@ -51,14 +52,17 @@ export default function ReportDetailPage() {
   const [selectedDimension, setSelectedDimension] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
 
-  const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
-  const { data: attributeOrder } = useAttributeOrder();
-
-  const isLoading = loadingRecords || loadingReports || loadingDimensions;
 
   const report = reports?.find((r) => r.id === reportId);
+  const { data: completenessData, isLoading: loadingCompleteness } = useReportCompleteness(report?.id);
+
+  // Only load all records when a dimension is selected (needed for dimension breakdown)
+  const needsRecords = !!selectedDimension;
+  const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
+
+  const isLoading = loadingReports || loadingDimensions || loadingCompleteness;
 
   if (isLoading) {
     return (
@@ -74,15 +78,17 @@ export default function ReportDetailPage() {
 
   if (!report) return <div className="p-6">Informe no encontrado.</div>;
 
-  const records = getRecordsForReport(allRecords || [], report);
-  const validAttrs = getEvaluableAttributes(filterRealAttributes(report.attributes, attributeOrder || []));
-  const attrResults = computeAttributeResults(records, validAttrs);
+  // Use server-side completeness data (already filtered by universe and evaluable)
+  const attrResults = (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name));
   const avgCompleteness = attrResults.length > 0
     ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
     : 0;
+  const totalSKUs = attrResults.length > 0 ? attrResults[0].totalSKUs : 0;
 
   const dimension = dimensions?.find((d) => d.id === selectedDimension);
-  const dimensionResults = dimension ? computeDimensionResults(records, validAttrs, dimension.field) : [];
+  const records = needsRecords ? getRecordsForReport(allRecords || [], report) : [];
+  const validAttrs = attrResults.map(a => a.name);
+  const dimensionResults = dimension && needsRecords ? computeDimensionResults(records, validAttrs, dimension.field) : [];
 
   const handleDownload = () => {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
@@ -107,8 +113,8 @@ export default function ReportDetailPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{records.length.toLocaleString()}</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{validAttrs.length}</p></CardContent></Card>
+        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{totalSKUs.toLocaleString()}</p></CardContent></Card>
+        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{attrResults.length}</p></CardContent></Card>
         <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent></Card>
         <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos &lt;50%</p><p className="text-xl font-bold text-destructive">{attrResults.filter((a) => a.completeness < 50).length}</p></CardContent></Card>
       </div>
