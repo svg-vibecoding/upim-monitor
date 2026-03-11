@@ -470,7 +470,7 @@ export default function AdminPage() {
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <Button variant="ghost" size="sm" className="gap-1 text-xs text-muted-foreground" disabled>
-                                      <RotateCcw className="h-3 w-3" /> Restablecer
+                                      <RotateCcw className="h-3 w-3" /> Restablecer a esta versión
                                     </Button>
                                   </TooltipTrigger>
                                   <TooltipContent>
