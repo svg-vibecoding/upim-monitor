@@ -20,10 +20,6 @@ import {
 import type { PredefinedReport } from "@/data/mockData";
 import {
   PlusCircle,
-  FileText,
-  Layers,
-  Settings2,
-  Eye,
   ChevronRight,
   AlertTriangle,
   Filter,
