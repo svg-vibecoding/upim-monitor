@@ -81,9 +81,9 @@ export default function AdminPage() {
   const { data: attributeOrder = [], isLoading: attrsLoading } = useAttributeOrder();
   const { data: uploadHistory = [], isLoading: historyLoading } = usePimUploadHistory();
   const { data: dbUsers = [], isLoading: usersLoading } = useUsers();
+  const { data: dbDimensions = [], isLoading: dimensionsLoading } = useDimensions();
+  const { data: pimRecords = [] } = usePimRecords();
   const updateReportAttrs = useUpdateReportAttributes();
-
-  const [dimensions, setDimensions] = useState<Dimension[]>([...mockDimensions]);
 
   // User form
   const [userDialog, setUserDialog] = useState(false);
