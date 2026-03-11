@@ -554,7 +554,7 @@ export default function AdminPage() {
                           className="gap-2"
                           disabled={!canActivate || activating}
                           onClick={async () => {
-                            if (!pendingUploadId) return;
+                            
                             setActivating(true);
                             try {
                               const { data: latestPending, error: pendingError } = await supabase
