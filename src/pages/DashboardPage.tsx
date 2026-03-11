@@ -329,6 +329,19 @@ export default function DashboardPage() {
                     ))}
                   </div>
 
+                  {/* Universe guide text */}
+                  {activeReport && !loadingFocus && (
+                    <div className="text-xs text-muted-foreground mb-3 shrink-0 space-y-0.5">
+                      <p>
+                        Universo: {activeReport.universe}
+                        {focusItems.length > 0 && focusItems[0].totalSKUs > 0 && (
+                          <span className="ml-1 font-medium">{focusItems[0].totalSKUs.toLocaleString()} SKUs</span>
+                        )}
+                      </p>
+                      <p>Atributos evaluados: {focusItems.length}</p>
+                    </div>
+                  )}
+
                   {/* Focus list */}
                   {loadingFocus ? (
                     <p className="text-xs text-muted-foreground py-6 text-center">
