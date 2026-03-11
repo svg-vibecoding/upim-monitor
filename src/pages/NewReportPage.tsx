@@ -8,25 +8,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  mockPIMData, mockDimensions, computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
+  computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
 } from "@/data/mockData";
+import { usePimRecords, useDimensions, useAttributeOrder, STRUCTURAL_ATTRIBUTES } from "@/hooks/usePimData";
 import { Upload, FileText } from "lucide-react";
-
-const ALL_ATTRIBUTES = [
-  "Nombre Comercial", "Descripción Corta", "Descripción Larga", "Marca", "EAN",
-  "Unidad de Medida", "Contenido Neto", "País de Origen", "Peso Bruto", "Alto",
-  "Ancho", "Profundidad", "Material", "Color Principal", "Vida Útil",
-  "Descripción Corta Web", "Descripción Larga Web", "Imagen Principal", "Imagen 2",
-  "Imagen 3", "Ficha Técnica PDF", "Palabras Clave SEO", "Meta Description",
-  "Categoría Web B2B", "Categoría Web B2C", "Precio Sugerido B2B", "Precio Sugerido B2C",
-  "Unidad de Venta B2B", "Video Producto", "Información Nutricional", "Ingredientes",
-  "Código Proveedor", "Nombre Proveedor", "Referencia Proveedor", "Unidad de Compra",
-  "Factor de Conversión", "Lead Time", "MOQ", "País Origen Compra", "Incoterm", "Moneda Compra",
-];
 
 type Step = "config" | "results";
 
 export default function NewReportPage() {
+  const { data: allRecords = [] } = usePimRecords();
+  const { data: dimensionsData = [] } = useDimensions();
+  const { data: attributeOrder = [] } = useAttributeOrder();
+
+  const realAttributes = useMemo(() => {
+    return attributeOrder.filter((a) => !STRUCTURAL_ATTRIBUTES.includes(a));
+  }, [attributeOrder]);
+
   const [source, setSource] = useState<"general" | "csv">("general");
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [selectedAttrs, setSelectedAttrs] = useState<string[]>([]);
@@ -34,7 +31,7 @@ export default function NewReportPage() {
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
 
-  const filteredAttrs = ALL_ATTRIBUTES.filter((a) => a.toLowerCase().includes(searchAttr.toLowerCase()));
+  const filteredAttrs = realAttributes.filter((a) => a.toLowerCase().includes(searchAttr.toLowerCase()));
 
   const toggleAttr = (attr: string) => {
     setSelectedAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]);
@@ -42,17 +39,17 @@ export default function NewReportPage() {
 
   const records = useMemo(() => {
     if (source === "csv" && csvCodes.length > 0) {
-      return mockPIMData.filter((r) => csvCodes.includes(r.codigoJaivana));
+      return allRecords.filter((r) => csvCodes.includes(r.codigoJaivana));
     }
-    return mockPIMData;
-  }, [source, csvCodes]);
+    return allRecords;
+  }, [source, csvCodes, allRecords]);
 
   const attrResults = useMemo(() => {
     if (step !== "results") return [];
     return computeAttributeResults(records, selectedAttrs);
   }, [step, records, selectedAttrs]);
 
-  const dimension = mockDimensions.find((d) => d.id === dimensionId);
+  const dimension = dimensionsData.find((d) => d.id === dimensionId);
   const dimensionResults = useMemo(() => {
     if (step !== "results" || !dimension) return [];
     return computeDimensionResults(records, selectedAttrs, dimension.field);
@@ -167,7 +164,7 @@ export default function NewReportPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Sin dimensión</SelectItem>
-                  {mockDimensions.map((d) => (
+                  {dimensionsData.map((d) => (
                     <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
                   ))}
                 </SelectContent>
