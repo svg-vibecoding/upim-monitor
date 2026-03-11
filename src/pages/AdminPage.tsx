@@ -258,7 +258,7 @@ export default function AdminPage() {
       <Tabs defaultValue="pim-upload">
         <TabsList>
           <TabsTrigger value="pim-upload">Base PIM</TabsTrigger>
-          <TabsTrigger value="users">Usuarios</TabsTrigger>
+          <TabsTrigger value="attributes">Atributos</TabsTrigger>
           <TabsTrigger value="reports">Informes</TabsTrigger>
           <TabsTrigger value="dimensions">Dimensiones</TabsTrigger>
         </TabsList>
@@ -386,71 +386,68 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
 
-        {/* USERS */}
-        <TabsContent value="users" className="space-y-4">
-          <div className="flex justify-end">
-            <Dialog open={userDialog} onOpenChange={setUserDialog}>
-              <DialogTrigger asChild>
-                <Button onClick={() => openUserDialog()} className="gap-2"><Plus className="h-4 w-4" /> Nuevo usuario</Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader><DialogTitle>{editingUser ? "Editar usuario" : "Nuevo usuario"}</DialogTitle></DialogHeader>
-                <div className="space-y-3 pt-2">
-                  <div><Label>Nombre</Label><Input value={userName} onChange={(e) => setUserName(e.target.value)} /></div>
-                  <div><Label>Correo</Label><Input type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} /></div>
-                  {!editingUser && <div><Label>Contraseña inicial</Label><Input type="password" placeholder="••••••••" /></div>}
-                  <div>
-                    <Label>Rol</Label>
-                    <Select value={userRole} onValueChange={(v) => setUserRole(v as UserRole)}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="PIM Manager">PIM Manager</SelectItem>
-                        <SelectItem value="UsuarioPRO">UsuarioPRO</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={saveUser} className="w-full">Guardar</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <Card>
-            <CardContent className="pt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Correo</TableHead>
-                    <TableHead>Rol</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="w-24">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {users.map((u) => (
-                    <TableRow key={u.id}>
-                      <TableCell className="font-medium">{u.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
-                      <TableCell><Badge variant={u.role === "UsuarioPRO" ? "default" : "secondary"}>{u.role}</Badge></TableCell>
-                      <TableCell>
-                        <Badge variant={u.active ? "outline" : "destructive"} className={u.active ? "border-success text-success" : ""}>
-                          {u.active ? "Activo" : "Inactivo"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => openUserDialog(u)}><Pencil className="h-3 w-3" /></Button>
-                          <Button variant="ghost" size="sm" onClick={() => toggleUserActive(u.id)} className="text-xs">
-                            {u.active ? "Desactivar" : "Activar"}
-                          </Button>
-                        </div>
-                      </TableCell>
+        {/* ATTRIBUTES */}
+        <TabsContent value="attributes" className="space-y-4">
+          {attrsLoading ? (
+            <div className="flex items-center gap-2 p-8 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Cargando atributos...
+            </div>
+          ) : fullAttributeList.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">
+                  No se han detectado atributos. Sube un archivo Excel en la pestaña "Base PIM" para cargar los atributos disponibles.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="pt-4">
+                <p className="text-sm text-muted-foreground mb-4">
+                  {fullAttributeList.length} atributos detectados en la base PIM. La clasificación y evaluabilidad se aplican internamente en esta versión.
+                </p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-8">#</TableHead>
+                      <TableHead>Atributo</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Evaluable</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                  </TableHeader>
+                  <TableBody>
+                    {["Código Jaivaná", ...fullAttributeList].map((attr, idx) => {
+                      const classification = getAttributeClassification(attr);
+                      const typeBadgeVariant: Record<string, "default" | "secondary" | "outline"> = {
+                        base: "default",
+                        funcional: "secondary",
+                        "dimensión": "outline",
+                        general: "outline",
+                      };
+                      return (
+                        <TableRow key={attr}>
+                          <TableCell className="text-xs text-muted-foreground">{idx + 1}</TableCell>
+                          <TableCell className="font-medium text-sm">{attr}</TableCell>
+                          <TableCell>
+                            <Badge variant={typeBadgeVariant[classification.type] || "outline"} className="text-xs">
+                              {classification.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {classification.evaluable ? (
+                              <span className="text-xs text-success font-medium">Sí</span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground font-medium">No evaluable</span>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* REPORTS - now DB-driven */}
