@@ -8,21 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
-  mockPIMData, mockDimensions, computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
+  computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
 } from "@/data/mockData";
+import { usePimRecords, useDimensions, useAttributeOrder, STRUCTURAL_ATTRIBUTES } from "@/hooks/usePimData";
 import { Upload, FileText } from "lucide-react";
-
-const ALL_ATTRIBUTES = [
-  "Nombre Comercial", "Descripción Corta", "Descripción Larga", "Marca", "EAN",
-  "Unidad de Medida", "Contenido Neto", "País de Origen", "Peso Bruto", "Alto",
-  "Ancho", "Profundidad", "Material", "Color Principal", "Vida Útil",
-  "Descripción Corta Web", "Descripción Larga Web", "Imagen Principal", "Imagen 2",
-  "Imagen 3", "Ficha Técnica PDF", "Palabras Clave SEO", "Meta Description",
-  "Categoría Web B2B", "Categoría Web B2C", "Precio Sugerido B2B", "Precio Sugerido B2C",
-  "Unidad de Venta B2B", "Video Producto", "Información Nutricional", "Ingredientes",
-  "Código Proveedor", "Nombre Proveedor", "Referencia Proveedor", "Unidad de Compra",
-  "Factor de Conversión", "Lead Time", "MOQ", "País Origen Compra", "Incoterm", "Moneda Compra",
-];
 
 type Step = "config" | "results";
 
