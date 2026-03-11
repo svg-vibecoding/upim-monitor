@@ -35,7 +35,8 @@ export default function ReportsListPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {reports!.map((report) => {
             const records = getRecordsForReport(allRecords!, report);
-            const attrResults = computeAttributeResults(records, report.attributes);
+            const validAttrs = filterRealAttributes(report.attributes, attributeOrder || []);
+            const attrResults = computeAttributeResults(records, validAttrs);
             const avgCompleteness = attrResults.length > 0
               ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
               : 0;
