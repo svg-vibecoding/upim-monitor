@@ -26,8 +26,9 @@ export default function NewReportPage() {
     return getFullAttributeList(attributeOrder);
   }, [attributeOrder]);
 
-  const [source, setSource] = useState<"general" | "csv">("general");
+  const [source, setSource] = useState<"general" | "file">("general");
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
+  const [uploadedFileName, setUploadedFileName] = useState<string>("");
   const [selectedAttrs, setSelectedAttrs] = useState<string[]>([]);
   const [dimensionId, setDimensionId] = useState<string>("");
   const [step, setStep] = useState<Step>("config");
