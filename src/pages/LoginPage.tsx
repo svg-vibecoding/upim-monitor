@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import upimLogo from "@/assets/upim-logo.png";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -27,8 +28,9 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted">
       <div className="w-full max-w-sm bg-card rounded-lg shadow-lg p-8">
         <div className="text-center mb-6">
-          <h1 className="text-2xl font-bold text-primary">UPIM</h1>
-          <p className="text-sm text-muted-foreground mt-1">Monitor de Completitud PIM</p>
+          <img src={upimLogo} alt="UPIM" className="h-10 mx-auto" />
+          <p className="text-sm text-muted-foreground mt-2">Monitor de Completitud PIM</p>
+        </div>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
