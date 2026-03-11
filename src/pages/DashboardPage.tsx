@@ -342,7 +342,7 @@ export default function DashboardPage() {
 
                   {/* Focus list */}
                   {filteredFocusItems.length > 0 ? (
-                    <ScrollArea className="max-h-[280px]">
+                    <ScrollArea className="max-h-[220px]">
                       <div className="space-y-3 pr-2">
                         {filteredFocusItems.map((fp) => {
                           const severity = getSeverity(fp.completeness);
