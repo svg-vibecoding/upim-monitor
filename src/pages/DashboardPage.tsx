@@ -15,6 +15,7 @@ import {
   getRecordsForReport,
   computeAttributeResults,
   getFullAttributeList,
+  sortReportsByDisplayOrder,
 } from "@/hooks/usePimData";
 import type { PredefinedReport } from "@/data/mockData";
 import {
