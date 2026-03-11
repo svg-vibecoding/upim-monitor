@@ -10,7 +10,8 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
 } from "@/data/mockData";
-import { usePimRecords, useDimensions, useAttributeOrder, NON_EVALUABLE_FIELDS, getFullAttributeList } from "@/hooks/usePimData";
+import { usePimRecords, useDimensions, useAttributeOrder, NON_EVALUABLE_FIELDS, DIMENSION_FIELDS, getFullAttributeList } from "@/hooks/usePimData";
+import { Badge } from "@/components/ui/badge";
 import { Upload, FileText } from "lucide-react";
 
 type Step = "config" | "results";
@@ -20,8 +21,8 @@ export default function NewReportPage() {
   const { data: dimensionsData = [] } = useDimensions();
   const { data: attributeOrder = [] } = useAttributeOrder();
 
-  const realAttributes = useMemo(() => {
-    return getFullAttributeList(attributeOrder).filter((a) => !NON_EVALUABLE_FIELDS.includes(a));
+  const fullAttributes = useMemo(() => {
+    return getFullAttributeList(attributeOrder);
   }, [attributeOrder]);
 
   const [source, setSource] = useState<"general" | "csv">("general");
@@ -31,7 +32,7 @@ export default function NewReportPage() {
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
 
-  const filteredAttrs = realAttributes.filter((a) => a.toLowerCase().includes(searchAttr.toLowerCase()));
+  const filteredAttrs = fullAttributes.filter((a) => a.toLowerCase().includes(searchAttr.toLowerCase()));
 
   const toggleAttr = (attr: string) => {
     setSelectedAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]);
