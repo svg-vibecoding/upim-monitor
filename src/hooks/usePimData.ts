@@ -276,7 +276,9 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
 export function computeFocusPoints(records: PIMRecord[], reports: PredefinedReport[], realAttributeKeys: string[] = []): AttributeResult[] {
   const activeRecords = records.filter((r) => r.estadoGlobal === "Activo");
   const allAttrs = [...new Set(reports.flatMap((r) => r.attributes))];
-  const validAttrs = realAttributeKeys.length > 0 ? filterRealAttributes(allAttrs, realAttributeKeys) : allAttrs;
+  const validAttrs = getEvaluableAttributes(
+    realAttributeKeys.length > 0 ? filterRealAttributes(allAttrs, realAttributeKeys) : allAttrs
+  );
   if (validAttrs.length === 0 || activeRecords.length === 0) return [];
   const results = computeAttributeResults(activeRecords, validAttrs);
   return results.sort((a, b) => a.completeness - b.completeness).slice(0, 5);
