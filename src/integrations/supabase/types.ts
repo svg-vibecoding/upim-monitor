@@ -100,6 +100,7 @@ export type Database = {
           id: string
           name: string
           universe: string
+          universe_key: string
           updated_at: string
         }
         Insert: {
@@ -109,6 +110,7 @@ export type Database = {
           id?: string
           name: string
           universe?: string
+          universe_key?: string
           updated_at?: string
         }
         Update: {
@@ -118,6 +120,7 @@ export type Database = {
           id?: string
           name?: string
           universe?: string
+          universe_key?: string
           updated_at?: string
         }
         Relationships: []

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { PIMRecord, PredefinedReport, Dimension, AttributeResult, DimensionResult } from "@/data/mockData";
+import type { PIMRecord, PredefinedReport, Dimension, AttributeResult, DimensionResult, UniverseKey } from "@/data/mockData";
 
 // --- Fallback: read from JSONB attributes when fixed columns have defaults ---
 function resolveField(
@@ -236,6 +236,7 @@ export function usePredefinedReports() {
         name: r.name,
         description: r.description,
         universe: r.universe,
+        universeKey: ((r as any).universe_key || "all") as UniverseKey,
         attributes: r.attributes || [],
       }));
     },
@@ -287,13 +288,17 @@ export function filterRealAttributes(attributes: string[], realAttributeKeys: st
   return attributes.filter((a) => realSet.has(a));
 }
 
+/** Check if a value is considered empty (null, undefined, empty string, or whitespace-only) */
+function isEmptyValue(val: unknown): boolean {
+  if (val === null || val === undefined) return true;
+  if (typeof val === "string" && val.trim() === "") return true;
+  return false;
+}
+
 export function computeAttributeResults(records: PIMRecord[], attributes: string[]): AttributeResult[] {
   return attributes.map((attr) => {
     const total = records.length;
-    const populated = records.filter((r) => {
-      const val = r[attr];
-      return val !== null && val !== "" && val !== undefined;
-    }).length;
+    const populated = records.filter((r) => !isEmptyValue(r[attr])).length;
     return { name: attr, totalSKUs: total, populated, completeness: total > 0 ? Math.round((populated / total) * 100) : 0 };
   });
 }
@@ -301,7 +306,8 @@ export function computeAttributeResults(records: PIMRecord[], attributes: string
 export function computeDimensionResults(records: PIMRecord[], attributes: string[], dimensionField: string): DimensionResult[] {
   const groups: Record<string, PIMRecord[]> = {};
   for (const r of records) {
-    const val = (r[dimensionField] as string) || "Sin valor asignado";
+    const rawVal = r[dimensionField] as string | null;
+    const val = (rawVal && rawVal.trim() !== "") ? rawVal : "Sin valor asignado";
     if (!groups[val]) groups[val] = [];
     groups[val].push(r);
   }
@@ -311,7 +317,7 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
     for (const r of recs) {
       for (const attr of attributes) {
         totalChecks++;
-        if (r[attr] !== null && r[attr] !== "" && r[attr] !== undefined) populatedChecks++;
+        if (!isEmptyValue(r[attr])) populatedChecks++;
       }
     }
     return {
@@ -324,11 +330,17 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
 }
 
 export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedReport): PIMRecord[] {
-  const u = report.universe.toLowerCase();
-  if (u.includes("activos")) return allRecords.filter((r) => r.estadoGlobal === "Activo");
-  if (u.includes("b2b")) return allRecords.filter((r) => r.visibilidadB2B === "Visible");
-  if (u.includes("b2c")) return allRecords.filter((r) => r.visibilidadB2C === "Visible");
-  return allRecords;
+  switch (report.universeKey) {
+    case "active":
+      return allRecords.filter((r) => r.estadoGlobal === "Activo");
+    case "visible_b2b":
+      return allRecords.filter((r) => r.visibilidadB2B === "Visible");
+    case "visible_b2c":
+      return allRecords.filter((r) => r.visibilidadB2C === "Visible");
+    case "all":
+    default:
+      return allRecords;
+  }
 }
 
 export function computeFocusPoints(records: PIMRecord[], reports: PredefinedReport[], realAttributeKeys: string[] = []): AttributeResult[] {
