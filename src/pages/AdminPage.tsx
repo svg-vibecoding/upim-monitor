@@ -535,26 +535,67 @@ export default function AdminPage() {
                         </div>
                       )}
 
+                      {missingMandatory.length > 0 && (
+                        <div className="rounded-md border border-destructive bg-destructive/5 p-3 mt-2">
+                          <p className="text-xs font-medium text-destructive flex items-center gap-1">
+                            <AlertCircle className="h-3.5 w-3.5" /> Faltan atributos obligatorios:
+                          </p>
+                          <ul className="text-xs text-destructive list-disc list-inside mt-1">
+                            {missingMandatory.map((a) => <li key={a}>{a}</li>)}
+                          </ul>
+                          <p className="text-xs text-muted-foreground mt-1">No se puede activar esta versión hasta incluir estos atributos.</p>
+                        </div>
+                      )}
+
                       <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
                         <Button
                           variant="default"
                           size="sm"
                           className="gap-2"
-                          onClick={() => {
-                            invalidatePimData();
-                            setCsvResult(null);
-                            toast.success("Datos actualizados correctamente");
+                          disabled={!canActivate || activating}
+                          onClick={async () => {
+                            if (!pendingUploadId) return;
+                            setActivating(true);
+                            try {
+                              const { data, error } = await supabase.functions.invoke("activate-pim-version", {
+                                body: { upload_id: pendingUploadId },
+                              });
+                              if (error) throw error;
+                              if (data?.error) throw new Error(data.error);
+                              invalidatePimData();
+                              setCsvResult(null);
+                              setPendingUploadId(null);
+                              setPendingAttributeOrder([]);
+                              toast.success("Base PIM activada correctamente");
+                            } catch (err: any) {
+                              toast.error(err.message || "Error activando la base PIM");
+                            } finally {
+                              setActivating(false);
+                            }
                           }}
                         >
-                          <RefreshCw className="h-4 w-4" /> Actualizar datos de la app
+                          {activating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                          {activating ? "Activando..." : "Actualizar datos de la app"}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           className="gap-2"
-                          onClick={() => {
+                          disabled={activating}
+                          onClick={async () => {
+                            if (pendingUploadId) {
+                              try {
+                                await supabase
+                                  .from("pim_upload_history" as any)
+                                  .update({ status: "discarded" })
+                                  .eq("id", pendingUploadId);
+                              } catch { /* non-blocking */ }
+                            }
                             setCsvResult(null);
-                            toast.info("Carga descartada. Los datos de la app no fueron actualizados.");
+                            setPendingUploadId(null);
+                            setPendingAttributeOrder([]);
+                            queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
+                            toast.info("Carga descartada. Los datos de la app no fueron modificados.");
                           }}
                         >
                           Descartar esta actualización
