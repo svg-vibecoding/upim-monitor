@@ -527,10 +527,22 @@ export default function AdminPage() {
                           className="gap-2"
                           onClick={() => {
                             invalidatePimData();
+                            setCsvResult(null);
                             toast.success("Datos actualizados correctamente");
                           }}
                         >
                           <RefreshCw className="h-4 w-4" /> Actualizar datos de la app
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-2"
+                          onClick={() => {
+                            setCsvResult(null);
+                            toast.info("Carga descartada. Los datos de la app no fueron actualizados.");
+                          }}
+                        >
+                          Descartar
                         </Button>
                       </div>
                     </>
