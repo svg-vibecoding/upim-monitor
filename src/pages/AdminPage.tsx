@@ -9,14 +9,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import {
-  mockUsers, mockDimensions,
-  AppUser, UserRole, Dimension,
-} from "@/data/mockData";
-import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw } from "lucide-react";
+import { mockDimensions, Dimension } from "@/data/mockData";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   useInvalidatePimData,
   usePredefinedReports,
@@ -31,26 +29,66 @@ import {
 } from "@/hooks/usePimData";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import type { AppRole } from "@/contexts/AuthContext";
+
+interface DBUser {
+  id: string;
+  name: string;
+  email: string;
+  active: boolean;
+  role: AppRole;
+}
+
+function useUsers() {
+  return useQuery({
+    queryKey: ["admin-users"],
+    queryFn: async (): Promise<DBUser[]> => {
+      const { data: profiles, error } = await supabase
+        .from("profiles")
+        .select("id, name, email, active")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("user_id, role");
+
+      const roleMap = new Map<string, AppRole>();
+      (roles || []).forEach((r) => roleMap.set(r.user_id, r.role as AppRole));
+
+      return (profiles || []).map((p) => ({
+        id: p.id,
+        name: p.name,
+        email: p.email,
+        active: p.active,
+        role: roleMap.get(p.id) || "pim_manager",
+      }));
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+}
 
 export default function AdminPage() {
   const navigate = useNavigate();
   const invalidatePimData = useInvalidatePimData();
+  const queryClient = useQueryClient();
 
   // DB-driven data
   const { data: dbReports = [], isLoading: reportsLoading } = usePredefinedReports();
   const { data: attributeOrder = [], isLoading: attrsLoading } = useAttributeOrder();
   const { data: uploadHistory = [], isLoading: historyLoading } = usePimUploadHistory();
+  const { data: dbUsers = [], isLoading: usersLoading } = useUsers();
   const updateReportAttrs = useUpdateReportAttributes();
 
-  const [users, setUsers] = useState<AppUser[]>([...mockUsers]);
   const [dimensions, setDimensions] = useState<Dimension[]>([...mockDimensions]);
 
   // User form
   const [userDialog, setUserDialog] = useState(false);
-  const [editingUser, setEditingUser] = useState<AppUser | null>(null);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [userRole, setUserRole] = useState<UserRole>("PIM Manager");
+  const [userPassword, setUserPassword] = useState("");
+  const [userRole, setUserRole] = useState<AppRole>("pim_manager");
+  const [userSaving, setUserSaving] = useState(false);
 
   // Report edit state
   const [reportDialog, setReportDialog] = useState(false);
