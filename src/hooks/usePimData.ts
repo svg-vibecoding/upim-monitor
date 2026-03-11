@@ -288,13 +288,17 @@ export function filterRealAttributes(attributes: string[], realAttributeKeys: st
   return attributes.filter((a) => realSet.has(a));
 }
 
+/** Check if a value is considered empty (null, undefined, empty string, or whitespace-only) */
+function isEmptyValue(val: unknown): boolean {
+  if (val === null || val === undefined) return true;
+  if (typeof val === "string" && val.trim() === "") return true;
+  return false;
+}
+
 export function computeAttributeResults(records: PIMRecord[], attributes: string[]): AttributeResult[] {
   return attributes.map((attr) => {
     const total = records.length;
-    const populated = records.filter((r) => {
-      const val = r[attr];
-      return val !== null && val !== "" && val !== undefined;
-    }).length;
+    const populated = records.filter((r) => !isEmptyValue(r[attr])).length;
     return { name: attr, totalSKUs: total, populated, completeness: total > 0 ? Math.round((populated / total) * 100) : 0 };
   });
 }
