@@ -350,6 +350,11 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
       return allRecords.filter((r) => r.visibilidadB2B === "Visible");
     case "visible_b2c":
       return allRecords.filter((r) => r.visibilidadB2C === "Visible");
+    case "digital_base":
+      return allRecords.filter((r) => {
+        const codigoSumaGo = r["Código SumaGo"];
+        return codigoSumaGo !== null && codigoSumaGo !== undefined && String(codigoSumaGo).trim() !== "";
+      });
     case "all":
     default:
       return allRecords;
