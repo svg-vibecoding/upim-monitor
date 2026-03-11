@@ -18,7 +18,7 @@ export function AppSidebar() {
   const { user } = useAuth();
 
   const items = [
-    { title: "Inicio", url: "/", icon: Home },
+    { title: "Inicio", url: "/", icon: LayoutDashboard },
     { title: "Informes", url: "/informes", icon: FileText },
     { title: "Nuevo Informe", url: "/nuevo-informe", icon: PlusCircle },
   ];
