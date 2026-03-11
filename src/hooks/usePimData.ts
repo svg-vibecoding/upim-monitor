@@ -212,10 +212,9 @@ export function usePimRecords() {
       let hasMore = true;
 
       while (hasMore) {
-        const { data, error } = await supabase
+      const { data, error } = await supabase
           .from("pim_records")
           .select("*")
-          .in("estado_global", ["activo", "inactivo"])
           .range(from, from + PAGE_SIZE - 1);
 
         if (error) throw error;
