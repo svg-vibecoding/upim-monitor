@@ -12,6 +12,7 @@ export default function ReportsListPage() {
   const navigate = useNavigate();
   const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
+  const { data: attributeOrder } = useAttributeOrder();
 
   const isLoading = loadingRecords || loadingReports;
   const hasData = allRecords && allRecords.length > 0 && reports && reports.length > 0;
