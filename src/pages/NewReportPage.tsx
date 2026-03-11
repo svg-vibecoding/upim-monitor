@@ -186,6 +186,10 @@ export default function NewReportPage() {
                 </div>
               </RadioGroup>
 
+              {source === "general" && (
+                <p className="text-xs text-muted-foreground">SKUs totales (activos e inactivos)</p>
+              )}
+
               {source === "file" && (
                 <div className="space-y-3">
                   <p className="text-xs text-muted-foreground">El archivo debe tener una columna con Código Jaivaná. Se aceptan archivos .xlsx y .xls.</p>
