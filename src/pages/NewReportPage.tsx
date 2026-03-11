@@ -157,8 +157,8 @@ export default function NewReportPage() {
               </RadioGroup>
               {source === "file" && (
                 <div className="space-y-3">
-                  <p className="text-xs text-muted-foreground">El archivo debe tener una columna con Código Jaivaná (formato JAV-XXXXX). Se aceptan archivos .xlsx y .xls.</p>
-                  {csvCodes.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">El archivo debe tener una columna con Código Jaivaná. Se aceptan archivos .xlsx y .xls.</p>
+                  {!uploadedFileName ? (
                     <label className="flex items-center gap-2 cursor-pointer border border-dashed border-input rounded-md px-4 py-3 text-sm hover:bg-accent transition-colors w-fit">
                       <Upload className="h-4 w-4 text-muted-foreground" />
                       <span>Seleccionar archivo</span>
@@ -169,17 +169,27 @@ export default function NewReportPage() {
                       <FileSpreadsheet className="h-5 w-5 text-success shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{uploadedFileName}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <CheckCircle2 className="h-3 w-3 text-success" />
-                          <span className="text-xs text-muted-foreground">
-                            {csvCodes.length} código{csvCodes.length !== 1 ? "s" : ""} Jaivaná encontrado{csvCodes.length !== 1 ? "s" : ""}
-                          </span>
-                          {allRecords.length > 0 && (
-                            <span className="text-xs text-muted-foreground">
-                              · {allRecords.filter((r) => csvCodes.includes(r.codigoJaivana)).length} coinciden en la base
-                            </span>
-                          )}
-                        </div>
+                        {uploadedFileReady ? (
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {csvCodes.length > 0 ? (
+                              <>
+                                <CheckCircle2 className="h-3 w-3 text-success" />
+                                <span className="text-xs text-muted-foreground">
+                                  {uploadedTotalRows} fila{uploadedTotalRows !== 1 ? "s" : ""} · {csvCodes.length} código{csvCodes.length !== 1 ? "s" : ""} detectado{csvCodes.length !== 1 ? "s" : ""}
+                                </span>
+                                {allRecords.length > 0 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    · {allRecords.filter((r) => csvCodes.includes(r.codigoJaivana)).length} coinciden en la base
+                                  </span>
+                                )}
+                              </>
+                            ) : (
+                              <span className="text-xs text-destructive">No se encontraron códigos en el archivo</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Procesando…</span>
+                        )}
                       </div>
                       <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClearFile}>
                         <X className="h-3.5 w-3.5" />
