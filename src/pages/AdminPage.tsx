@@ -26,6 +26,8 @@ import {
   getAttributeClassification,
   isNonEvaluable,
   usePimUploadHistory,
+  usePimRecords,
+  useDimensions,
   sortReportsByDisplayOrder,
 } from "@/hooks/usePimData";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
