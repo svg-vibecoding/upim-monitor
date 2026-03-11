@@ -92,6 +92,45 @@ export type Database = {
         }
         Relationships: []
       }
+      pim_records_staging: {
+        Row: {
+          attributes: Json
+          categoria_n1_comercial: string | null
+          clasificacion_producto: string | null
+          codigo_jaivana: string
+          created_at: string
+          estado_global: string | null
+          id: string
+          updated_at: string
+          visibilidad_b2b: string | null
+          visibilidad_b2c: string | null
+        }
+        Insert: {
+          attributes?: Json
+          categoria_n1_comercial?: string | null
+          clasificacion_producto?: string | null
+          codigo_jaivana: string
+          created_at?: string
+          estado_global?: string | null
+          id?: string
+          updated_at?: string
+          visibilidad_b2b?: string | null
+          visibilidad_b2c?: string | null
+        }
+        Update: {
+          attributes?: Json
+          categoria_n1_comercial?: string | null
+          clasificacion_producto?: string | null
+          codigo_jaivana?: string
+          created_at?: string
+          estado_global?: string | null
+          id?: string
+          updated_at?: string
+          visibilidad_b2b?: string | null
+          visibilidad_b2c?: string | null
+        }
+        Relationships: []
+      }
       pim_upload_history: {
         Row: {
           errors: number
