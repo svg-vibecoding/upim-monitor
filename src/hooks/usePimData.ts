@@ -359,7 +359,19 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
     case "all":
     default:
       return allRecords;
-  }
+}
+
+/** Canonical display order for predefined reports */
+export const REPORT_DISPLAY_ORDER = ["PIM General", "SumaGO B2B", "SumaGO B2C", "Compras"];
+
+/** Sort reports by canonical display order */
+export function sortReportsByDisplayOrder<T extends { name: string }>(reports: T[]): T[] {
+  return [...reports].sort((a, b) => {
+    const idxA = REPORT_DISPLAY_ORDER.indexOf(a.name);
+    const idxB = REPORT_DISPLAY_ORDER.indexOf(b.name);
+    return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+  });
+}
 }
 
 export function computeFocusPoints(records: PIMRecord[], reports: PredefinedReport[], realAttributeKeys: string[] = []): AttributeResult[] {
