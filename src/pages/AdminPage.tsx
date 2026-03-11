@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,33 +10,32 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
-  mockUsers, mockPredefinedReports, mockDimensions,
-  AppUser, UserRole, PredefinedReport, Dimension,
+  mockUsers, mockDimensions,
+  AppUser, UserRole, Dimension,
 } from "@/data/mockData";
-import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, ArrowRight, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, ArrowRight, RefreshCw, Search, CheckSquare, Square } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
-import { useInvalidatePimData } from "@/hooks/usePimData";
-
-const ALL_ATTRIBUTES = [
-  "Nombre Comercial", "Descripción Corta", "Descripción Larga", "Marca", "EAN",
-  "Unidad de Medida", "Contenido Neto", "País de Origen", "Peso Bruto", "Alto",
-  "Ancho", "Profundidad", "Material", "Color Principal", "Vida Útil",
-  "Descripción Corta Web", "Descripción Larga Web", "Imagen Principal", "Imagen 2",
-  "Imagen 3", "Ficha Técnica PDF", "Palabras Clave SEO", "Meta Description",
-  "Categoría Web B2B", "Categoría Web B2C", "Precio Sugerido B2B", "Precio Sugerido B2C",
-  "Unidad de Venta B2B", "Video Producto", "Información Nutricional", "Ingredientes",
-  "Código Proveedor", "Nombre Proveedor", "Referencia Proveedor", "Unidad de Compra",
-  "Factor de Conversión", "Lead Time", "MOQ", "País Origen Compra", "Incoterm", "Moneda Compra",
-];
+import {
+  useInvalidatePimData,
+  usePredefinedReports,
+  useAttributeOrder,
+  useUpdateReportAttributes,
+  STRUCTURAL_ATTRIBUTES,
+} from "@/hooks/usePimData";
+import { toast } from "sonner";
 
 export default function AdminPage() {
   const navigate = useNavigate();
   const invalidatePimData = useInvalidatePimData();
 
+  // DB-driven data
+  const { data: dbReports = [], isLoading: reportsLoading } = usePredefinedReports();
+  const { data: attributeOrder = [], isLoading: attrsLoading } = useAttributeOrder();
+  const updateReportAttrs = useUpdateReportAttributes();
+
   const [users, setUsers] = useState<AppUser[]>([...mockUsers]);
-  const [reports, setReports] = useState<PredefinedReport[]>([...mockPredefinedReports]);
   const [dimensions, setDimensions] = useState<Dimension[]>([...mockDimensions]);
 
   // User form
@@ -46,12 +45,11 @@ export default function AdminPage() {
   const [userEmail, setUserEmail] = useState("");
   const [userRole, setUserRole] = useState<UserRole>("PIM Manager");
 
-  // Report form
+  // Report edit state
   const [reportDialog, setReportDialog] = useState(false);
-  const [editingReport, setEditingReport] = useState<PredefinedReport | null>(null);
-  const [reportName, setReportName] = useState("");
-  const [reportUniverse, setReportUniverse] = useState("");
+  const [editingReportId, setEditingReportId] = useState<string | null>(null);
   const [reportAttrs, setReportAttrs] = useState<string[]>([]);
+  const [attrSearch, setAttrSearch] = useState("");
 
   // Dimension form
   const [dimDialog, setDimDialog] = useState(false);
@@ -86,36 +84,55 @@ export default function AdminPage() {
     setUsers((prev) => prev.map((u) => u.id === id ? { ...u, active: !u.active } : u));
   };
 
-  const openReportDialog = (report?: PredefinedReport) => {
-    if (report) {
-      setEditingReport(report);
-      setReportName(report.name);
-      setReportUniverse(report.universe);
-      setReportAttrs([...report.attributes]);
+  // --- Reports: open edit dialog with current attrs from DB ---
+  const openReportDialog = (reportId: string) => {
+    const report = dbReports.find((r) => r.id === reportId);
+    if (!report) return;
+    setEditingReportId(reportId);
+    setAttrSearch("");
+
+    // For PIM General (first report or name contains "General"), default to all non-structural attrs if empty
+    const isPimGeneral = report.name.toLowerCase().includes("general");
+    if (isPimGeneral && (report.attributes.length === 0 || report.attributes.some((a) => !attributeOrder.includes(a)))) {
+      // Preselect all except structural
+      setReportAttrs(attributeOrder.filter((a) => !STRUCTURAL_ATTRIBUTES.includes(a)));
     } else {
-      setEditingReport(null);
-      setReportName("");
-      setReportUniverse("");
-      setReportAttrs([]);
+      setReportAttrs([...report.attributes]);
     }
     setReportDialog(true);
   };
 
-  const saveReport = () => {
-    if (editingReport) {
-      setReports((prev) => prev.map((r) => r.id === editingReport.id
-        ? { ...r, name: reportName, universe: reportUniverse, attributes: reportAttrs } : r));
-    } else {
-      setReports((prev) => [...prev, {
-        id: String(Date.now()), name: reportName, description: "", universe: reportUniverse, attributes: reportAttrs,
-      }]);
+  const saveReportAttrs = async () => {
+    if (!editingReportId) return;
+    try {
+      await updateReportAttrs.mutateAsync({ reportId: editingReportId, attributes: reportAttrs });
+      toast.success("Atributos del informe actualizados");
+      setReportDialog(false);
+    } catch (err) {
+      toast.error(`Error al guardar: ${(err as Error).message}`);
     }
-    setReportDialog(false);
   };
 
   const toggleReportAttr = (attr: string) => {
     setReportAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]);
   };
+
+  const selectAllAttrs = () => {
+    setReportAttrs(attributeOrder.filter((a) => !STRUCTURAL_ATTRIBUTES.includes(a)));
+  };
+
+  const deselectAllAttrs = () => {
+    setReportAttrs([]);
+  };
+
+  // Filtered attributes for search in dialog
+  const filteredAttrs = useMemo(() => {
+    if (!attrSearch.trim()) return attributeOrder;
+    const q = attrSearch.toLowerCase();
+    return attributeOrder.filter((a) => a.toLowerCase().includes(q));
+  }, [attributeOrder, attrSearch]);
+
+  const editingReport = dbReports.find((r) => r.id === editingReportId);
 
   const openDimDialog = () => {
     setDimName("");
@@ -144,7 +161,7 @@ export default function AdminPage() {
     error?: string;
   } | null>(null);
 
-  const CHUNK_SIZE = 2000; // rows per request to edge function
+  const CHUNK_SIZE = 2000;
 
   const handleCsvUpload = async () => {
     const file = fileInputRef.current?.files?.[0];
@@ -189,7 +206,7 @@ export default function AdminPage() {
         const res = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ rows: chunk }),
+          body: JSON.stringify({ rows: chunk, isFirstChunk: i === 0 }),
         });
 
         const data = await res.json();
@@ -332,7 +349,6 @@ export default function AdminPage() {
                         </div>
                       )}
 
-                      {/* Post-upload actions */}
                       <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
                         <Button
                           variant="default"
@@ -384,7 +400,7 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
 
-
+        {/* USERS */}
         <TabsContent value="users" className="space-y-4">
           <div className="flex justify-end">
             <Dialog open={userDialog} onOpenChange={setUserDialog}>
@@ -451,60 +467,127 @@ export default function AdminPage() {
           </Card>
         </TabsContent>
 
-        {/* REPORTS */}
+        {/* REPORTS - now DB-driven */}
         <TabsContent value="reports" className="space-y-4">
-          <div className="flex justify-end">
-            <Dialog open={reportDialog} onOpenChange={setReportDialog}>
-              <DialogTrigger asChild>
-                <Button onClick={() => openReportDialog()} className="gap-2"><Plus className="h-4 w-4" /> Nuevo informe</Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-lg max-h-[80vh] overflow-auto">
-                <DialogHeader><DialogTitle>{editingReport ? "Editar informe" : "Nuevo informe"}</DialogTitle></DialogHeader>
-                <div className="space-y-3 pt-2">
-                  <div><Label>Nombre</Label><Input value={reportName} onChange={(e) => setReportName(e.target.value)} /></div>
-                  <div><Label>Universo / criterio base</Label><Input value={reportUniverse} onChange={(e) => setReportUniverse(e.target.value)} /></div>
-                  <div>
-                    <Label>Atributos ({reportAttrs.length})</Label>
-                    <div className="grid grid-cols-2 gap-1 max-h-48 overflow-auto mt-1 border rounded-md p-2">
-                      {ALL_ATTRIBUTES.map((attr) => (
-                        <label key={attr} className="flex items-center gap-2 text-sm cursor-pointer py-0.5">
-                          <Checkbox checked={reportAttrs.includes(attr)} onCheckedChange={() => toggleReportAttr(attr)} />
-                          <span className="truncate">{attr}</span>
-                        </label>
-                      ))}
+          {attrsLoading || reportsLoading ? (
+            <div className="flex items-center gap-2 p-8 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Cargando informes...
+            </div>
+          ) : attributeOrder.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-sm text-muted-foreground">
+                  No se han detectado atributos. Sube un archivo Excel en la pestaña "Base PIM" para cargar los atributos disponibles.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Report attribute edit dialog */}
+              <Dialog open={reportDialog} onOpenChange={setReportDialog}>
+                <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
+                  <DialogHeader>
+                    <DialogTitle>
+                      Configurar atributos — {editingReport?.name}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          placeholder="Buscar atributo..."
+                          value={attrSearch}
+                          onChange={(e) => setAttrSearch(e.target.value)}
+                          className="pl-9"
+                        />
+                      </div>
+                      <Badge variant="secondary">{reportAttrs.length} seleccionados</Badge>
                     </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={selectAllAttrs}>
+                        <CheckSquare className="h-3 w-3" /> Todos
+                      </Button>
+                      <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={deselectAllAttrs}>
+                        <Square className="h-3 w-3" /> Ninguno
+                      </Button>
+                    </div>
+                    <div className="border rounded-md p-2 overflow-auto flex-1 min-h-0 max-h-[50vh]">
+                      {filteredAttrs.map((attr) => {
+                        const isStructural = STRUCTURAL_ATTRIBUTES.includes(attr);
+                        return (
+                          <label
+                            key={attr}
+                            className={`flex items-center gap-2 text-sm cursor-pointer py-1 px-1 rounded hover:bg-muted/50 ${isStructural ? "opacity-60" : ""}`}
+                          >
+                            <Checkbox
+                              checked={reportAttrs.includes(attr)}
+                              onCheckedChange={() => toggleReportAttr(attr)}
+                            />
+                            <span className="truncate">{attr}</span>
+                            {isStructural && (
+                              <Badge variant="outline" className="text-[10px] ml-auto shrink-0">estructural</Badge>
+                            )}
+                          </label>
+                        );
+                      })}
+                      {filteredAttrs.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-4">No se encontraron atributos</p>
+                      )}
+                    </div>
+                    <Button
+                      onClick={saveReportAttrs}
+                      disabled={updateReportAttrs.isPending}
+                      className="w-full gap-2"
+                    >
+                      {updateReportAttrs.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Guardar configuración
+                    </Button>
                   </div>
-                  <Button onClick={saveReport} className="w-full">Guardar</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <Card>
-            <CardContent className="pt-4">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Universo</TableHead>
-                    <TableHead className="text-right">Atributos</TableHead>
-                    <TableHead className="w-20">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reports.map((r) => (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium">{r.name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{r.universe}</TableCell>
-                      <TableCell className="text-right">{r.attributes.length}</TableCell>
-                      <TableCell>
-                        <Button variant="ghost" size="icon" onClick={() => openReportDialog(r)}><Pencil className="h-3 w-3" /></Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                </DialogContent>
+              </Dialog>
+
+              <Card>
+                <CardContent className="pt-4">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead>Universo</TableHead>
+                        <TableHead className="text-right">Atributos</TableHead>
+                        <TableHead className="w-20">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {dbReports.map((r) => (
+                        <TableRow key={r.id}>
+                          <TableCell className="font-medium">{r.name}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{r.universe}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant={r.attributes.length > 0 ? "secondary" : "destructive"}>
+                              {r.attributes.length}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Button variant="ghost" size="icon" onClick={() => openReportDialog(r.id)}>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {dbReports.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center text-muted-foreground">
+                            No hay informes predefinidos
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </TabsContent>
 
         {/* DIMENSIONS */}
