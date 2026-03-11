@@ -280,9 +280,9 @@ export default function DashboardPage() {
           </div>
 
           {/* ═══ FOCOS + REPORTS (asymmetric) ═══ */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 items-start">
             {/* ── Focos de atención (wider, left) ── */}
-            <div className="lg:col-span-3 flex flex-col">
+            <div className="lg:col-span-2 flex flex-col">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-warning" />
