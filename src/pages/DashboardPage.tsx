@@ -177,7 +177,8 @@ export default function DashboardPage() {
                 <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
                   {kpis!.total.toLocaleString()}
                 </p>
-                <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-border">
+                <div className="flex-1 min-h-6" />
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
@@ -226,7 +227,8 @@ export default function DashboardPage() {
                   </p>
                   <span className="text-xs text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
                 </div>
-                <div className="grid grid-cols-2 gap-3 mt-auto pt-4 border-t border-border">
+                <div className="flex-1 min-h-6" />
+                <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
@@ -272,7 +274,8 @@ export default function DashboardPage() {
                     <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
                       {pimGeneralCompleteness}%
                     </p>
-                    <div className="mt-auto pt-4 border-t border-border">
+                    <div className="flex-1 min-h-6" />
+                    <div className="pt-4 border-t border-border">
                       <p className="text-xs text-muted-foreground mb-2">Progreso PIM General</p>
                       <CompletenessBar value={pimGeneralCompleteness} showLabel={false} size="sm" />
                     </div>
@@ -280,7 +283,8 @@ export default function DashboardPage() {
                 ) : (
                   <>
                     <p className="text-5xl font-bold text-muted-foreground/30 tabular-nums leading-none mt-3">—</p>
-                    <div className="mt-auto pt-4 border-t border-border">
+                    <div className="flex-1 min-h-6" />
+                    <div className="pt-4 border-t border-border">
                       <p className="text-xs text-muted-foreground">Sin datos de completitud</p>
                     </div>
                   </>
