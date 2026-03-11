@@ -127,12 +127,13 @@ export default function AdminPage() {
     setReportAttrs([]);
   };
 
-  // Filtered attributes for search in dialog
+  // Filtered attributes for search in dialog — only evaluable attrs
+  const evaluableAttrsOrdered = useMemo(() => getEvaluableAttributes(attributeOrder), [attributeOrder]);
   const filteredAttrs = useMemo(() => {
-    if (!attrSearch.trim()) return attributeOrder;
+    if (!attrSearch.trim()) return evaluableAttrsOrdered;
     const q = attrSearch.toLowerCase();
-    return attributeOrder.filter((a) => a.toLowerCase().includes(q));
-  }, [attributeOrder, attrSearch]);
+    return evaluableAttrsOrdered.filter((a) => a.toLowerCase().includes(q));
+  }, [evaluableAttrsOrdered, attrSearch]);
 
   const editingReport = dbReports.find((r) => r.id === editingReportId);
 
