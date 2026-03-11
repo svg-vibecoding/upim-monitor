@@ -167,8 +167,10 @@ export default function NewReportPage() {
           {/* Step 1: Universe */}
           <Card>
             <CardContent className="pt-4 space-y-3">
-              <Label className="text-sm font-semibold">1. Seleccionar universo</Label>
-              <p className="text-xs text-muted-foreground">Selecciona el universo de productos sobre el cual se construirá el informe.</p>
+              <div>
+                <Label className="text-sm font-semibold">1. Seleccionar universo</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">Selecciona el universo de productos sobre el cual se construirá el informe.</p>
+              </div>
               <RadioGroup value={source} onValueChange={(v) => setSource(v as Source)} className="flex flex-wrap gap-4">
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="general" id="src-gen" />
