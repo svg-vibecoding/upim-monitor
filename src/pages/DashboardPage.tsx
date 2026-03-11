@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  usePimRecords, usePredefinedReports, useLastPimUpdate,
-  computeKPIs, computeFocusPoints,
+  usePimKPIs, usePimRecords, usePredefinedReports,
+  computeFocusPoints,
 } from "@/hooks/usePimData";
 import { PlusCircle, FileText, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
@@ -13,18 +13,19 @@ import { es } from "date-fns/locale";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const { data: kpis, isLoading: loadingKPIs } = usePimKPIs();
   const { data: records, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
-  const { data: lastUpdate } = useLastPimUpdate();
 
-  const isLoading = loadingRecords || loadingReports;
-  const hasData = records && records.length > 0 && reports && reports.length > 0;
+  const isLoading = loadingKPIs || loadingRecords || loadingReports;
+  const hasData = kpis && kpis.total > 0;
 
-  const kpis = hasData ? computeKPIs(records, reports) : null;
-  const focusPoints = hasData ? computeFocusPoints(records, reports) : [];
+  const focusPoints = records && records.length > 0 && reports && reports.length > 0
+    ? computeFocusPoints(records, reports)
+    : [];
 
-  const lastUpdateFormatted = lastUpdate
-    ? format(new Date(lastUpdate), "d 'de' MMMM yyyy, HH:mm", { locale: es })
+  const lastUpdateFormatted = kpis?.lastUpdated
+    ? format(new Date(kpis.lastUpdated), "d 'de' MMMM yyyy, HH:mm", { locale: es })
     : "Sin datos cargados";
 
   const kpiCards = kpis ? [
@@ -65,17 +66,6 @@ export default function DashboardPage() {
         </Card>
       ) : (
         <>
-          {/* Global Completeness */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-muted-foreground">Puntaje global de completitud</span>
-                <span className="text-2xl font-bold text-foreground">{kpis!.globalCompleteness}%</span>
-              </div>
-              <CompletenessBar value={kpis!.globalCompleteness} showLabel={false} size="md" />
-            </CardContent>
-          </Card>
-
           {/* KPI Cards */}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {kpiCards.map((k) => (
@@ -94,7 +84,7 @@ export default function DashboardPage() {
             <div className="lg:col-span-2">
               <h2 className="text-sm font-semibold text-foreground mb-3">Informes predefinidos</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {reports!.map((r) => (
+                {reports && reports.map((r) => (
                   <Card
                     key={r.id}
                     className="cursor-pointer hover:border-primary/30 transition-colors"
