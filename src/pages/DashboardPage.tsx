@@ -15,6 +15,7 @@ import {
   getRecordsForReport,
   computeAttributeResults,
   getFullAttributeList,
+  sortReportsByDisplayOrder,
 } from "@/hooks/usePimData";
 import type { PredefinedReport } from "@/data/mockData";
 import {
@@ -69,7 +70,6 @@ function severityBarColor(s: SeverityLevel) {
 }
 
 /* ── Focus report order ───────────────────────────────────────── */
-const FOCUS_REPORT_ORDER = ["PIM General", "SumaGO B2B", "SumaGO B2C", "Compras"];
 
 /* ── Dashboard ──────────────────────────────────────────────────── */
 
@@ -84,10 +84,7 @@ export default function DashboardPage() {
   const hasData = kpis && kpis.total > 0;
 
   const focusReports = useMemo(
-    () => {
-      const filtered = (reports || []).filter((r) => FOCUS_REPORT_ORDER.includes(r.name));
-      return filtered.sort((a, b) => FOCUS_REPORT_ORDER.indexOf(a.name) - FOCUS_REPORT_ORDER.indexOf(b.name));
-    },
+    () => sortReportsByDisplayOrder((reports || []).filter((r) => ["PIM General", "SumaGO B2B", "SumaGO B2C", "Compras"].includes(r.name))),
     [reports]
   );
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -300,7 +297,7 @@ export default function DashboardPage() {
               <Card className="h-full">
                 <CardContent className="py-2 px-2">
                   {reports &&
-                    reports.map((r, idx) => (
+                    sortReportsByDisplayOrder(reports).map((r, idx) => (
                       <div
                         key={r.id}
                         className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted/60 cursor-pointer transition-colors group"
