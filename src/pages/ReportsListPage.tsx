@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   usePimRecords, usePredefinedReports, useAttributeOrder,
   computeAttributeResults, getRecordsForReport, filterRealAttributes, getEvaluableAttributes,
+  sortReportsByDisplayOrder,
 } from "@/hooks/usePimData";
 import { FileText } from "lucide-react";
 
