@@ -128,6 +128,27 @@ export const NON_EVALUABLE_FIELDS = [...FUNCTIONAL_FIELDS, ...DIMENSION_FIELDS];
 /** Legacy alias kept for backward compat */
 export const STRUCTURAL_ATTRIBUTES = FUNCTIONAL_FIELDS;
 
+/** Fields stored as fixed DB columns (excluding Código Jaivaná which is handled separately) */
+export const FIXED_COLUMN_FIELDS = [
+  "Estado (Global)",
+  "SumaGO",
+  "Visibilidad Adobe B2B",
+  "Visibilidad Adobe B2C",
+  "Categoría N1 Comercial",
+  "Clasificación del Producto",
+];
+
+/** Build full attribute list by prepending fixed-column fields to the JSONB attribute order */
+export function getFullAttributeList(attributeOrder: string[]): string[] {
+  const result = [...FIXED_COLUMN_FIELDS];
+  for (const attr of attributeOrder) {
+    if (!FIXED_COLUMN_FIELDS.includes(attr)) {
+      result.push(attr);
+    }
+  }
+  return result;
+}
+
 /** Given a full attribute order, return only evaluable attributes */
 export function getEvaluableAttributes(allAttrs: string[]): string[] {
   return allAttrs.filter((a) => !NON_EVALUABLE_FIELDS.includes(a));
