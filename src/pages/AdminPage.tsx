@@ -258,7 +258,7 @@ export default function AdminPage() {
       <Tabs defaultValue="pim-upload">
         <TabsList>
           <TabsTrigger value="pim-upload">Base PIM</TabsTrigger>
-          <TabsTrigger value="users">Usuarios</TabsTrigger>
+          <TabsTrigger value="attributes">Atributos</TabsTrigger>
           <TabsTrigger value="reports">Informes</TabsTrigger>
           <TabsTrigger value="dimensions">Dimensiones</TabsTrigger>
         </TabsList>
