@@ -18,15 +18,15 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const { user } = useAuth();
 
-  const items = [
+  const mainItems = [
     { title: "Inicio", url: "/", icon: BarChart3 },
     { title: "Informes", url: "/informes", icon: FileText },
     { title: "Nuevo Informe", url: "/nuevo-informe", icon: PlusCircle },
   ];
 
-  if (user?.role === "usuario_pro") {
-    items.push({ title: "Administración", url: "/admin", icon: Settings });
-  }
+  const proItems = [
+    { title: "Administración", url: "/admin", icon: Settings },
+  ];
 
   return (
     <Sidebar collapsible="icon">
@@ -47,7 +47,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {mainItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
@@ -65,6 +65,32 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {user?.role === "usuario_pro" && (
+          <SidebarGroup>
+            {!collapsed && (
+              <p className="px-4 pt-2 pb-1 text-[11px] font-medium text-sidebar-muted uppercase tracking-wider">Pro</p>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {proItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={item.url}
+                        className="hover:bg-sidebar-accent/50 text-sidebar-foreground"
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      >
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {!collapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
     </Sidebar>
   );
