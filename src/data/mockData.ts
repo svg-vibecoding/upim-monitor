@@ -124,7 +124,6 @@ function generateMockData(): PIMRecord[] {
     const record: PIMRecord = {
       codigoJaivana: `JAV-${String(i + 1).padStart(6, "0")}`,
       estadoGlobal: isActive ? "Activo" : "Inactivo",
-      codigoSumaGo: hasSumaGo ? `SG-${String(i + 1).padStart(5, "0")}` : null,
       visibilidadB2B: hasSumaGo && Math.random() > 0.2 ? "Visible" : "Oculto",
       visibilidadB2C: hasSumaGo && Math.random() > 0.3 ? "Visible" : "Oculto",
       categoriaN1Comercial: categories[Math.floor(Math.random() * categories.length)],
