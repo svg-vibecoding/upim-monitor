@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { PIMRecord, PredefinedReport, Dimension, AttributeResult, DimensionResult } from "@/data/mockData";
+import type { PIMRecord, PredefinedReport, Dimension, AttributeResult, DimensionResult, UniverseKey } from "@/data/mockData";
 
 // --- Fallback: read from JSONB attributes when fixed columns have defaults ---
 function resolveField(
