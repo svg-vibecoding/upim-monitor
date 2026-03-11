@@ -788,6 +788,91 @@ export default function AdminPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* USERS */}
+        <TabsContent value="users" className="space-y-4">
+          <div className="flex justify-end">
+            <Dialog open={userDialog} onOpenChange={setUserDialog}>
+              <DialogTrigger asChild>
+                <Button onClick={openUserDialog} className="gap-2"><UserPlus className="h-4 w-4" /> Nuevo usuario</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Crear usuario</DialogTitle></DialogHeader>
+                <div className="space-y-3 pt-2">
+                  <div><Label>Nombre</Label><Input value={userName} onChange={(e) => setUserName(e.target.value)} placeholder="Nombre completo" /></div>
+                  <div><Label>Correo electrónico</Label><Input type="email" value={userEmail} onChange={(e) => setUserEmail(e.target.value)} placeholder="correo@empresa.com" /></div>
+                  <div><Label>Contraseña inicial</Label><Input type="password" value={userPassword} onChange={(e) => setUserPassword(e.target.value)} placeholder="Mínimo 6 caracteres" /></div>
+                  <div>
+                    <Label>Rol</Label>
+                    <Select value={userRole} onValueChange={(v) => setUserRole(v as AppRole)}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pim_manager">PIM Manager</SelectItem>
+                        <SelectItem value="usuario_pro">UsuarioPRO</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <Button onClick={saveUser} className="w-full" disabled={userSaving}>
+                    {userSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creando...</> : "Crear usuario"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <Card>
+            <CardContent className="pt-4">
+              {usersLoading ? (
+                <div className="flex items-center gap-2 p-8 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Cargando usuarios...
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Correo</TableHead>
+                      <TableHead>Rol</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="w-28">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dbUsers.map((u) => (
+                      <TableRow key={u.id} className={!u.active ? "opacity-50" : ""}>
+                        <TableCell className="font-medium">{u.name}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
+                        <TableCell>
+                          <Badge variant={u.role === "usuario_pro" ? "default" : "secondary"}>
+                            {u.role === "usuario_pro" ? "UsuarioPRO" : "PIM Manager"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={u.active ? "outline" : "destructive"}>
+                            {u.active ? "Activo" : "Inactivo"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleUserActive(u.id, u.active)}
+                          >
+                            {u.active ? "Desactivar" : "Activar"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {dbUsers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground">No hay usuarios registrados</TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
