@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { PIMRecord, PredefinedReport, Dimension, AttributeResult, DimensionResult } from "@/data/mockData";
 
@@ -9,7 +9,6 @@ function resolveField(
   attributes: Record<string, string | null>,
   attrKey: string
 ): string {
-  // If the fixed column has the DB default and the attribute exists, prefer attributes
   if (fixedValue === fixedDefault && attributes[attrKey]) {
     return attributes[attrKey]!;
   }
@@ -39,7 +38,6 @@ function dbRowToPIMRecord(row: {
 
   const sumaGo = row.codigo_sumago || attrs["SumaGO"] || null;
 
-  // Remove fixed-column keys from attributes to avoid duplication
   const cleanAttrs = { ...attrs };
   delete cleanAttrs["Estado (Global)"];
   delete cleanAttrs["Visibilidad Adobe B2B"];
@@ -90,6 +88,32 @@ export function usePimKPIs() {
   });
 }
 
+// --- Attribute order from pim_metadata ---
+export function useAttributeOrder() {
+  return useQuery({
+    queryKey: ["pim-attribute-order"],
+    queryFn: async (): Promise<string[]> => {
+      const { data, error } = await supabase
+        .from("pim_metadata" as any)
+        .select("attribute_order")
+        .eq("id", "singleton")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return [];
+      return (data as any).attribute_order || [];
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+// --- Structural attributes excluded from completeness by default ---
+export const STRUCTURAL_ATTRIBUTES = [
+  "Estado (Global)",
+  "SumaGO",
+  "Visibilidad Adobe B2B",
+  "Visibilidad Adobe B2C",
+];
+
 // --- Records hook (only fetches valid rows, excludes ghosts) ---
 export function usePimRecords() {
   return useQuery({
@@ -139,6 +163,23 @@ export function usePredefinedReports() {
       }));
     },
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+// --- Mutation to update report attributes ---
+export function useUpdateReportAttributes() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ reportId, attributes }: { reportId: string; attributes: string[] }) => {
+      const { error } = await supabase
+        .from("predefined_reports")
+        .update({ attributes })
+        .eq("id", reportId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
+    },
   });
 }
 
@@ -221,5 +262,6 @@ export function useInvalidatePimData() {
     queryClient.invalidateQueries({ queryKey: ["pim-kpis"] });
     queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
     queryClient.invalidateQueries({ queryKey: ["dimensions"] });
+    queryClient.invalidateQueries({ queryKey: ["pim-attribute-order"] });
   };
 }
