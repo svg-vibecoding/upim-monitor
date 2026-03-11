@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  usePimRecords, usePredefinedReports,
-  computeAttributeResults, getRecordsForReport,
+  usePimRecords, usePredefinedReports, useAttributeOrder,
+  computeAttributeResults, getRecordsForReport, filterRealAttributes,
 } from "@/hooks/usePimData";
 import { FileText } from "lucide-react";
 
@@ -12,6 +12,7 @@ export default function ReportsListPage() {
   const navigate = useNavigate();
   const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
+  const { data: attributeOrder } = useAttributeOrder();
 
   const isLoading = loadingRecords || loadingReports;
   const hasData = allRecords && allRecords.length > 0 && reports && reports.length > 0;
@@ -34,7 +35,8 @@ export default function ReportsListPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {reports!.map((report) => {
             const records = getRecordsForReport(allRecords!, report);
-            const attrResults = computeAttributeResults(records, report.attributes);
+            const validAttrs = filterRealAttributes(report.attributes, attributeOrder || []);
+            const attrResults = computeAttributeResults(records, validAttrs);
             const avgCompleteness = attrResults.length > 0
               ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
               : 0;

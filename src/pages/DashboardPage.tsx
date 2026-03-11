@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  usePimKPIs, usePimRecords, usePredefinedReports,
+  usePimKPIs, usePimRecords, usePredefinedReports, useAttributeOrder,
   computeFocusPoints,
 } from "@/hooks/usePimData";
 import { PlusCircle, FileText, AlertTriangle } from "lucide-react";
@@ -16,12 +16,13 @@ export default function DashboardPage() {
   const { data: kpis, isLoading: loadingKPIs } = usePimKPIs();
   const { data: records, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
+  const { data: attributeOrder } = useAttributeOrder();
 
   const isLoading = loadingKPIs || loadingRecords || loadingReports;
   const hasData = kpis && kpis.total > 0;
 
   const focusPoints = records && records.length > 0 && reports && reports.length > 0
-    ? computeFocusPoints(records, reports)
+    ? computeFocusPoints(records, reports, attributeOrder || [])
     : [];
 
   const lastUpdateFormatted = kpis?.lastUpdated

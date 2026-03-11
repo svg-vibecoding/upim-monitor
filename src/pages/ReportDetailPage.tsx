@@ -7,8 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  usePimRecords, usePredefinedReports, useDimensions,
+  usePimRecords, usePredefinedReports, useDimensions, useAttributeOrder,
   computeAttributeResults, computeDimensionResults, getRecordsForReport,
+  filterRealAttributes,
 } from "@/hooks/usePimData";
 import { downloadCSV } from "@/data/mockData";
 import { ArrowLeft, Download } from "lucide-react";
@@ -21,6 +22,7 @@ export default function ReportDetailPage() {
   const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
+  const { data: attributeOrder } = useAttributeOrder();
 
   const isLoading = loadingRecords || loadingReports || loadingDimensions;
 
@@ -41,13 +43,14 @@ export default function ReportDetailPage() {
   if (!report) return <div className="p-6">Informe no encontrado.</div>;
 
   const records = getRecordsForReport(allRecords || [], report);
-  const attrResults = computeAttributeResults(records, report.attributes);
+  const validAttrs = filterRealAttributes(report.attributes, attributeOrder || []);
+  const attrResults = computeAttributeResults(records, validAttrs);
   const avgCompleteness = attrResults.length > 0
     ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
     : 0;
 
   const dimension = dimensions?.find((d) => d.id === selectedDimension);
-  const dimensionResults = dimension ? computeDimensionResults(records, report.attributes, dimension.field) : [];
+  const dimensionResults = dimension ? computeDimensionResults(records, validAttrs, dimension.field) : [];
 
   const handleDownload = () => {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
@@ -73,7 +76,7 @@ export default function ReportDetailPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{records.length.toLocaleString()}</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{report.attributes.length}</p></CardContent></Card>
+        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{validAttrs.length}</p></CardContent></Card>
         <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent></Card>
         <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos &lt;50%</p><p className="text-xl font-bold text-destructive">{attrResults.filter((a) => a.completeness < 50).length}</p></CardContent></Card>
       </div>
