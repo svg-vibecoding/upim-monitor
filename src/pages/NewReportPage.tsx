@@ -142,6 +142,12 @@ export default function NewReportPage() {
                 className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
               />
               <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
+                {/* Código Jaivaná — always selected, not removable */}
+                <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
+                  <Checkbox checked={true} disabled />
+                  <span className="truncate">Código Jaivaná</span>
+                  <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
+                </label>
                 {filteredAttrs.map((attr) => {
                   const classification = getAttributeClassification(attr);
                   const nonEvaluable = !classification.evaluable;
