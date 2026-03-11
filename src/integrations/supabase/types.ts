@@ -35,6 +35,24 @@ export type Database = {
         }
         Relationships: []
       }
+      pim_metadata: {
+        Row: {
+          attribute_order: string[]
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          attribute_order?: string[]
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          attribute_order?: string[]
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pim_records: {
         Row: {
           attributes: Json

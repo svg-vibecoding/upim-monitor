@@ -52,7 +52,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { rows: jsonRows } = await req.json() as { rows: Record<string, unknown>[] };
+    const { rows: jsonRows, isFirstChunk } = await req.json() as {
+      rows: Record<string, unknown>[];
+      isFirstChunk?: boolean;
+    };
 
     if (!jsonRows || jsonRows.length === 0) {
       return new Response(
@@ -88,6 +91,16 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // Save attribute order on first chunk
+    if (isFirstChunk) {
+      const attrOrder = columnMap
+        .filter((c) => c.attrName)
+        .map((c) => c.attrName!);
+      await supabase
+        .from("pim_metadata")
+        .upsert({ id: "singleton", attribute_order: attrOrder, updated_at: new Date().toISOString() });
+    }
 
     let inserted = 0;
     let updated = 0;
