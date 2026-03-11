@@ -170,70 +170,85 @@ export default function AdminPage() {
   const [dimDialog, setDimDialog] = useState(false);
   const [dimName, setDimName] = useState("");
   const [dimField, setDimField] = useState("");
+  const [editingDimId, setEditingDimId] = useState<string | null>(null);
+  const [dimSaving, setDimSaving] = useState(false);
 
-  // --- Reports: open edit dialog with current attrs from DB ---
-  const openReportDialog = (reportId: string) => {
-    const report = dbReports.find((r) => r.id === reportId);
-    if (!report) return;
-    setEditingReportId(reportId);
-    setAttrSearch("");
-
-    // For PIM General, default to all evaluable attrs if empty
-    const isPimGeneral = report.name.toLowerCase().includes("general");
-    const evaluableAttrs = getEvaluableAttributes(attributeOrder);
-    if (isPimGeneral && (report.attributes.length === 0 || report.attributes.some((a) => !attributeOrder.includes(a)))) {
-      setReportAttrs([...evaluableAttrs]);
+  const openDimDialog = (dim?: { id: string; name: string; field: string }) => {
+    if (dim) {
+      setEditingDimId(dim.id);
+      setDimName(dim.name);
+      setDimField(dim.field);
     } else {
-      // Only keep evaluable attrs from saved selection
-      setReportAttrs(report.attributes.filter((a) => evaluableAttrs.includes(a)));
+      setEditingDimId(null);
+      setDimName("");
+      setDimField("");
     }
-    setReportDialog(true);
-  };
-
-  const saveReportAttrs = async () => {
-    if (!editingReportId) return;
-    try {
-      await updateReportAttrs.mutateAsync({ reportId: editingReportId, attributes: reportAttrs });
-      toast.success("Atributos del informe actualizados");
-      setReportDialog(false);
-    } catch (err) {
-      toast.error(`Error al guardar: ${(err as Error).message}`);
-    }
-  };
-
-  const toggleReportAttr = (attr: string) => {
-    setReportAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]);
-  };
-
-  const selectAllAttrs = () => {
-    setReportAttrs(getEvaluableAttributes(getFullAttributeList(attributeOrder)));
-  };
-
-  const deselectAllAttrs = () => {
-    setReportAttrs([]);
-  };
-
-  // Full attribute list including fixed-column fields
-  const fullAttributeList = useMemo(() => getFullAttributeList(attributeOrder), [attributeOrder]);
-
-  // Filtered attributes for search in dialog — show all, tag non-evaluable
-  const filteredAttrs = useMemo(() => {
-    if (!attrSearch.trim()) return fullAttributeList;
-    const q = attrSearch.toLowerCase();
-    return fullAttributeList.filter((a) => a.toLowerCase().includes(q));
-  }, [fullAttributeList, attrSearch]);
-
-  const editingReport = dbReports.find((r) => r.id === editingReportId);
-
-  const openDimDialog = () => {
-    setDimName("");
-    setDimField("");
     setDimDialog(true);
   };
 
-  const saveDimension = () => {
-    setDimensions((prev) => [...prev, { id: String(Date.now()), name: dimName, field: dimField }]);
-    setDimDialog(false);
+  // Attributes available for dimensions (all real attributes from PIM)
+  const availableAttrsForDim = useMemo(() => {
+    const full = getFullAttributeList(attributeOrder);
+    // Exclude Código Jaivaná (it's the PK, not useful as dimension)
+    return full.filter((a) => a !== "Código Jaivaná");
+  }, [attributeOrder]);
+
+  // Compute unique values per dimension field from pim_records
+  const dimensionUniqueValues = useMemo(() => {
+    const result: Record<string, string[]> = {};
+    for (const dim of dbDimensions) {
+      const valuesSet = new Set<string>();
+      for (const rec of pimRecords) {
+        const rawVal = rec[dim.field] as string | null;
+        if (rawVal && rawVal.trim() !== "") {
+          valuesSet.add(rawVal.trim());
+        }
+      }
+      const sorted = [...valuesSet].sort((a, b) => a.localeCompare(b));
+      result[dim.id] = sorted;
+    }
+    return result;
+  }, [dbDimensions, pimRecords]);
+
+  const saveDimension = async () => {
+    if (!dimName || !dimField) {
+      toast.error("Selecciona un nombre y un atributo");
+      return;
+    }
+    setDimSaving(true);
+    try {
+      if (editingDimId) {
+        const { error } = await supabase
+          .from("dimensions")
+          .update({ name: dimName, field: dimField })
+          .eq("id", editingDimId);
+        if (error) throw error;
+        toast.success("Dimensión actualizada");
+      } else {
+        const { error } = await supabase
+          .from("dimensions")
+          .insert({ name: dimName, field: dimField });
+        if (error) throw error;
+        toast.success("Dimensión creada");
+      }
+      setDimDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["dimensions"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error guardando dimensión");
+    } finally {
+      setDimSaving(false);
+    }
+  };
+
+  const deleteDimension = async (dimId: string) => {
+    try {
+      const { error } = await supabase.from("dimensions").delete().eq("id", dimId);
+      if (error) throw error;
+      toast.success("Dimensión eliminada");
+      queryClient.invalidateQueries({ queryKey: ["dimensions"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error eliminando dimensión");
+    }
   };
 
   // CSV upload state
