@@ -28,7 +28,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted">
       <div className="w-full max-w-sm bg-card rounded-lg shadow-lg p-8">
         <div className="text-center mb-6">
-          <img src={upimLogo} alt="UPIM" className="h-10 mx-auto" />
+          <img src={upimLogoLogin} alt="UPIM" className="h-10 mx-auto" />
           <p className="text-sm text-muted-foreground mt-2">Monitor de Completitud PIM</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
