@@ -178,8 +178,8 @@ export default function DashboardPage() {
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Estado General
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Layers className="h-4 w-4 text-primary" />
+                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                    <Layers className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
                 <p className="text-4xl font-bold text-foreground tabular-nums leading-none">
@@ -242,8 +242,8 @@ export default function DashboardPage() {
                   <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Visibilidad Digital
                   </span>
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Eye className="h-4 w-4 text-primary" />
+                  <div className="h-8 w-8 rounded-lg bg-muted flex items-center justify-center">
+                    <Eye className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
                 <div className="space-y-4">
@@ -342,7 +342,7 @@ export default function DashboardPage() {
 
                   {/* Focus list */}
                   {filteredFocusItems.length > 0 ? (
-                    <ScrollArea className="max-h-[280px]">
+                    <ScrollArea className="max-h-[220px]">
                       <div className="space-y-3 pr-2">
                         {filteredFocusItems.map((fp) => {
                           const severity = getSeverity(fp.completeness);
