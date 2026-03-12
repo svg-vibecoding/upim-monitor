@@ -16,7 +16,7 @@ import {
   sortReportsByDisplayOrder, getRecordsForReport,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, FileSpreadsheet, X, CheckCircle2, Filter } from "lucide-react";
+import { Upload, FileText, FileSpreadsheet, X, CheckCircle2, Filter, ArrowLeft, Download } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 
