@@ -50,8 +50,10 @@ const severityLevels: SeverityLevel[] = ["critical", "low", "medium", "acceptabl
 export default function ReportDetailPage() {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
+  const trackEvent = useTrackEvent();
   const [selectedDimension, setSelectedDimension] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
+  const [tracked, setTracked] = useState(false);
 
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
