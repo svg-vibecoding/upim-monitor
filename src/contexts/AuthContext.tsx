@@ -61,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: profile.email,
         role,
         active: profile.active,
+        track_insights: profile.track_insights ?? true,
       };
     } catch {
       return null;
