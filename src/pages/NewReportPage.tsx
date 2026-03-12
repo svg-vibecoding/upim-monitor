@@ -47,11 +47,18 @@ export default function NewReportPage() {
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
 
-  const filteredAttrs = fullAttributes.filter((a) => a.toLowerCase().includes(searchAttr.toLowerCase()));
+  const filteredAttrsWithClassification = useMemo(() => {
+    const search = searchAttr.toLowerCase();
+    return fullAttributes
+      .filter((a) => a.toLowerCase().includes(search))
+      .map((attr) => ({ attr, classification: getAttributeClassification(attr) }));
+  }, [fullAttributes, searchAttr]);
 
-  const toggleAttr = (attr: string) => {
+  const selectedSet = useMemo(() => new Set(selectedAttrs), [selectedAttrs]);
+
+  const toggleAttr = useCallback((attr: string) => {
     setSelectedAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]);
-  };
+  }, []);
 
   const selectedReport = sortedReports.find((r) => r.id === selectedReportId);
 
