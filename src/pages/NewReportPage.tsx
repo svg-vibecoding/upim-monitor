@@ -16,12 +16,40 @@ import {
   sortReportsByDisplayOrder, getRecordsForReport,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, FileSpreadsheet, X, CheckCircle2 } from "lucide-react";
+import { Upload, FileText, FileSpreadsheet, X, CheckCircle2, Filter } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 type Step = "config" | "results";
 type Source = "general" | "file" | "report";
+type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
+
+function getSeverity(pct: number): SeverityLevel {
+  if (pct <= 25) return "critical";
+  if (pct <= 50) return "low";
+  if (pct <= 75) return "medium";
+  return "acceptable";
+}
+
+function severityLabel(s: SeverityLevel) {
+  switch (s) {
+    case "critical": return "0–25 %";
+    case "low": return "25–50 %";
+    case "medium": return "50–75 %";
+    case "acceptable": return "75 %+";
+  }
+}
+
+function severityDot(s: SeverityLevel) {
+  switch (s) {
+    case "critical": return "bg-destructive";
+    case "low": return "bg-warning";
+    case "medium": return "bg-info";
+    case "acceptable": return "bg-success";
+  }
+}
+
+const severityLevels: SeverityLevel[] = ["critical", "low", "medium", "acceptable"];
 
 const AttributeCheckboxItem = memo(({ attr, classification, checked, onToggle }: {
   attr: string;
@@ -73,6 +101,7 @@ export default function NewReportPage() {
   const [dimensionId, setDimensionId] = useState<string>("");
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
+  const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
 
   const filteredAttrsWithClassification = useMemo(() => {
     const search = searchAttr.toLowerCase();
@@ -399,6 +428,27 @@ export default function NewReportPage() {
 
           <Card>
             <CardContent className="pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-foreground">Detalle por atributo</h2>
+                <div className="flex items-center gap-1.5">
+                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                  {severityLevels.map((level) => {
+                    const count = attrResults.filter((a) => getSeverity(a.completeness) === level).length;
+                    const isActive = severityFilter === level;
+                    return (
+                      <button
+                        key={level}
+                        onClick={() => setSeverityFilter(isActive ? null : level)}
+                        className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors ${isActive ? "bg-accent ring-1 ring-ring" : "hover:bg-muted"}`}
+                        title={severityLabel(level)}
+                      >
+                        <span className={`inline-block h-2.5 w-2.5 rounded-full ${severityDot(level)}`} />
+                        <span className="tabular-nums text-muted-foreground">{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div className="overflow-auto">
                 <Table>
                   <TableHeader>
@@ -410,7 +460,9 @@ export default function NewReportPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {attrResults.map((a) => (
+                    {attrResults
+                      .filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter)
+                      .map((a) => (
                       <TableRow key={a.name}>
                         <TableCell className="font-medium text-sm">{a.name}</TableCell>
                         <TableCell className="text-right tabular-nums">{a.totalSKUs.toLocaleString()}</TableCell>
