@@ -410,6 +410,7 @@ export default function NewReportPage() {
             <FileText className="h-4 w-4" /> Generar informe
           </Button>
         </div>
+        </>
       )}
 
       {step === "results" && isLoadingRecords && (
