@@ -49,7 +49,7 @@ function useUsers() {
     queryFn: async (): Promise<DBUser[]> => {
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("id, name, email, active")
+        .select("id, name, email, active, track_insights")
         .order("created_at", { ascending: true });
       if (error) throw error;
 
