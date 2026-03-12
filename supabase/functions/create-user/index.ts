@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
     }
 
     // 3. Parse request body
-    const { name, email, password, role, active } = await req.json();
+    const { name, email, password, role, active, track_insights } = await req.json();
 
     if (!name || !email || !password || !role) {
       return new Response(JSON.stringify({ error: "Faltan campos obligatorios: name, email, password, role" }), {
