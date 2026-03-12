@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw, UserPlus, Trash2, ChevronRight } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
