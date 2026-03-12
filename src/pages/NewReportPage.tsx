@@ -24,6 +24,7 @@ type Step = "config" | "results";
 type Source = "general" | "file" | "report";
 
 export default function NewReportPage() {
+  const trackEvent = useTrackEvent();
   const { data: allRecords = [] } = usePimRecords();
   const { data: dimensionsData = [] } = useDimensions();
   const { data: attributeOrder = [] } = useAttributeOrder();
