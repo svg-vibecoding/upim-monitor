@@ -80,16 +80,6 @@ AttributeCheckboxItem.displayName = "AttributeCheckboxItem";
 
 export default function NewReportPage() {
   const trackEvent = useTrackEvent();
-  const { data: allRecords = [], isLoading: isLoadingRecords } = usePimRecords();
-  const { data: dimensionsData = [] } = useDimensions();
-  const { data: attributeOrder = [] } = useAttributeOrder();
-  const { data: predefinedReports = [] } = usePredefinedReports();
-
-  const sortedReports = useMemo(() => sortReportsByDisplayOrder(predefinedReports), [predefinedReports]);
-
-  const fullAttributes = useMemo(() => {
-    return getFullAttributeList(attributeOrder);
-  }, [attributeOrder]);
 
   const [source, setSource] = useState<Source>("general");
   const [selectedReportId, setSelectedReportId] = useState<string>("");
@@ -102,6 +92,18 @@ export default function NewReportPage() {
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
+
+  const shouldFetchRecords = step === "results";
+  const { data: allRecords = [], isLoading: isLoadingRecords } = usePimRecords({ enabled: shouldFetchRecords });
+  const { data: dimensionsData = [] } = useDimensions();
+  const { data: attributeOrder = [] } = useAttributeOrder();
+  const { data: predefinedReports = [] } = usePredefinedReports();
+
+  const sortedReports = useMemo(() => sortReportsByDisplayOrder(predefinedReports), [predefinedReports]);
+
+  const fullAttributes = useMemo(() => {
+    return getFullAttributeList(attributeOrder);
+  }, [attributeOrder]);
 
   const filteredAttrsWithClassification = useMemo(() => {
     const search = searchAttr.toLowerCase();
