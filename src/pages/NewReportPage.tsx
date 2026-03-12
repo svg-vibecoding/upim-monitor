@@ -101,6 +101,7 @@ export default function NewReportPage() {
   const [dimensionId, setDimensionId] = useState<string>("");
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
+  const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
 
   const filteredAttrsWithClassification = useMemo(() => {
     const search = searchAttr.toLowerCase();
