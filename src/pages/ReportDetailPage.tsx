@@ -81,6 +81,16 @@ export default function ReportDetailPage() {
 
   if (!report) return <div className="p-6">Informe no encontrado.</div>;
 
+  // Track report viewed once data loads
+  if (!tracked && completenessData && report) {
+    setTracked(true);
+    trackEvent("report_viewed", {
+      report_id: report.id,
+      report_name: report.name,
+      report_type: "predefined",
+    });
+  }
+
   // Use server-side completeness data (already filtered by universe and evaluable)
   const attrResults = (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name));
   const avgCompleteness = attrResults.length > 0
