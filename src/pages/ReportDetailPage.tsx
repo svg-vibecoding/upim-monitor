@@ -132,7 +132,7 @@ export default function ReportDetailPage() {
           <h1 className="text-2xl font-bold text-foreground">{report.name}</h1>
           <p className="text-sm text-muted-foreground">{report.universe}</p>
         </div>
-        <Button variant="outline" onClick={handleDownload} className="gap-2">
+        <Button onClick={handleDownload} className="gap-2">
           <Download className="h-4 w-4" /> Descargar resumen
         </Button>
       </div>
