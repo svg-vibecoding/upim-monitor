@@ -26,6 +26,7 @@ export function AppSidebar() {
 
   const proItems = [
     { title: "Administración", url: "/admin", icon: Settings },
+    { title: "Insights de uso", url: "/insights", icon: Activity },
   ];
 
   return (
