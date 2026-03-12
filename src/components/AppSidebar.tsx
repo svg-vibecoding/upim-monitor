@@ -1,4 +1,4 @@
-import { BarChart3, FileText, PlusCircle, Settings } from "lucide-react";
+import { BarChart3, FileText, PlusCircle, Settings, Activity } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import upimLogo from "@/assets/upim-logo.png";
 import { useAuth } from "@/contexts/AuthContext";
