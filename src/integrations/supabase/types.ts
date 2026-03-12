@@ -230,6 +230,45 @@ export type Database = {
         }
         Relationships: []
       }
+      usage_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          report_id: string | null
+          report_name: string | null
+          report_type: string | null
+          source_type: string | null
+          user_email: string
+          user_id: string
+          user_role: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          report_id?: string | null
+          report_name?: string | null
+          report_type?: string | null
+          source_type?: string | null
+          user_email?: string
+          user_id: string
+          user_role?: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          report_id?: string | null
+          report_name?: string | null
+          report_type?: string | null
+          source_type?: string | null
+          user_email?: string
+          user_id?: string
+          user_role?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
