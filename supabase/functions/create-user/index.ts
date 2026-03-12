@@ -91,18 +91,19 @@ Deno.serve(async (req) => {
     const userId = newUser.user.id;
 
     // 5. Insert profile (the trigger handle_new_user should create it, but we update to ensure name + active)
+    const profileData = { name, active: active !== false, track_insights: track_insights !== false };
     const { error: profileError } = await adminClient
       .from("profiles")
-      .update({ name, active: active !== false })
+      .update(profileData)
       .eq("id", userId);
 
     if (profileError) {
-      // Profile might not exist yet if trigger hasn't fired, try upsert
       await adminClient.from("profiles").upsert({
         id: userId,
         name,
         email,
         active: active !== false,
+        track_insights: track_insights !== false,
       });
     }
 

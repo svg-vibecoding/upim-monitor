@@ -81,7 +81,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(async () => {
             const appUser = await loadAppUser(newSession.user);
             if (appUser) {
-              setUser(appUser);
+              setUser((prev) => {
+                // Fire login_success when user transitions from null to authenticated
+                if (!prev && event === "SIGNED_IN" && appUser.track_insights) {
+                  import("@/hooks/useTrackEvent").then(({ trackEventDirect }) => {
+                    trackEventDirect(appUser.id, appUser.email, appUser.role, "login_success", undefined, true);
+                  });
+                }
+                return appUser;
+              });
             } else {
               // Inactive or no profile — sign out
               setUser(null);

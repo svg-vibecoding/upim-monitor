@@ -66,6 +66,7 @@ function useUsers() {
         email: p.email,
         active: p.active,
         role: roleMap.get(p.id) || "pim_manager",
+        track_insights: p.track_insights ?? true,
       }));
     },
     staleTime: 2 * 60 * 1000,

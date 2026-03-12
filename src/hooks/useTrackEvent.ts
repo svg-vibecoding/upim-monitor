@@ -21,7 +21,7 @@ export function useTrackEvent() {
 
   return useCallback(
     async (eventType: TrackableEvent, payload?: TrackEventPayload) => {
-      if (!user) return;
+      if (!user || user.track_insights === false) return;
       try {
         await supabase.from("usage_events").insert({
           event_type: eventType,
@@ -49,8 +49,10 @@ export async function trackEventDirect(
   email: string,
   role: string,
   eventType: TrackableEvent,
-  payload?: TrackEventPayload
+  payload?: TrackEventPayload,
+  trackInsights: boolean = true
 ) {
+  if (!trackInsights) return;
   try {
     await supabase.from("usage_events").insert({
       event_type: eventType,

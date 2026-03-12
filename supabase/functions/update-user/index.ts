@@ -83,6 +83,7 @@ Deno.serve(async (req) => {
     if (name) profileUpdate.name = name;
     if (email) profileUpdate.email = email;
     if (typeof active === "boolean") profileUpdate.active = active;
+    if (typeof track_insights === "boolean") profileUpdate.track_insights = track_insights;
 
     if (Object.keys(profileUpdate).length > 0) {
       const { error: profileError } = await adminClient
