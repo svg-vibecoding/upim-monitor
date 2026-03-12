@@ -216,7 +216,14 @@ export default function ReportDetailPage() {
               </SelectContent>
             </Select>
           </div>
-          {dimensionResults.length > 0 ? (
+          {selectedDimension && loadingRecords ? (
+            <div className="flex items-center justify-center gap-2 py-8">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+              <p className="text-sm text-muted-foreground">
+                Informe por distribución {dimensions?.find(d => d.id === selectedDimension)?.name} en proceso...
+              </p>
+            </div>
+          ) : dimensionResults.length > 0 ? (
             <div className="overflow-auto">
               <Table>
                 <TableHeader>
