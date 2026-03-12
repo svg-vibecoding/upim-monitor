@@ -11,6 +11,7 @@ import ReportsListPage from "@/pages/ReportsListPage";
 import ReportDetailPage from "@/pages/ReportDetailPage";
 import NewReportPage from "@/pages/NewReportPage";
 import AdminPage from "@/pages/AdminPage";
+import InsightsPage from "@/pages/InsightsPage";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
