@@ -230,7 +230,7 @@ export function getEvaluableAttributes(allAttrs: string[]): string[] {
 }
 
 // --- Records hook (only fetches valid rows, excludes ghosts) ---
-export function usePimRecords() {
+export function usePimRecords(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["pim-records"],
     queryFn: async (): Promise<PIMRecord[]> => {
@@ -257,6 +257,7 @@ export function usePimRecords() {
       }
       return allRows;
     },
+    enabled: options?.enabled ?? true,
     staleTime: 5 * 60 * 1000,
   });
 }
