@@ -99,6 +99,12 @@ export default function NewReportPage() {
   const { data: attributeOrder = [] } = useAttributeOrder();
   const { data: predefinedReports = [] } = usePredefinedReports();
 
+  const sortedReports = useMemo(() => sortReportsByDisplayOrder(predefinedReports), [predefinedReports]);
+
+  const fullAttributes = useMemo(() => {
+    return getFullAttributeList(attributeOrder);
+  }, [attributeOrder]);
+
   const filteredAttrsWithClassification = useMemo(() => {
     const search = searchAttr.toLowerCase();
     return fullAttributes
