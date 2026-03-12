@@ -1,0 +1,1 @@
+UPDATE public.predefined_reports SET description = 'Completitud de atributos relevantes para operaciones' WHERE name = 'Operaciones';
