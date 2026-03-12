@@ -432,7 +432,7 @@ export default function NewReportPage() {
               <h1 className="text-2xl font-bold text-foreground">Informe personalizado</h1>
               <p className="text-sm text-muted-foreground">{universeLabel}</p>
             </div>
-            <Button onClick={handleDownload} className="gap-2">
+            <Button variant="outline" onClick={handleDownload} className="gap-2">
               <Download className="h-4 w-4" /> Descargar resumen
             </Button>
           </div>
