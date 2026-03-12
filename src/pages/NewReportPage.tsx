@@ -52,7 +52,7 @@ AttributeCheckboxItem.displayName = "AttributeCheckboxItem";
 
 export default function NewReportPage() {
   const trackEvent = useTrackEvent();
-  const { data: allRecords = [] } = usePimRecords();
+  const { data: allRecords = [], isLoading: isLoadingRecords } = usePimRecords();
   const { data: dimensionsData = [] } = useDimensions();
   const { data: attributeOrder = [] } = useAttributeOrder();
   const { data: predefinedReports = [] } = usePredefinedReports();
