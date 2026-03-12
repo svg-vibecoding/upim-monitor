@@ -149,7 +149,7 @@ export default function AdminPage() {
       setUserSaving(true);
       try {
         const { data, error } = await supabase.functions.invoke("create-user", {
-          body: { name: userName, email: userEmail, password: userPassword, role: userRole, active: true },
+          body: { name: userName, email: userEmail, password: userPassword, role: userRole, active: true, track_insights: userTrackInsights },
         });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
