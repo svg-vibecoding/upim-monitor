@@ -111,7 +111,7 @@ export const mockPredefinedReports: PredefinedReport[] = [
     universe: "SKUs con Visibilidad Adobe B2C = Visible", universeKey: "visible_b2c", attributes: sumaGoB2CAttrs,
   },
   {
-    id: "r4", name: "Compras", description: "Completitud de atributos de gestión de compras.",
+    id: "r4", name: "Operaciones", description: "Completitud de atributos de gestión de operaciones.",
     universe: "Totalidad del PIM", universeKey: "all", attributes: comprasAttrs,
   },
 ];

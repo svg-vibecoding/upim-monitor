@@ -1,0 +1,1 @@
+UPDATE public.predefined_reports SET name = 'Operaciones' WHERE name = 'Compras';
