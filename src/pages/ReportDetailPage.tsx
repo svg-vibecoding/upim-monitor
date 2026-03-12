@@ -105,7 +105,15 @@ export default function ReportDetailPage() {
 
   const handleDownload = () => {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
-    const rows = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
+    const rows: (string | number)[][] = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
+
+    if (dimensionResults.length > 0 && dimension) {
+      rows.push([]);
+      rows.push([`Distribución por ${dimension.name}`, "", "", ""]);
+      rows.push([dimension.name, "SKUs", "Poblados", "Completitud %"]);
+      dimensionResults.forEach((d) => rows.push([d.value, d.totalSKUs, d.populated, d.completeness]));
+    }
+
     downloadCSV(`${report.name.replace(/\s/g, "_")}_resumen.csv`, headers, rows);
     trackEvent("report_downloaded", {
       report_id: report.id,
