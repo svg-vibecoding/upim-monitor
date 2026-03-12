@@ -40,6 +40,7 @@ interface DBUser {
   email: string;
   active: boolean;
   role: AppRole;
+  track_insights: boolean;
 }
 
 function useUsers() {
