@@ -105,6 +105,7 @@ export default function AdminPage() {
       setUserPassword("");
       setUserRole(user.role);
       setUserActive(user.active);
+      setUserTrackInsights(user.track_insights);
     } else {
       setEditingUserId(null);
       setUserName("");
@@ -112,6 +113,7 @@ export default function AdminPage() {
       setUserPassword("");
       setUserRole("pim_manager");
       setUserActive(true);
+      setUserTrackInsights(true);
     }
     setUserDialog(true);
   };
