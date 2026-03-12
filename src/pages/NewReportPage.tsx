@@ -23,6 +23,33 @@ import { useTrackEvent } from "@/hooks/useTrackEvent";
 type Step = "config" | "results";
 type Source = "general" | "file" | "report";
 
+const AttributeCheckboxItem = memo(({ attr, classification, checked, onToggle }: {
+  attr: string;
+  classification: { type: string; evaluable: boolean };
+  checked: boolean;
+  onToggle: (attr: string) => void;
+}) => {
+  const nonEvaluable = !classification.evaluable;
+  const showTypeBadge = classification.type !== "general";
+  return (
+    <label className={`flex items-center gap-2 py-1 px-1 text-sm cursor-pointer hover:bg-accent rounded ${nonEvaluable ? "opacity-60" : ""}`}>
+      <Checkbox checked={checked} onCheckedChange={() => onToggle(attr)} />
+      <span className="truncate">{attr}</span>
+      {showTypeBadge && (
+        <Badge variant="outline" className="text-[10px] shrink-0">
+          {classification.type}
+        </Badge>
+      )}
+      {nonEvaluable && (
+        <Badge variant="secondary" className="text-[10px] shrink-0">
+          no evaluable
+        </Badge>
+      )}
+    </label>
+  );
+});
+AttributeCheckboxItem.displayName = "AttributeCheckboxItem";
+
 export default function NewReportPage() {
   const trackEvent = useTrackEvent();
   const { data: allRecords = [] } = usePimRecords();
