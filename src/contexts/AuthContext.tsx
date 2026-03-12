@@ -10,6 +10,7 @@ export interface AppUser {
   email: string;
   role: AppRole;
   active: boolean;
+  track_insights: boolean;
 }
 
 interface AuthContextType {
