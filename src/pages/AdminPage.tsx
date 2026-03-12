@@ -127,7 +127,7 @@ export default function AdminPage() {
       setUserSaving(true);
       try {
         const body: Record<string, unknown> = {
-          userId: editingUserId, name: userName, email: userEmail, role: userRole, active: userActive,
+          userId: editingUserId, name: userName, email: userEmail, role: userRole, active: userActive, track_insights: userTrackInsights,
         };
         if (userPassword) body.password = userPassword;
         const { data, error } = await supabase.functions.invoke("update-user", { body });
