@@ -1071,6 +1071,13 @@ export default function AdminPage() {
                       </Select>
                     </div>
                   )}
+                  <div className="flex items-center justify-between pt-2 pb-1">
+                    <div>
+                      <Label htmlFor="track-insights">Capturar insights de uso</Label>
+                      <p className="text-xs text-muted-foreground">Registrar actividad de este usuario en el módulo de Insights</p>
+                    </div>
+                    <Switch id="track-insights" checked={userTrackInsights} onCheckedChange={setUserTrackInsights} />
+                  </div>
                   <Button onClick={saveUser} className="w-full" disabled={userSaving}>
                     {userSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {editingUserId ? "Guardando..." : "Creando..."}</> : editingUserId ? "Guardar cambios" : "Crear usuario"}
                   </Button>
