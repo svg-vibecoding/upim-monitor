@@ -18,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, FileSpreadsheet, X, CheckCircle2 } from "lucide-react";
 import * as XLSX from "xlsx";
+import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 type Step = "config" | "results";
 type Source = "general" | "file" | "report";
