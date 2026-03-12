@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw, UserPlus, Trash2, ChevronRight } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { useNavigate } from "react-router-dom";
@@ -40,6 +41,7 @@ interface DBUser {
   email: string;
   active: boolean;
   role: AppRole;
+  track_insights: boolean;
 }
 
 function useUsers() {
@@ -48,7 +50,7 @@ function useUsers() {
     queryFn: async (): Promise<DBUser[]> => {
       const { data: profiles, error } = await supabase
         .from("profiles")
-        .select("id, name, email, active")
+        .select("id, name, email, active, track_insights")
         .order("created_at", { ascending: true });
       if (error) throw error;
 
@@ -65,6 +67,7 @@ function useUsers() {
         email: p.email,
         active: p.active,
         role: roleMap.get(p.id) || "pim_manager",
+        track_insights: p.track_insights ?? true,
       }));
     },
     staleTime: 2 * 60 * 1000,
@@ -94,7 +97,7 @@ export default function AdminPage() {
   const [userRole, setUserRole] = useState<AppRole>("pim_manager");
   const [userActive, setUserActive] = useState(true);
   const [userSaving, setUserSaving] = useState(false);
-
+  const [userTrackInsights, setUserTrackInsights] = useState(true);
   const openUserDialog = (user?: DBUser) => {
     if (user) {
       setEditingUserId(user.id);
@@ -103,6 +106,7 @@ export default function AdminPage() {
       setUserPassword("");
       setUserRole(user.role);
       setUserActive(user.active);
+      setUserTrackInsights(user.track_insights);
     } else {
       setEditingUserId(null);
       setUserName("");
@@ -110,6 +114,7 @@ export default function AdminPage() {
       setUserPassword("");
       setUserRole("pim_manager");
       setUserActive(true);
+      setUserTrackInsights(true);
     }
     setUserDialog(true);
   };
@@ -123,7 +128,7 @@ export default function AdminPage() {
       setUserSaving(true);
       try {
         const body: Record<string, unknown> = {
-          userId: editingUserId, name: userName, email: userEmail, role: userRole, active: userActive,
+          userId: editingUserId, name: userName, email: userEmail, role: userRole, active: userActive, track_insights: userTrackInsights,
         };
         if (userPassword) body.password = userPassword;
         const { data, error } = await supabase.functions.invoke("update-user", { body });
@@ -145,7 +150,7 @@ export default function AdminPage() {
       setUserSaving(true);
       try {
         const { data, error } = await supabase.functions.invoke("create-user", {
-          body: { name: userName, email: userEmail, password: userPassword, role: userRole, active: true },
+          body: { name: userName, email: userEmail, password: userPassword, role: userRole, active: true, track_insights: userTrackInsights },
         });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
@@ -1066,6 +1071,13 @@ export default function AdminPage() {
                       </Select>
                     </div>
                   )}
+                  <div className="flex items-center justify-between pt-2 pb-1">
+                    <div>
+                      <Label htmlFor="track-insights">Capturar insights de uso</Label>
+                      <p className="text-xs text-muted-foreground">Registrar actividad de este usuario en el módulo de Insights</p>
+                    </div>
+                    <Switch id="track-insights" checked={userTrackInsights} onCheckedChange={setUserTrackInsights} />
+                  </div>
                   <Button onClick={saveUser} className="w-full" disabled={userSaving}>
                     {userSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> {editingUserId ? "Guardando..." : "Creando..."}</> : editingUserId ? "Guardar cambios" : "Crear usuario"}
                   </Button>

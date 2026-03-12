@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN track_insights boolean NOT NULL DEFAULT true;

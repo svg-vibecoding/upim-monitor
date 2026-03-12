@@ -10,6 +10,7 @@ export interface AppUser {
   email: string;
   role: AppRole;
   active: boolean;
+  track_insights: boolean;
 }
 
 interface AuthContextType {
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("name, email, active")
+        .select("name, email, active, track_insights")
         .eq("id", authUser.id)
         .maybeSingle();
 
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: profile.email,
         role,
         active: profile.active,
+        track_insights: profile.track_insights ?? true,
       };
     } catch {
       return null;
@@ -79,7 +81,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setTimeout(async () => {
             const appUser = await loadAppUser(newSession.user);
             if (appUser) {
-              setUser(appUser);
+              setUser((prev) => {
+                // Fire login_success when user transitions from null to authenticated
+                if (!prev && event === "SIGNED_IN" && appUser.track_insights) {
+                  import("@/hooks/useTrackEvent").then(({ trackEventDirect }) => {
+                    trackEventDirect(appUser.id, appUser.email, appUser.role, "login_success", undefined, true);
+                  });
+                }
+                return appUser;
+              });
             } else {
               // Inactive or no profile — sign out
               setUser(null);
