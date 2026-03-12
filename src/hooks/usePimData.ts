@@ -381,6 +381,11 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
         const codigoSumaGo = r["Código SumaGo"];
         return codigoSumaGo !== null && codigoSumaGo !== undefined && String(codigoSumaGo).trim() !== "";
       });
+    case "producto_foco":
+      return allRecords.filter((r) => {
+        const val = r["Producto foco"];
+        return val !== null && val !== undefined && String(val).trim().toUpperCase() === "SI";
+      });
     case "all":
     default:
       return allRecords;
