@@ -235,11 +235,18 @@ export default function NewReportPage() {
     setSelectedReportId("");
   };
 
-  return (
-    <div className="space-y-6 max-w-5xl">
-      <h1 className="text-2xl font-bold text-foreground">Crear nuevo informe</h1>
+  const universeLabel = useMemo(() => {
+    if (source === "general") return "Base general del PIM";
+    if (source === "report" && selectedReport) return selectedReport.universe;
+    if (source === "file" && uploadedFileName) return `Universo de productos personalizado (${uploadedFileName})`;
+    return "";
+  }, [source, selectedReport, uploadedFileName]);
 
+  return (
+    <div className="space-y-6 max-w-6xl">
       {step === "config" && (
+        <>
+        <h1 className="text-2xl font-bold text-foreground">Crear nuevo informe</h1>
         <div className="space-y-4">
           {/* Step 1: Universe */}
           <Card>
