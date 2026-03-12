@@ -96,7 +96,7 @@ export default function AdminPage() {
   const [userRole, setUserRole] = useState<AppRole>("pim_manager");
   const [userActive, setUserActive] = useState(true);
   const [userSaving, setUserSaving] = useState(false);
-
+  const [userTrackInsights, setUserTrackInsights] = useState(true);
   const openUserDialog = (user?: DBUser) => {
     if (user) {
       setEditingUserId(user.id);
