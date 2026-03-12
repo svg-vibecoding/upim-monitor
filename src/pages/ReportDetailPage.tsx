@@ -107,6 +107,11 @@ export default function ReportDetailPage() {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
     const rows = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
     downloadCSV(`${report.name.replace(/\s/g, "_")}_resumen.csv`, headers, rows);
+    trackEvent("report_downloaded", {
+      report_id: report.id,
+      report_name: report.name,
+      report_type: "predefined",
+    });
   };
 
   return (
