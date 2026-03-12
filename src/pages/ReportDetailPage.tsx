@@ -15,6 +15,7 @@ import {
 import { downloadCSV } from "@/data/mockData";
 import { ArrowLeft, Download, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 /* ── Severity helpers ─────────────────────────────────────────── */
 type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
