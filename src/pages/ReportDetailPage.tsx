@@ -151,6 +151,7 @@ export default function ReportDetailPage() {
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-foreground">Detalle por atributo</h2>
             <div className="flex items-center gap-1.5">
+              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
               {severityLevels.map((level) => {
                 const count = attrResults.filter((a) => getSeverity(a.completeness) === level).length;
                 const isActive = severityFilter === level;
@@ -166,11 +167,6 @@ export default function ReportDetailPage() {
                   </button>
                 );
               })}
-              {severityFilter && (
-                <button onClick={() => setSeverityFilter(null)} className="ml-1 text-xs text-muted-foreground hover:text-foreground">
-                  <Filter className="h-3.5 w-3.5" />
-                </button>
-              )}
             </div>
           </div>
           <div className="overflow-auto">
