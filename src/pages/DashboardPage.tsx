@@ -70,7 +70,7 @@ export default function DashboardPage() {
   const hasData = kpis && kpis.total > 0;
 
   const focusReports = useMemo(
-    () => sortReportsByDisplayOrder((reports || []).filter((r) => ["PIM General", "SumaGO B2B", "SumaGO B2C", "Compras"].includes(r.name))),
+    () => sortReportsByDisplayOrder((reports || []).filter((r) => ["PIM General", "Portafolio foco", "SumaGO B2B", "SumaGO B2C", "Compras"].includes(r.name))),
     [reports]
   );
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
