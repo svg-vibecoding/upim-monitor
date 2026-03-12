@@ -22,6 +22,34 @@ import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 type Step = "config" | "results";
 type Source = "general" | "file" | "report";
+type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
+
+function getSeverity(pct: number): SeverityLevel {
+  if (pct <= 25) return "critical";
+  if (pct <= 50) return "low";
+  if (pct <= 75) return "medium";
+  return "acceptable";
+}
+
+function severityLabel(s: SeverityLevel) {
+  switch (s) {
+    case "critical": return "0–25 %";
+    case "low": return "25–50 %";
+    case "medium": return "50–75 %";
+    case "acceptable": return "75 %+";
+  }
+}
+
+function severityDot(s: SeverityLevel) {
+  switch (s) {
+    case "critical": return "bg-destructive";
+    case "low": return "bg-warning";
+    case "medium": return "bg-info";
+    case "acceptable": return "bg-success";
+  }
+}
+
+const severityLevels: SeverityLevel[] = ["critical", "low", "medium", "acceptable"];
 
 const AttributeCheckboxItem = memo(({ attr, classification, checked, onToggle }: {
   attr: string;
