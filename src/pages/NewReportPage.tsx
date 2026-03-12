@@ -52,7 +52,7 @@ AttributeCheckboxItem.displayName = "AttributeCheckboxItem";
 
 export default function NewReportPage() {
   const trackEvent = useTrackEvent();
-  const { data: allRecords = [] } = usePimRecords();
+  const { data: allRecords = [], isLoading: isLoadingRecords } = usePimRecords();
   const { data: dimensionsData = [] } = useDimensions();
   const { data: attributeOrder = [] } = useAttributeOrder();
   const { data: predefinedReports = [] } = usePredefinedReports();
@@ -374,7 +374,16 @@ export default function NewReportPage() {
         </div>
       )}
 
-      {step === "results" && (
+      {step === "results" && isLoadingRecords && (
+        <Card>
+          <CardContent className="pt-6 pb-8 flex flex-col items-center justify-center gap-3">
+            <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-muted-foreground">Informe en proceso…</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === "results" && !isLoadingRecords && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
