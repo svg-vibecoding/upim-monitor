@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { userId, name, email, password, role, active } = await req.json();
+    const { userId, name, email, password, role, active, track_insights } = await req.json();
 
     if (!userId) {
       return new Response(JSON.stringify({ error: "userId es obligatorio" }), {
