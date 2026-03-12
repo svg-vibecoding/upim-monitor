@@ -307,27 +307,15 @@ export default function NewReportPage() {
                   <span className="truncate">Código Jaivaná</span>
                   <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
                 </label>
-                {filteredAttrs.map((attr) => {
-                  const classification = getAttributeClassification(attr);
-                  const nonEvaluable = !classification.evaluable;
-                  const showTypeBadge = classification.type !== "general";
-                  return (
-                    <label key={attr} className={`flex items-center gap-2 py-1 px-1 text-sm cursor-pointer hover:bg-accent rounded ${nonEvaluable ? "opacity-60" : ""}`}>
-                      <Checkbox checked={selectedAttrs.includes(attr)} onCheckedChange={() => toggleAttr(attr)} />
-                      <span className="truncate">{attr}</span>
-                      {showTypeBadge && (
-                        <Badge variant="outline" className="text-[10px] shrink-0">
-                          {classification.type}
-                        </Badge>
-                      )}
-                      {nonEvaluable && (
-                        <Badge variant="secondary" className="text-[10px] shrink-0">
-                          no evaluable
-                        </Badge>
-                      )}
-                    </label>
-                  );
-                })}
+                {filteredAttrsWithClassification.map(({ attr, classification }) => (
+                  <AttributeCheckboxItem
+                    key={attr}
+                    attr={attr}
+                    classification={classification}
+                    checked={selectedSet.has(attr)}
+                    onToggle={toggleAttr}
+                  />
+                ))}
               </div>
               {selectedAttrs.length > 0 && (
                 <p className="text-xs text-muted-foreground">{selectedAttrs.length} atributos seleccionados</p>
