@@ -20,6 +20,18 @@ export default function LoginPage() {
     const result = await login(email, password);
     if (!result.success) {
       setError(result.error || "Error de autenticación");
+    } else {
+      // Track successful login — uses the session that login just established
+      import("@/hooks/useTrackEvent").then(({ trackEventDirect }) => {
+        // We don't have the user object yet here, but AuthContext will resolve it.
+        // Use a small delay so the auth state settles.
+        setTimeout(async () => {
+          const { data: { session } } = await (await import("@/integrations/supabase/client")).supabase.auth.getSession();
+          if (session?.user) {
+            trackEventDirect(session.user.id, email, "", "login_success");
+          }
+        }, 2000);
+      });
     }
     setLoading(false);
   };

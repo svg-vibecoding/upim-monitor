@@ -11,6 +11,7 @@ import ReportsListPage from "@/pages/ReportsListPage";
 import ReportDetailPage from "@/pages/ReportDetailPage";
 import NewReportPage from "@/pages/NewReportPage";
 import AdminPage from "@/pages/AdminPage";
+import InsightsPage from "@/pages/InsightsPage";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ function AppRoutes() {
           <Route path="/informes/:reportId" element={<AppLayout><ReportDetailPage /></AppLayout>} />
           <Route path="/nuevo-informe" element={<AppLayout><NewReportPage /></AppLayout>} />
           <Route path="/admin" element={<AppLayout><AdminPage /></AppLayout>} />
+          <Route path="/insights" element={<AppLayout><InsightsPage /></AppLayout>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </>
       )}

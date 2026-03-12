@@ -18,11 +18,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, FileSpreadsheet, X, CheckCircle2 } from "lucide-react";
 import * as XLSX from "xlsx";
+import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 type Step = "config" | "results";
 type Source = "general" | "file" | "report";
 
 export default function NewReportPage() {
+  const trackEvent = useTrackEvent();
   const { data: allRecords = [] } = usePimRecords();
   const { data: dimensionsData = [] } = useDimensions();
   const { data: attributeOrder = [] } = useAttributeOrder();
@@ -137,13 +139,23 @@ export default function NewReportPage() {
   const canGenerate = selectedAttrs.length > 0;
 
   const handleGenerate = () => {
-    if (canGenerate) setStep("results");
+    if (canGenerate) {
+      setStep("results");
+      trackEvent("report_created", {
+        report_type: "custom",
+        source_type: source === "file" ? "csv" : "base_pim",
+      });
+    }
   };
 
   const handleDownload = () => {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
     const rows = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
     downloadCSV("informe_personalizado.csv", headers, rows);
+    trackEvent("report_downloaded", {
+      report_type: "custom",
+      source_type: source === "file" ? "csv" : "base_pim",
+    });
   };
 
   const handleReset = () => {

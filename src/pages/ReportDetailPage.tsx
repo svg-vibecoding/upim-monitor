@@ -15,6 +15,7 @@ import {
 import { downloadCSV } from "@/data/mockData";
 import { ArrowLeft, Download, Filter } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 /* ── Severity helpers ─────────────────────────────────────────── */
 type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
@@ -49,8 +50,10 @@ const severityLevels: SeverityLevel[] = ["critical", "low", "medium", "acceptabl
 export default function ReportDetailPage() {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
+  const trackEvent = useTrackEvent();
   const [selectedDimension, setSelectedDimension] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
+  const [tracked, setTracked] = useState(false);
 
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
@@ -78,6 +81,16 @@ export default function ReportDetailPage() {
 
   if (!report) return <div className="p-6">Informe no encontrado.</div>;
 
+  // Track report viewed once data loads
+  if (!tracked && completenessData && report) {
+    setTracked(true);
+    trackEvent("report_viewed", {
+      report_id: report.id,
+      report_name: report.name,
+      report_type: "predefined",
+    });
+  }
+
   // Use server-side completeness data (already filtered by universe and evaluable)
   const attrResults = (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name));
   const avgCompleteness = attrResults.length > 0
@@ -94,6 +107,11 @@ export default function ReportDetailPage() {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
     const rows = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
     downloadCSV(`${report.name.replace(/\s/g, "_")}_resumen.csv`, headers, rows);
+    trackEvent("report_downloaded", {
+      report_id: report.id,
+      report_name: report.name,
+      report_type: "predefined",
+    });
   };
 
   return (
