@@ -139,7 +139,13 @@ export default function NewReportPage() {
   const canGenerate = selectedAttrs.length > 0;
 
   const handleGenerate = () => {
-    if (canGenerate) setStep("results");
+    if (canGenerate) {
+      setStep("results");
+      trackEvent("report_created", {
+        report_type: "custom",
+        source_type: source === "file" ? "csv" : "base_pim",
+      });
+    }
   };
 
   const handleDownload = () => {
