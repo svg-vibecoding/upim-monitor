@@ -34,7 +34,7 @@ export interface DimensionResult {
   completeness: number;
 }
 
-export type UniverseKey = "all" | "active" | "visible_b2b" | "visible_b2c" | "digital_base";
+export type UniverseKey = "all" | "active" | "visible_b2b" | "visible_b2c" | "digital_base" | "producto_foco";
 
 export interface PredefinedReport {
   id: string;

@@ -381,6 +381,11 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
         const codigoSumaGo = r["Código SumaGo"];
         return codigoSumaGo !== null && codigoSumaGo !== undefined && String(codigoSumaGo).trim() !== "";
       });
+    case "producto_foco":
+      return allRecords.filter((r) => {
+        const val = r["Producto foco"];
+        return val !== null && val !== undefined && String(val).trim().toUpperCase() === "SI";
+      });
     case "all":
     default:
       return allRecords;
@@ -388,7 +393,7 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
 }
 
 /** Canonical display order for predefined reports */
-export const REPORT_DISPLAY_ORDER = ["PIM General", "SumaGO B2B", "SumaGO B2C", "Compras"];
+export const REPORT_DISPLAY_ORDER = ["PIM General", "Portafolio foco", "SumaGO B2B", "SumaGO B2C", "Compras"];
 
 /** Sort reports by canonical display order */
 export function sortReportsByDisplayOrder<T extends { name: string }>(reports: T[]): T[] {
