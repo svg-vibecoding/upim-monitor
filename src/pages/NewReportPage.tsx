@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,33 @@ import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 type Step = "config" | "results";
 type Source = "general" | "file" | "report";
+
+const AttributeCheckboxItem = memo(({ attr, classification, checked, onToggle }: {
+  attr: string;
+  classification: { type: string; evaluable: boolean };
+  checked: boolean;
+  onToggle: (attr: string) => void;
+}) => {
+  const nonEvaluable = !classification.evaluable;
+  const showTypeBadge = classification.type !== "general";
+  return (
+    <label className={`flex items-center gap-2 py-1 px-1 text-sm cursor-pointer hover:bg-accent rounded ${nonEvaluable ? "opacity-60" : ""}`}>
+      <Checkbox checked={checked} onCheckedChange={() => onToggle(attr)} />
+      <span className="truncate">{attr}</span>
+      {showTypeBadge && (
+        <Badge variant="outline" className="text-[10px] shrink-0">
+          {classification.type}
+        </Badge>
+      )}
+      {nonEvaluable && (
+        <Badge variant="secondary" className="text-[10px] shrink-0">
+          no evaluable
+        </Badge>
+      )}
+    </label>
+  );
+});
+AttributeCheckboxItem.displayName = "AttributeCheckboxItem";
 
 export default function NewReportPage() {
   const trackEvent = useTrackEvent();
@@ -47,11 +74,18 @@ export default function NewReportPage() {
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
 
-  const filteredAttrs = fullAttributes.filter((a) => a.toLowerCase().includes(searchAttr.toLowerCase()));
+  const filteredAttrsWithClassification = useMemo(() => {
+    const search = searchAttr.toLowerCase();
+    return fullAttributes
+      .filter((a) => a.toLowerCase().includes(search))
+      .map((attr) => ({ attr, classification: getAttributeClassification(attr) }));
+  }, [fullAttributes, searchAttr]);
 
-  const toggleAttr = (attr: string) => {
+  const selectedSet = useMemo(() => new Set(selectedAttrs), [selectedAttrs]);
+
+  const toggleAttr = useCallback((attr: string) => {
     setSelectedAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr]);
-  };
+  }, []);
 
   const selectedReport = sortedReports.find((r) => r.id === selectedReportId);
 
@@ -300,27 +334,15 @@ export default function NewReportPage() {
                   <span className="truncate">Código Jaivaná</span>
                   <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
                 </label>
-                {filteredAttrs.map((attr) => {
-                  const classification = getAttributeClassification(attr);
-                  const nonEvaluable = !classification.evaluable;
-                  const showTypeBadge = classification.type !== "general";
-                  return (
-                    <label key={attr} className={`flex items-center gap-2 py-1 px-1 text-sm cursor-pointer hover:bg-accent rounded ${nonEvaluable ? "opacity-60" : ""}`}>
-                      <Checkbox checked={selectedAttrs.includes(attr)} onCheckedChange={() => toggleAttr(attr)} />
-                      <span className="truncate">{attr}</span>
-                      {showTypeBadge && (
-                        <Badge variant="outline" className="text-[10px] shrink-0">
-                          {classification.type}
-                        </Badge>
-                      )}
-                      {nonEvaluable && (
-                        <Badge variant="secondary" className="text-[10px] shrink-0">
-                          no evaluable
-                        </Badge>
-                      )}
-                    </label>
-                  );
-                })}
+                {filteredAttrsWithClassification.map(({ attr, classification }) => (
+                  <AttributeCheckboxItem
+                    key={attr}
+                    attr={attr}
+                    classification={classification}
+                    checked={selectedSet.has(attr)}
+                    onToggle={toggleAttr}
+                  />
+                ))}
               </div>
               {selectedAttrs.length > 0 && (
                 <p className="text-xs text-muted-foreground">{selectedAttrs.length} atributos seleccionados</p>
