@@ -152,6 +152,10 @@ export default function NewReportPage() {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
     const rows = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
     downloadCSV("informe_personalizado.csv", headers, rows);
+    trackEvent("report_downloaded", {
+      report_type: "custom",
+      source_type: source === "file" ? "csv" : "base_pim",
+    });
   };
 
   const handleReset = () => {
