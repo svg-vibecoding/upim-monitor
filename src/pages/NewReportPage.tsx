@@ -16,7 +16,7 @@ import {
   sortReportsByDisplayOrder, getRecordsForReport,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, FileSpreadsheet, X, CheckCircle2, Filter } from "lucide-react";
+import { Upload, FileText, FileSpreadsheet, X, CheckCircle2, Filter, ArrowLeft, Download } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 
@@ -235,11 +235,18 @@ export default function NewReportPage() {
     setSelectedReportId("");
   };
 
-  return (
-    <div className="space-y-6 max-w-5xl">
-      <h1 className="text-2xl font-bold text-foreground">Crear nuevo informe</h1>
+  const universeLabel = useMemo(() => {
+    if (source === "general") return "Base general del PIM";
+    if (source === "report" && selectedReport) return selectedReport.universe;
+    if (source === "file" && uploadedFileName) return `Universo de productos personalizado (${uploadedFileName})`;
+    return "";
+  }, [source, selectedReport, uploadedFileName]);
 
+  return (
+    <div className="space-y-6 max-w-6xl">
       {step === "config" && (
+        <>
+        <h1 className="text-2xl font-bold text-foreground">Crear nuevo informe</h1>
         <div className="space-y-4">
           {/* Step 1: Universe */}
           <Card>
@@ -403,6 +410,7 @@ export default function NewReportPage() {
             <FileText className="h-4 w-4" /> Generar informe
           </Button>
         </div>
+        </>
       )}
 
       {step === "results" && isLoadingRecords && (
@@ -416,16 +424,25 @@ export default function NewReportPage() {
 
       {step === "results" && !isLoadingRecords && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                {records.length.toLocaleString()} SKUs · {selectedAttrs.length} atributos · Completitud promedio: {avgCompleteness}%
-              </p>
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={handleReset}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-foreground">Informe personalizado</h1>
+              <p className="text-sm text-muted-foreground">{universeLabel}</p>
             </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={handleReset}>Nuevo informe</Button>
-              <Button onClick={handleDownload} className="gap-2">Descargar resumen</Button>
-            </div>
+            <Button variant="outline" onClick={handleDownload} className="gap-2">
+              <Download className="h-4 w-4" /> Descargar resumen
+            </Button>
+          </div>
+
+          {/* Summary cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{records.length.toLocaleString()}</p></CardContent></Card>
+            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{selectedAttrs.length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent></Card>
+            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos &lt;50%</p><p className="text-xl font-bold text-destructive">{attrResults.filter((a) => a.completeness < 50).length}</p></CardContent></Card>
           </div>
 
           <Card>
