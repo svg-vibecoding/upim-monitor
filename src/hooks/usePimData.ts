@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { PIMRecord, PredefinedReport, Dimension, AttributeResult, DimensionResult, UniverseKey } from "@/data/mockData";
