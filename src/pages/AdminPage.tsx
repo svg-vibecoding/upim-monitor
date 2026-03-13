@@ -748,54 +748,101 @@ export default function AdminPage() {
                 </p>
               </CardContent>
             </Card>
-          ) : (
-            <Card>
-              <CardContent className="pt-4">
-                <p className="text-sm text-muted-foreground mb-4">
-                  {fullAttributeList.length} atributos detectados en la base PIM. La clasificación y evaluabilidad se aplican internamente en esta versión.
-                </p>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-8">#</TableHead>
-                      <TableHead>Atributo</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Evaluable</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {["Código Jaivaná", ...fullAttributeList].map((attr, idx) => {
-                      const classification = getAttributeClassification(attr, dbReports, dbDimensions);
-                      const typeBadgeVariant: Record<string, "default" | "secondary" | "outline"> = {
-                        base: "default",
-                        funcional: "secondary",
-                        "dimensión": "outline",
-                        general: "outline",
-                      };
-                      return (
-                        <TableRow key={attr}>
-                          <TableCell className="text-xs text-muted-foreground">{idx + 1}</TableCell>
-                          <TableCell className="font-medium text-sm">{attr}</TableCell>
-                          <TableCell>
-                            <Badge variant={typeBadgeVariant[classification.type] || "outline"} className="text-xs">
-                              {classification.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {classification.evaluable ? (
-                              <span className="text-xs text-success font-medium">Sí</span>
-                            ) : (
-                              <span className="text-xs text-muted-foreground font-medium">No evaluable</span>
-                            )}
-                          </TableCell>
+          ) : (() => {
+            const ATTR_TYPE_DESCRIPTIONS: Record<string, string> = {
+              todos: "Visualiza todos los atributos del PIM y su clasificación dentro de la app.",
+              base: "Se usa para identificar de forma única los registros del PIM. Estos atributos son esenciales para la integridad de la base y siempre deben estar presentes en una actualización.",
+              funcional: "Corresponde a atributos usados por alguna lógica activa de la app. Por ejemplo, informes predefinidos, reglas de visibilidad o universos de análisis.",
+              "dimensión": "Agrupa atributos usados para distribuir y analizar la completitud en informes. Permiten segmentar resultados por categorías, marcas u otros ejes de análisis definidos en la app.",
+              general: "Incluye todos los atributos del PIM que no cumplen una función estructural ni operativa dentro de la app. Son evaluables en informes, pero no sostienen lógica activa del sistema.",
+            };
+
+            const allAttrsWithBase = ["Código Jaivaná", ...fullAttributeList];
+            const classifiedAttrs = allAttrsWithBase.map((attr) => ({
+              attr,
+              classification: getAttributeClassification(attr, dbReports, dbDimensions),
+            }));
+            const filteredAttrs = attrTypeFilter === "todos"
+              ? classifiedAttrs
+              : classifiedAttrs.filter((a) => a.classification.type === attrTypeFilter);
+
+            const typeBadgeVariant: Record<string, "default" | "secondary" | "outline"> = {
+              base: "default",
+              funcional: "secondary",
+              "dimensión": "outline",
+              general: "outline",
+            };
+
+            return (
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="flex flex-col gap-3 mb-4">
+                    <ToggleGroup
+                      type="single"
+                      value={attrTypeFilter}
+                      onValueChange={(v) => { if (v) setAttrTypeFilter(v); }}
+                      className="justify-start gap-1"
+                    >
+                      {["todos", "base", "funcional", "dimensión", "general"].map((t) => (
+                        <ToggleGroupItem
+                          key={t}
+                          value={t}
+                          size="sm"
+                          className="rounded-full px-3 py-1 text-xs capitalize data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                        >
+                          {t === "todos" ? "Todos" : t.charAt(0).toUpperCase() + t.slice(1)}
+                        </ToggleGroupItem>
+                      ))}
+                    </ToggleGroup>
+                    <p className="text-sm text-muted-foreground">
+                      {ATTR_TYPE_DESCRIPTIONS[attrTypeFilter]}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Mostrando {filteredAttrs.length} de {allAttrsWithBase.length} atributos
+                    </p>
+                  </div>
+
+                  {filteredAttrs.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+                      <Inbox className="h-8 w-8" />
+                      <p className="text-sm">No hay atributos clasificados como <span className="font-medium capitalize">{attrTypeFilter}</span>.</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-8">#</TableHead>
+                          <TableHead>Atributo</TableHead>
+                          <TableHead>Tipo</TableHead>
+                          <TableHead>Evaluable</TableHead>
                         </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
+                      </TableHeader>
+                      <TableBody>
+                        {filteredAttrs.map(({ attr, classification }, idx) => (
+                          <TableRow key={attr}>
+                            <TableCell className="text-xs text-muted-foreground">{idx + 1}</TableCell>
+                            <TableCell className="font-medium text-sm">{attr}</TableCell>
+                            <TableCell>
+                              <Badge variant={typeBadgeVariant[classification.type] || "outline"} className="text-xs">
+                                {classification.type}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {classification.evaluable ? (
+                                <span className="text-xs text-success font-medium">Sí</span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground font-medium">No evaluable</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            );
+          })()}
         </TabsContent>
 
         {/* REPORTS - now DB-driven */}
