@@ -13,7 +13,7 @@ import {
 import {
   usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList,
   getAttributeClassification, isNonEvaluable, usePredefinedReports,
-  sortReportsByDisplayOrder, getRecordsForReport,
+  sortReportsByDisplayOrder, getRecordsForReport, getEvaluableAttributes,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, FileSpreadsheet, X, CheckCircle2, Filter, ArrowLeft, Download } from "lucide-react";
