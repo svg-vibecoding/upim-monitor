@@ -347,7 +347,7 @@ export default function DashboardPage() {
                           <span className="ml-1 font-medium">{focusItems[0].totalSKUs.toLocaleString()} SKUs</span>
                         )}
                       </p>
-                      <p>Atributos evaluados: {focusItems.length}</p>
+                      <p>Atributos evaluados: {focusItems.length}{totalEvaluableAttrs > 0 ? ` de ${totalEvaluableAttrs}` : ""}</p>
                     </div>
                   )}
 
