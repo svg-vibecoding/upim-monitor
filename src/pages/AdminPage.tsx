@@ -848,7 +848,7 @@ export default function AdminPage() {
                         <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
                       </label>
                       {filteredAttrs.map((attr) => {
-                        const classification = getAttributeClassification(attr);
+                        const classification = getAttributeClassification(attr, dbReports, dbDimensions);
                         const nonEvaluable = !classification.evaluable;
                         const showTypeBadge = classification.type !== "general";
                         return (
