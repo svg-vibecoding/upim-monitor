@@ -248,7 +248,7 @@ export function useProtectedAttributes() {
   return useMemo(() => getProtectedAttributes(reports, dimensions), [reports, dimensions]);
 }
 
-import { useMemo } from "react";
+
 
 /** Check if an attribute is non-evaluable */
 export function isNonEvaluable(attr: string): boolean {
