@@ -457,7 +457,7 @@ export default function AdminPage() {
                   Actualizar base PIM
                 </h3>
                  <p className="text-sm text-muted-foreground mt-1">
-                  Sube un archivo Excel (.xlsx / .xls) con los registros del PIM. La columna <strong>"Código Jaivaná"</strong> es obligatoria y se usa como clave única.
+                  Sube un archivo Excel para actualizar la base del PIM. La columna <strong>"Código Jaivaná"</strong> es obligatoria y se usa como clave única.
                  </p>
               </div>
 
