@@ -540,15 +540,23 @@ export default function AdminPage() {
                         </div>
                       )}
 
-                      {missingMandatory.length > 0 && (
+                      {missingProtected.length > 0 && (
                         <div className="rounded-md border border-destructive bg-destructive/5 p-3 mt-2">
                           <p className="text-xs font-medium text-destructive flex items-center gap-1">
-                            <AlertCircle className="h-3.5 w-3.5" /> Faltan atributos obligatorios:
+                            <AlertCircle className="h-3.5 w-3.5" /> Faltan atributos requeridos por lógica activa del sistema:
                           </p>
-                          <ul className="text-xs text-destructive list-disc list-inside mt-1">
-                            {missingMandatory.map((a) => <li key={a}>{a}</li>)}
+                          <ul className="text-xs text-destructive list-none mt-1 space-y-0.5">
+                            {missingProtected.map((p) => (
+                              <li key={p.attr} className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-[10px] shrink-0">{p.type}</Badge>
+                                <span className="font-medium">{p.attr}</span>
+                                <span className="text-muted-foreground">— {p.reason}</span>
+                              </li>
+                            ))}
                           </ul>
-                          <p className="text-xs text-muted-foreground mt-1">No se puede activar esta versión hasta incluir estos atributos.</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            No se puede activar esta versión. Para continuar sin estos atributos, primero elimina o ajusta la lógica que los utiliza (informes o dimensiones).
+                          </p>
                         </div>
                       )}
 
