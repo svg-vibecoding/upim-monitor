@@ -255,22 +255,16 @@ export function isNonEvaluable(attr: string): boolean {
   return !getAttributeClassification(attr).evaluable;
 }
 
-// --- Legacy exports (derived from the map, for backward compat) ---
+// --- Legacy exports (static fallback for backward compat, no dynamic context) ---
 
 /** @deprecated Use getAttributeClassification instead */
-export const FUNCTIONAL_FIELDS = Object.entries(ATTRIBUTE_CLASSIFICATION)
-  .filter(([, c]) => c.type === "funcional")
-  .map(([k]) => k);
+export const FUNCTIONAL_FIELDS = ["Estado (Global)", "Visibilidad Adobe B2B", "Visibilidad Adobe B2C"];
 
 /** @deprecated Use getAttributeClassification instead */
-export const DIMENSION_FIELDS = Object.entries(ATTRIBUTE_CLASSIFICATION)
-  .filter(([, c]) => c.type === "dimensión")
-  .map(([k]) => k);
+export const DIMENSION_FIELDS = ["Categoría N1 Comercial", "Clasificación del Producto"];
 
 /** @deprecated Use isNonEvaluable instead */
-export const NON_EVALUABLE_FIELDS = Object.entries(ATTRIBUTE_CLASSIFICATION)
-  .filter(([, c]) => !c.evaluable)
-  .map(([k]) => k);
+export const NON_EVALUABLE_FIELDS = ["Código Jaivaná", "Estado (Global)"];
 
 /** @deprecated Use FUNCTIONAL_FIELDS */
 export const STRUCTURAL_ATTRIBUTES = FUNCTIONAL_FIELDS;
