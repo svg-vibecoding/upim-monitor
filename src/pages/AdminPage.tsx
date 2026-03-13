@@ -921,8 +921,16 @@ export default function AdminPage() {
                             />
                             <span className="truncate">{attr}</span>
                             <span className="ml-auto flex gap-1 shrink-0">
-                              {showTypeBadge && (
-                                <Badge variant="outline" className="text-[10px]">
+                                {showTypeBadge && (
+                                <Badge
+                                  variant="outline"
+                                  className="text-[10px]"
+                                  style={
+                                    classification.type === "dimensión"
+                                      ? { backgroundColor: "#3366FF", color: "#fff", borderColor: "#3366FF" }
+                                      : undefined
+                                  }
+                                >
                                   {classification.type}
                                 </Badge>
                               )}
