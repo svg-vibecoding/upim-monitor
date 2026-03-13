@@ -57,6 +57,12 @@ export default function ReportDetailPage() {
 
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
+  const { data: attributeOrder } = useAttributeOrder();
+
+  const totalEvaluableAttrs = useMemo(() => {
+    if (!attributeOrder) return 0;
+    return getEvaluableAttributes(getFullAttributeList(attributeOrder)).length;
+  }, [attributeOrder]);
 
   const report = reports?.find((r) => r.id === reportId);
   const { data: completenessData, isLoading: loadingCompleteness } = useReportCompleteness(report?.id);
