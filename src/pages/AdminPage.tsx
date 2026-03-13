@@ -762,7 +762,7 @@ export default function AdminPage() {
                   </TableHeader>
                   <TableBody>
                     {["Código Jaivaná", ...fullAttributeList].map((attr, idx) => {
-                      const classification = getAttributeClassification(attr);
+                      const classification = getAttributeClassification(attr, dbReports, dbDimensions);
                       const typeBadgeVariant: Record<string, "default" | "secondary" | "outline"> = {
                         base: "default",
                         funcional: "secondary",
