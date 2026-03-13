@@ -362,7 +362,7 @@ export default function AdminPage() {
         return;
       }
       const sheet = workbook.Sheets[sheetName];
-      const allRows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      const allRows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false });
 
       if (allRows.length === 0) {
         setCsvResult({ success: false, error: "El archivo no tiene datos." });
