@@ -30,6 +30,7 @@ import {
   usePimRecords,
   useDimensions,
   sortReportsByDisplayOrder,
+  useProtectedAttributes,
 } from "@/hooks/usePimData";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -325,20 +326,19 @@ export default function AdminPage() {
     error?: string;
   } | null>(null);
 
-  // Mandatory attributes validation (same as server-side)
-  const MANDATORY_ATTRIBUTES = [
-    "Estado (Global)",
-    "Código SumaGo",
-    "Visibilidad Adobe B2B",
-    "Visibilidad Adobe B2C",
-  ];
+  // Dynamic protected attributes (replaces hardcoded MANDATORY_ATTRIBUTES)
+  const protectedAttributes = useProtectedAttributes();
 
-  const missingMandatory = useMemo(() => {
+  const missingProtected = useMemo(() => {
     if (!csvResult?.success || !csvResult.attributeOrder) return [];
-    return MANDATORY_ATTRIBUTES.filter((a) => !csvResult.attributeOrder!.includes(a));
-  }, [csvResult]);
+    const uploadedSet = new Set(csvResult.attributeOrder);
+    // Código Jaivaná is validated by row existence, not by attribute_order
+    return protectedAttributes
+      .filter((p) => p.attr !== "Código Jaivaná")
+      .filter((p) => !uploadedSet.has(p.attr));
+  }, [csvResult, protectedAttributes]);
 
-  const canActivate = csvResult?.success && missingMandatory.length === 0 && (csvResult.uniqueRows || 0) > 0 && !!pendingUploadId;
+  const canActivate = csvResult?.success && missingProtected.length === 0 && (csvResult.uniqueRows || 0) > 0 && !!pendingUploadId;
 
   const CHUNK_SIZE = 2000;
 
@@ -540,15 +540,23 @@ export default function AdminPage() {
                         </div>
                       )}
 
-                      {missingMandatory.length > 0 && (
+                      {missingProtected.length > 0 && (
                         <div className="rounded-md border border-destructive bg-destructive/5 p-3 mt-2">
                           <p className="text-xs font-medium text-destructive flex items-center gap-1">
-                            <AlertCircle className="h-3.5 w-3.5" /> Faltan atributos obligatorios:
+                            <AlertCircle className="h-3.5 w-3.5" /> Faltan atributos requeridos por lógica activa del sistema:
                           </p>
-                          <ul className="text-xs text-destructive list-disc list-inside mt-1">
-                            {missingMandatory.map((a) => <li key={a}>{a}</li>)}
+                          <ul className="text-xs text-destructive list-none mt-1 space-y-0.5">
+                            {missingProtected.map((p) => (
+                              <li key={p.attr} className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-[10px] shrink-0">{p.type}</Badge>
+                                <span className="font-medium">{p.attr}</span>
+                                <span className="text-muted-foreground">— {p.reason}</span>
+                              </li>
+                            ))}
                           </ul>
-                          <p className="text-xs text-muted-foreground mt-1">No se puede activar esta versión hasta incluir estos atributos.</p>
+                          <p className="text-xs text-muted-foreground mt-2">
+                            No se puede activar esta versión. Para continuar sin estos atributos, primero elimina o ajusta la lógica que los utiliza (informes o dimensiones).
+                          </p>
                         </div>
                       )}
 
@@ -754,7 +762,7 @@ export default function AdminPage() {
                   </TableHeader>
                   <TableBody>
                     {["Código Jaivaná", ...fullAttributeList].map((attr, idx) => {
-                      const classification = getAttributeClassification(attr);
+                      const classification = getAttributeClassification(attr, dbReports, dbDimensions);
                       const typeBadgeVariant: Record<string, "default" | "secondary" | "outline"> = {
                         base: "default",
                         funcional: "secondary",
@@ -840,7 +848,7 @@ export default function AdminPage() {
                         <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
                       </label>
                       {filteredAttrs.map((attr) => {
-                        const classification = getAttributeClassification(attr);
+                        const classification = getAttributeClassification(attr, dbReports, dbDimensions);
                         const nonEvaluable = !classification.evaluable;
                         const showTypeBadge = classification.type !== "general";
                         return (

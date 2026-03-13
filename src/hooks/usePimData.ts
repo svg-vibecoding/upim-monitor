@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { PIMRecord, PredefinedReport, Dimension, AttributeResult, DimensionResult, UniverseKey } from "@/data/mockData";
@@ -153,45 +154,117 @@ export interface AttributeClassification {
   evaluable: boolean;
 }
 
-/** Hardcoded classification map for this version. 
- *  Any attribute not listed here defaults to { type: "general", evaluable: true }.
- *  This map governs UI badges, completeness calculation, and functional logic.
- *  It does NOT constitute a complete validation of PIM load obligations. */
-const ATTRIBUTE_CLASSIFICATION: Record<string, AttributeClassification> = {
-  "Código Jaivaná":            { type: "base",      evaluable: false },
-  "Estado (Global)":           { type: "funcional",  evaluable: false },
-  "Visibilidad Adobe B2B":     { type: "funcional",  evaluable: true },
-  "Visibilidad Adobe B2C":     { type: "funcional",  evaluable: true },
-  "Categoría N1 Comercial":    { type: "dimensión",  evaluable: true },
-  "Clasificación del Producto": { type: "dimensión", evaluable: true },
+/** Maps universe_key values to the PIM attribute they depend on.
+ *  This is the single source of truth for functional attribute detection.
+ *  Must stay in sync with getRecordsForReport() filtering logic. */
+export const UNIVERSE_KEY_ATTRIBUTE_MAP: Record<string, string | null> = {
+  all: null,
+  active: "Estado (Global)",
+  digital_base: "Código SumaGo",
+  visible_b2b: "Visibilidad Adobe B2B",
+  visible_b2c: "Visibilidad Adobe B2C",
+  producto_foco: "Producto foco",
 };
 
-/** Get the classification for any attribute */
-export function getAttributeClassification(attr: string): AttributeClassification {
-  return ATTRIBUTE_CLASSIFICATION[attr] || { type: "general", evaluable: true };
+/** Static classification for base attributes (always present regardless of config) */
+const BASE_CLASSIFICATION: Record<string, AttributeClassification> = {
+  "Código Jaivaná": { type: "base", evaluable: false },
+};
+
+/** Non-evaluable attributes (regardless of dynamic type) */
+const NON_EVALUABLE_SET = new Set(["Código Jaivaná", "Estado (Global)"]);
+
+/** Compute dynamic classification for an attribute based on active reports and dimensions.
+ *  Priority: base > funcional > dimensión > general */
+export function getAttributeClassification(
+  attr: string,
+  reports?: PredefinedReport[],
+  dimensions?: Dimension[],
+): AttributeClassification {
+  // Base attributes are always base
+  if (BASE_CLASSIFICATION[attr]) return BASE_CLASSIFICATION[attr];
+
+  const evaluable = !NON_EVALUABLE_SET.has(attr);
+
+  // Check if any report depends on this attribute via universe_key
+  if (reports) {
+    for (const r of reports) {
+      const depAttr = UNIVERSE_KEY_ATTRIBUTE_MAP[r.universeKey];
+      if (depAttr === attr) return { type: "funcional", evaluable };
+    }
+  }
+
+  // Check if any dimension uses this attribute
+  if (dimensions) {
+    for (const d of dimensions) {
+      if (d.field === attr) return { type: "dimensión", evaluable };
+    }
+  }
+
+  return { type: "general", evaluable };
 }
+
+/** Protected attribute with reason for protection */
+export interface ProtectedAttribute {
+  attr: string;
+  type: AttributeType;
+  reason: string;
+}
+
+/** Compute all protected attributes from active reports and dimensions */
+export function getProtectedAttributes(
+  reports: PredefinedReport[],
+  dimensions: Dimension[],
+): ProtectedAttribute[] {
+  const result: ProtectedAttribute[] = [
+    { attr: "Código Jaivaná", type: "base", reason: "Llave única de identificación" },
+  ];
+  const seen = new Set<string>(["Código Jaivaná"]);
+
+  // Functional from reports
+  for (const r of reports) {
+    const depAttr = UNIVERSE_KEY_ATTRIBUTE_MAP[r.universeKey];
+    if (depAttr && !seen.has(depAttr)) {
+      seen.add(depAttr);
+      result.push({ attr: depAttr, type: "funcional", reason: `Informe "${r.name}"` });
+    }
+  }
+
+  // Dimension attributes
+  for (const d of dimensions) {
+    if (!seen.has(d.field)) {
+      seen.add(d.field);
+      result.push({ attr: d.field, type: "dimensión", reason: `Dimensión "${d.name}"` });
+    }
+  }
+
+  return result;
+}
+
+/** Hook: returns protected attributes based on current reports and dimensions */
+export function useProtectedAttributes() {
+  const { data: reports = [] } = usePredefinedReports();
+  const { data: dimensions = [] } = useDimensions();
+  return useMemo(() => getProtectedAttributes(reports, dimensions), [reports, dimensions]);
+}
+
+
 
 /** Check if an attribute is non-evaluable */
 export function isNonEvaluable(attr: string): boolean {
   return !getAttributeClassification(attr).evaluable;
 }
 
-// --- Legacy exports (derived from the map, for backward compat) ---
+// --- Legacy exports (static fallback for backward compat, no dynamic context) ---
 
 /** @deprecated Use getAttributeClassification instead */
-export const FUNCTIONAL_FIELDS = Object.entries(ATTRIBUTE_CLASSIFICATION)
-  .filter(([, c]) => c.type === "funcional")
-  .map(([k]) => k);
+export const FUNCTIONAL_FIELDS = ["Estado (Global)", "Visibilidad Adobe B2B", "Visibilidad Adobe B2C"];
 
 /** @deprecated Use getAttributeClassification instead */
-export const DIMENSION_FIELDS = Object.entries(ATTRIBUTE_CLASSIFICATION)
-  .filter(([, c]) => c.type === "dimensión")
-  .map(([k]) => k);
+export const DIMENSION_FIELDS = ["Categoría N1 Comercial", "Clasificación del Producto"];
 
 /** @deprecated Use isNonEvaluable instead */
-export const NON_EVALUABLE_FIELDS = Object.entries(ATTRIBUTE_CLASSIFICATION)
-  .filter(([, c]) => !c.evaluable)
-  .map(([k]) => k);
+export const NON_EVALUABLE_FIELDS = ["Código Jaivaná", "Estado (Global)"];
 
 /** @deprecated Use FUNCTIONAL_FIELDS */
 export const STRUCTURAL_ATTRIBUTES = FUNCTIONAL_FIELDS;

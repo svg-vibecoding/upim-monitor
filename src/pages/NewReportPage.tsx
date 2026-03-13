@@ -109,7 +109,7 @@ export default function NewReportPage() {
     const search = searchAttr.toLowerCase();
     return fullAttributes
       .filter((a) => a.toLowerCase().includes(search))
-      .map((attr) => ({ attr, classification: getAttributeClassification(attr) }));
+      .map((attr) => ({ attr, classification: getAttributeClassification(attr, predefinedReports, dimensionsData) }));
   }, [fullAttributes, searchAttr]);
 
   const selectedSet = useMemo(() => new Set(selectedAttrs), [selectedAttrs]);
