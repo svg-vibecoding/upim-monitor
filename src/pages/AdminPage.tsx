@@ -457,7 +457,7 @@ export default function AdminPage() {
                   Actualizar base PIM
                 </h3>
                  <p className="text-sm text-muted-foreground mt-1">
-                  Sube un archivo Excel (.xlsx / .xls) con los registros del PIM. La columna <strong>"Código Jaivaná"</strong> es obligatoria y se usa como clave única.
+                  Sube un archivo Excel para actualizar la base del PIM. La columna <strong>"Código Jaivaná"</strong> es obligatoria y se usa como clave única.
                  </p>
               </div>
 
@@ -646,11 +646,12 @@ export default function AdminPage() {
 
               <div className="bg-muted rounded-lg p-4 text-xs text-muted-foreground space-y-1">
                  <p className="font-medium text-foreground text-sm">Formato esperado del archivo Excel:</p>
-                 <p>• Formato: <strong>.xlsx</strong> o <strong>.xls</strong> (se lee la primera hoja)</p>
-                 <p>• Columna obligatoria: <strong>Código Jaivaná</strong></p>
-                 <p>• Columnas fijas reconocidas: Estado Global, Visibilidad B2B, Visibilidad B2C, Categoría N1 Comercial, Clasificación del Producto</p>
+                 <p>• Formato permitido: <strong>.xlsx</strong> o <strong>.xls</strong> (se procesa la primera hoja)</p>
+                 <p>• El archivo cargado se toma como la versión completa y vigente de la Base PIM</p>
+                 <p>• Se generará un reporte de control sobre el archivo cargado. La actualización se aplica al confirmar "Actualizar datos en la app"</p>
+                 <p>• Columna obligatoria de identificación: <strong>Código Jaivaná</strong></p>
+                 <p>• La base debe incluir también los atributos requeridos por las funcionalidades activas de la app (atributos funcionales y/o dimensiones en uso)</p>
                  <p>• Cualquier otra columna se almacena como <strong>atributo</strong> evaluable en los informes</p>
-                 <p>• Los códigos numéricos se preservan como texto</p>
               </div>
             </CardContent>
           </Card>
