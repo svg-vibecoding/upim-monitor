@@ -173,6 +173,7 @@ export default function AdminPage() {
   const [editingReportId, setEditingReportId] = useState<string | null>(null);
   const [reportAttrs, setReportAttrs] = useState<string[]>([]);
   const [attrSearch, setAttrSearch] = useState("");
+  const [attrTypeFilter, setAttrTypeFilter] = useState("todos");
 
   // --- Reports: open edit dialog with current attrs from DB ---
   const openReportDialog = (reportId: string) => {
