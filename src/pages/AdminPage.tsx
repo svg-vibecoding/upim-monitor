@@ -795,12 +795,17 @@ export default function AdminPage() {
                         </ToggleGroupItem>
                       ))}
                     </ToggleGroup>
-                    <p className="text-sm text-muted-foreground">
-                      {ATTR_TYPE_DESCRIPTIONS[attrTypeFilter]}
-                    </p>
                     <p className="text-xs text-muted-foreground">
                       Mostrando {filteredAttrs.length} de {allAttrsWithBase.length} atributos
                     </p>
+                    <div className="mt-2">
+                      <h4 className="text-sm font-semibold text-foreground">
+                        {attrTypeFilter === "todos" ? "Todos" : attrTypeFilter === "base" ? "Atributos base" : attrTypeFilter === "funcional" ? "Atributos funcionales" : attrTypeFilter === "dimensión" ? "Atributos de dimensión" : "Atributos generales"}
+                      </h4>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        {ATTR_TYPE_DESCRIPTIONS[attrTypeFilter]}
+                      </p>
+                    </div>
                   </div>
 
                   {filteredAttrs.length === 0 ? (
