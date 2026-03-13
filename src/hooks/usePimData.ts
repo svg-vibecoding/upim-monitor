@@ -385,7 +385,7 @@ export function useDimensions() {
         id: d.id,
         name: d.name,
         field: d.field,
-      }));
+      })).sort((a, b) => a.name.localeCompare(b.name, "es"));
     },
     staleTime: 5 * 60 * 1000,
   });
