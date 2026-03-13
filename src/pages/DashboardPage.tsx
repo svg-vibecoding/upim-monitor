@@ -68,6 +68,12 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { data: kpis, isLoading: loadingKPIs } = usePimKPIs();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
+  const { data: attributeOrder } = useAttributeOrder();
+
+  const totalEvaluableAttrs = useMemo(() => {
+    if (!attributeOrder) return 0;
+    return getEvaluableAttributes(getFullAttributeList(attributeOrder)).length;
+  }, [attributeOrder]);
 
   const isLoading = loadingKPIs || loadingReports;
   const hasData = kpis && kpis.total > 0;
