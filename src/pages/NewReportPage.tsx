@@ -105,6 +105,10 @@ export default function NewReportPage() {
     return getFullAttributeList(attributeOrder);
   }, [attributeOrder]);
 
+  const totalEvaluableAttrs = useMemo(() => {
+    return getEvaluableAttributes(fullAttributes).length;
+  }, [fullAttributes]);
+
   const filteredAttrsWithClassification = useMemo(() => {
     const search = searchAttr.toLowerCase();
     return fullAttributes
