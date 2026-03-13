@@ -32,6 +32,7 @@ import {
   useDimensions,
   sortReportsByDisplayOrder,
   useProtectedAttributes,
+  type AttributeType,
 } from "@/hooks/usePimData";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
