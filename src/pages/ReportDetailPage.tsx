@@ -8,7 +8,7 @@ import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   usePimRecords, usePredefinedReports, useDimensions, useAttributeOrder,
-  useReportCompleteness, NON_EVALUABLE_FIELDS,
+  useReportCompleteness, NON_EVALUABLE_FIELDS, getFullAttributeList,
   computeAttributeResults, computeDimensionResults, getRecordsForReport,
   filterRealAttributes, getEvaluableAttributes,
 } from "@/hooks/usePimData";
