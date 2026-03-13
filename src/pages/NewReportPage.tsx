@@ -13,7 +13,7 @@ import {
 import {
   usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList,
   getAttributeClassification, isNonEvaluable, usePredefinedReports,
-  sortReportsByDisplayOrder, getRecordsForReport,
+  sortReportsByDisplayOrder, getRecordsForReport, getEvaluableAttributes,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileText, FileSpreadsheet, X, CheckCircle2, Filter, ArrowLeft, Download } from "lucide-react";
@@ -104,6 +104,10 @@ export default function NewReportPage() {
   const fullAttributes = useMemo(() => {
     return getFullAttributeList(attributeOrder);
   }, [attributeOrder]);
+
+  const totalEvaluableAttrs = useMemo(() => {
+    return getEvaluableAttributes(fullAttributes).length;
+  }, [fullAttributes]);
 
   const filteredAttrsWithClassification = useMemo(() => {
     const search = searchAttr.toLowerCase();
@@ -440,7 +444,7 @@ export default function NewReportPage() {
           {/* Summary cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{records.length.toLocaleString()}</p></CardContent></Card>
-            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{selectedAttrs.length}</p></CardContent></Card>
+            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{selectedAttrs.length}{totalEvaluableAttrs > 0 && <span className="text-sm font-normal text-muted-foreground"> de {totalEvaluableAttrs}</span>}</p></CardContent></Card>
             <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent></Card>
             <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos &lt;50%</p><p className="text-xl font-bold text-destructive">{attrResults.filter((a) => a.completeness < 50).length}</p></CardContent></Card>
           </div>

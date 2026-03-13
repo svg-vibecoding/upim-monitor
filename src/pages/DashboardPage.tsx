@@ -9,6 +9,9 @@ import {
   usePimKPIs,
   usePredefinedReports,
   useReportCompleteness,
+  useAttributeOrder,
+  getFullAttributeList,
+  getEvaluableAttributes,
   sortReportsByDisplayOrder,
   NON_EVALUABLE_FIELDS,
 } from "@/hooks/usePimData";
@@ -65,6 +68,12 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { data: kpis, isLoading: loadingKPIs } = usePimKPIs();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
+  const { data: attributeOrder } = useAttributeOrder();
+
+  const totalEvaluableAttrs = useMemo(() => {
+    if (!attributeOrder) return 0;
+    return getEvaluableAttributes(getFullAttributeList(attributeOrder)).length;
+  }, [attributeOrder]);
 
   const isLoading = loadingKPIs || loadingReports;
   const hasData = kpis && kpis.total > 0;
@@ -338,7 +347,7 @@ export default function DashboardPage() {
                           <span className="ml-1 font-medium">{focusItems[0].totalSKUs.toLocaleString()} SKUs</span>
                         )}
                       </p>
-                      <p>Atributos evaluados: {focusItems.length}</p>
+                      <p>Atributos evaluados: {focusItems.length}{totalEvaluableAttrs > 0 ? ` de ${totalEvaluableAttrs}` : ""}</p>
                     </div>
                   )}
 
