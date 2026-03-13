@@ -326,20 +326,19 @@ export default function AdminPage() {
     error?: string;
   } | null>(null);
 
-  // Mandatory attributes validation (same as server-side)
-  const MANDATORY_ATTRIBUTES = [
-    "Estado (Global)",
-    "Código SumaGo",
-    "Visibilidad Adobe B2B",
-    "Visibilidad Adobe B2C",
-  ];
+  // Dynamic protected attributes (replaces hardcoded MANDATORY_ATTRIBUTES)
+  const protectedAttributes = useProtectedAttributes();
 
-  const missingMandatory = useMemo(() => {
+  const missingProtected = useMemo(() => {
     if (!csvResult?.success || !csvResult.attributeOrder) return [];
-    return MANDATORY_ATTRIBUTES.filter((a) => !csvResult.attributeOrder!.includes(a));
-  }, [csvResult]);
+    const uploadedSet = new Set(csvResult.attributeOrder);
+    // Código Jaivaná is validated by row existence, not by attribute_order
+    return protectedAttributes
+      .filter((p) => p.attr !== "Código Jaivaná")
+      .filter((p) => !uploadedSet.has(p.attr));
+  }, [csvResult, protectedAttributes]);
 
-  const canActivate = csvResult?.success && missingMandatory.length === 0 && (csvResult.uniqueRows || 0) > 0 && !!pendingUploadId;
+  const canActivate = csvResult?.success && missingProtected.length === 0 && (csvResult.uniqueRows || 0) > 0 && !!pendingUploadId;
 
   const CHUNK_SIZE = 2000;
 
