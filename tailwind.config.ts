@@ -59,10 +59,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        "upim-blue": {
-          DEFAULT: "hsl(var(--upim-blue))",
-          foreground: "hsl(var(--upim-blue-foreground))",
-        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

@@ -789,11 +789,7 @@ export default function AdminPage() {
                           key={t}
                           value={t}
                           size="sm"
-                          className={`rounded-full px-3 py-1 text-xs capitalize ${
-                            t === "dimensión"
-                              ? "data-[state=on]:bg-upim-blue data-[state=on]:text-upim-blue-foreground"
-                              : "data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-                          }`}
+                          className="rounded-full px-3 py-1 text-xs capitalize data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
                         >
                           {t === "todos" ? "Todos" : t.charAt(0).toUpperCase() + t.slice(1)}
                         </ToggleGroupItem>
