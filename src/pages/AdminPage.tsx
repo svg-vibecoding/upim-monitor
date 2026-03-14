@@ -120,7 +120,7 @@ export default function AdminPage() {
       setOpName(op.name);
       setOpDescription(op.description);
       setOpLogicMode(op.logicMode);
-      setOpConditions(op.conditions.length > 0 ? op.conditions : [{ attribute: "", operator: "has_value", value: null }]);
+      setOpConditions(op.conditions.length > 0 ? op.conditions : [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }]);
       setOpLinkedKpi(op.linkedKpi || "none");
     } else {
       setEditingOpId(null);
