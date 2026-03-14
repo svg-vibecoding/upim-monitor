@@ -101,19 +101,19 @@ const comprasAttrs = [
 export const mockPredefinedReports: PredefinedReport[] = [
   {
     id: "r1", name: "PIM General", description: "Completitud general de atributos base del catálogo.",
-    universe: "Todos los SKUs activos del PIM", universeKey: "active", attributes: pimGeneralAttrs,
+    universe: "Todos los SKUs activos del PIM", universeKey: "active", operationId: null, attributes: pimGeneralAttrs,
   },
   {
     id: "r2", name: "SumaGO B2B", description: "Completitud de atributos para canal digital B2B.",
-    universe: "SKUs con Visibilidad Adobe B2B = Visible", universeKey: "visible_b2b", attributes: sumaGoB2BAttrs,
+    universe: "SKUs con Visibilidad Adobe B2B = Visible", universeKey: "visible_b2b", operationId: null, attributes: sumaGoB2BAttrs,
   },
   {
     id: "r3", name: "SumaGO B2C", description: "Completitud de atributos para canal digital B2C.",
-    universe: "SKUs con Visibilidad Adobe B2C = Visible", universeKey: "visible_b2c", attributes: sumaGoB2CAttrs,
+    universe: "SKUs con Visibilidad Adobe B2C = Visible", universeKey: "visible_b2c", operationId: null, attributes: sumaGoB2CAttrs,
   },
   {
     id: "r4", name: "Operaciones", description: "Completitud de atributos de gestión de operaciones.",
-    universe: "Totalidad del PIM", universeKey: "all", attributes: comprasAttrs,
+    universe: "Totalidad del PIM", universeKey: "all", operationId: null, attributes: comprasAttrs,
   },
 ];
 
