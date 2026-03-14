@@ -1215,7 +1215,7 @@ export default function AdminPage() {
                     </div>
                     <Button
                       onClick={saveNewReport}
-                      disabled={createReport.isPending}
+                      disabled={newReportSaving}
                       className="w-full gap-2"
                     >
                       {newReportSaving && <Loader2 className="h-4 w-4 animate-spin" />}
