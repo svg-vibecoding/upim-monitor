@@ -113,8 +113,8 @@ export default function CreatePredefinedReportPage() {
     const search = searchAttr.toLowerCase();
     return fullAttributes
       .filter((a) => a.toLowerCase().includes(search))
-      .map((attr) => ({ attr, classification: getAttributeClassification(attr, predefinedReports, dimensionsData) }));
-  }, [fullAttributes, searchAttr, predefinedReports, dimensionsData]);
+      .map((attr) => ({ attr, classification: getAttributeClassification(attr, predefinedReports, dimensionsData, operations) }));
+  }, [fullAttributes, searchAttr, predefinedReports, dimensionsData, operations]);
 
   const handleApplyTemplate = (rid: string) => {
     if (rid === "none") { setSelectedAttrs([]); return; }
