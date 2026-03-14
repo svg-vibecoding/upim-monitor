@@ -48,7 +48,7 @@ import {
   type LogicMode,
   type LinkedKpi,
 } from "@/hooks/usePimData";
-import { type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import type { AppRole } from "@/contexts/AuthContext";
