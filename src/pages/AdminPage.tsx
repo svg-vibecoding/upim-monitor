@@ -321,6 +321,7 @@ export default function AdminPage() {
   const [reportDialog, setReportDialog] = useState(false);
   const [editingReportId, setEditingReportId] = useState<string | null>(null);
   const [reportAttrs, setReportAttrs] = useState<string[]>([]);
+  const [reportOperationId, setReportOperationId] = useState<string | null>(null);
   const [attrSearch, setAttrSearch] = useState("");
   const [attrTypeFilter, setAttrTypeFilter] = useState("todos");
 
