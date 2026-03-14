@@ -1360,14 +1360,17 @@ export default function AdminPage() {
                         )}
                         <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
                           {/* Row 1: Attribute (full width) */}
-                          <Select value={cond.attribute} onValueChange={(v) => updateCondition(idx, "attribute", v)}>
-                            <SelectTrigger className="w-full"><SelectValue placeholder="Seleccionar atributo…" /></SelectTrigger>
-                            <SelectContent className="max-h-[300px]">
-                              {fullAttributeList.map((a) => (
-                                <SelectItem key={a} value={a}>{a}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="space-y-1">
+                            <span className="text-[11px] font-medium text-muted-foreground">Atributo</span>
+                            <Select value={cond.attribute} onValueChange={(v) => updateCondition(idx, "attribute", v)}>
+                              <SelectTrigger className="w-full"><SelectValue placeholder="Seleccionar atributo…" /></SelectTrigger>
+                              <SelectContent className="max-h-[300px]">
+                                {fullAttributeList.map((a) => (
+                                  <SelectItem key={a} value={a}>{a}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
                           {/* Row 2: Operator + Value + Remove */}
                           <div className="flex items-center gap-2">
                             <Select value={cond.operator} onValueChange={(v) => updateCondition(idx, "operator", v)}>
