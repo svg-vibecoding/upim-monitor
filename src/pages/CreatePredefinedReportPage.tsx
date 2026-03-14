@@ -1,5 +1,5 @@
-import { useState, useMemo, useCallback, memo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useMemo, useCallback, useEffect, memo } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useAttributeOrder, usePredefinedReports, useDimensions, useOperations,
-  useCreatePredefinedReport, getFullAttributeList, getEvaluableAttributes,
+  useCreatePredefinedReport, useUpdateReportAttributes, useUpdateReportOperation,
+  getFullAttributeList, getEvaluableAttributes,
   getAttributeClassification, sortReportsByDisplayOrder,
   type Condition, type LogicMode,
 } from "@/hooks/usePimData";
@@ -44,9 +45,13 @@ const AttributeCheckboxItem = memo(({ attr, classification, checked, onToggle }:
 AttributeCheckboxItem.displayName = "AttributeCheckboxItem";
 
 export default function CreatePredefinedReportPage() {
+  const { reportId } = useParams<{ reportId?: string }>();
+  const isEditMode = !!reportId;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const createReport = useCreatePredefinedReport();
+  const updateReportAttrs = useUpdateReportAttributes();
+  const updateReportOp = useUpdateReportOperation();
 
   const { data: attributeOrder = [] } = useAttributeOrder();
   const { data: predefinedReports = [] } = usePredefinedReports();
@@ -61,7 +66,7 @@ export default function CreatePredefinedReportPage() {
   const [description, setDescription] = useState("");
   const [source, setSource] = useState<UniverseSource>("general");
   const [selectedOperationId, setSelectedOperationId] = useState("");
-  const [opMode, setOpMode] = useState<OperationMode>("existing");
+  const [opMode, setOpMode] = useState<OperationMode>("new");
   const [inlineOp, setInlineOp] = useState<InlineOperationDef>({
     logicMode: "all",
     conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
@@ -70,12 +75,33 @@ export default function CreatePredefinedReportPage() {
   const [selectedAttrs, setSelectedAttrs] = useState<string[]>([]);
   const [searchAttr, setSearchAttr] = useState("");
   const [saving, setSaving] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-  // File upload state (for Excel universe)
+  // File upload state
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [uploadedFileReady, setUploadedFileReady] = useState(false);
   const [uploadedTotalRows, setUploadedTotalRows] = useState(0);
+
+  // Populate form when editing
+  useEffect(() => {
+    if (isEditMode && predefinedReports.length > 0 && !initialized) {
+      const report = predefinedReports.find((r) => r.id === reportId);
+      if (report) {
+        setName(report.name);
+        setDescription(report.description || "");
+        setSelectedAttrs(report.attributes);
+        if (report.operationId) {
+          setSource("operation");
+          setSelectedOperationId(report.operationId);
+          setOpMode("existing");
+        } else {
+          setSource("general");
+        }
+        setInitialized(true);
+      }
+    }
+  }, [isEditMode, reportId, predefinedReports, initialized]);
 
   const selectedSet = useMemo(() => new Set(selectedAttrs), [selectedAttrs]);
 
@@ -90,9 +116,9 @@ export default function CreatePredefinedReportPage() {
       .map((attr) => ({ attr, classification: getAttributeClassification(attr, predefinedReports, dimensionsData) }));
   }, [fullAttributes, searchAttr, predefinedReports, dimensionsData]);
 
-  const handleApplyTemplate = (reportId: string) => {
-    if (reportId === "none") { setSelectedAttrs([]); return; }
-    const report = sortedReports.find((r) => r.id === reportId);
+  const handleApplyTemplate = (rid: string) => {
+    if (rid === "none") { setSelectedAttrs([]); return; }
+    const report = sortedReports.find((r) => r.id === rid);
     if (report) setSelectedAttrs(report.attributes);
   };
 
@@ -139,51 +165,68 @@ export default function CreatePredefinedReportPage() {
     setUploadedTotalRows(0);
   };
 
+  const resolveOperationId = async (): Promise<string | null> => {
+    if (source !== "operation") return null;
+
+    if (opMode === "existing" && selectedOperationId) return selectedOperationId;
+
+    if (opMode === "new") {
+      const validConditions = inlineOp.conditions.filter((c) => c.attribute.trim() !== "");
+      if (validConditions.length === 0) {
+        toast.error("Agrega al menos una condición válida a la operación");
+        return "__error__";
+      }
+      const opPayload = {
+        name: `Op: ${name.trim()}`,
+        description: `Operación creada para el informe "${name.trim()}"`,
+        logic_mode: inlineOp.logicMode,
+        conditions: validConditions,
+        active: true,
+      };
+      const { data: opData, error: opError } = await supabase.from("operations" as any).insert(opPayload).select("id").single();
+      if (opError) throw opError;
+      queryClient.invalidateQueries({ queryKey: ["operations"] });
+      return (opData as any).id;
+    }
+
+    return null;
+  };
+
   const handleSave = async () => {
     if (!name.trim()) { toast.error("El nombre es obligatorio"); return; }
     if (selectedAttrs.length === 0) { toast.error("Selecciona al menos un atributo"); return; }
 
     setSaving(true);
     try {
-      let opId: string | null = null;
+      const opId = await resolveOperationId();
+      if (opId === "__error__") { setSaving(false); return; }
 
-      if (source === "operation") {
-        if (opMode === "existing" && selectedOperationId) {
-          opId = selectedOperationId;
-        } else if (opMode === "new") {
-          const validConditions = inlineOp.conditions.filter((c) => c.attribute.trim() !== "");
-          if (validConditions.length === 0) {
-            toast.error("Agrega al menos una condición válida a la operación");
-            setSaving(false);
-            return;
-          }
-          const opPayload = {
-            name: `Op: ${name.trim()}`,
-            description: `Operación creada para el informe "${name.trim()}"`,
-            logic_mode: inlineOp.logicMode,
-            conditions: validConditions,
-            active: true,
-          };
-          const { data: opData, error: opError } = await supabase.from("operations" as any).insert(opPayload).select("id").single();
-          if (opError) throw opError;
-          opId = (opData as any).id;
-          queryClient.invalidateQueries({ queryKey: ["operations"] });
-        }
+      if (isEditMode) {
+        // Update existing report
+        await updateReportOp.mutateAsync({ reportId: reportId!, operationId: opId });
+        await updateReportAttrs.mutateAsync({ reportId: reportId!, attributes: selectedAttrs });
+
+        // Update name/description
+        const { error } = await supabase.from("predefined_reports").update({
+          name: name.trim(),
+          description: description.trim(),
+        }).eq("id", reportId!);
+        if (error) throw error;
+        queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
+
+        toast.success("Informe actualizado exitosamente");
+      } else {
+        await createReport.mutateAsync({
+          name: name.trim(),
+          description: description.trim(),
+          operationId: opId,
+          attributes: selectedAttrs,
+        });
+        toast.success("Informe creado exitosamente");
       }
-
-      // TODO: For "report" and "file" sources, the operation_id linkage
-      // would need additional server-side support. For now we store the opId if available.
-
-      await createReport.mutateAsync({
-        name: name.trim(),
-        description: description.trim(),
-        operationId: opId,
-        attributes: selectedAttrs,
-      });
-      toast.success("Informe creado exitosamente");
-      navigate("/admin", { state: { tab: "informes" } });
+      navigate("/admin");
     } catch (err) {
-      toast.error(`Error al crear: ${(err as Error).message}`);
+      toast.error(`Error al guardar: ${(err as Error).message}`);
     } finally {
       setSaving(false);
     }
@@ -197,7 +240,9 @@ export default function CreatePredefinedReportPage() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold text-foreground">Crear informe predefinido</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          {isEditMode ? `Editar informe — ${name}` : "Crear informe predefinido"}
+        </h1>
       </div>
 
       {/* Name & Description */}
@@ -321,7 +366,7 @@ export default function CreatePredefinedReportPage() {
       <Button onClick={handleSave} disabled={!canSave || saving} className="gap-2">
         {saving && <Loader2 className="h-4 w-4 animate-spin" />}
         <FileText className="h-4 w-4" />
-        Crear informe predefinido
+        {isEditMode ? "Guardar cambios" : "Crear informe predefinido"}
       </Button>
     </div>
   );
