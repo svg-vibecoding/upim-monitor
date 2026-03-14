@@ -14,14 +14,15 @@ import {
   usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList,
   getAttributeClassification, isNonEvaluable, usePredefinedReports,
   sortReportsByDisplayOrder, getRecordsForReport, getEvaluableAttributes,
+  useOperations, evaluateOperation,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, FileSpreadsheet, X, CheckCircle2, Filter, ArrowLeft, Download } from "lucide-react";
+import { Upload, FileText, FileSpreadsheet, X, CheckCircle2, Filter, ArrowLeft, Download, Settings2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 type Step = "config" | "results";
-type Source = "general" | "file" | "report";
+type Source = "general" | "file" | "report" | "operation";
 type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
 
 function getSeverity(pct: number): SeverityLevel {
@@ -83,6 +84,7 @@ export default function NewReportPage() {
 
   const [source, setSource] = useState<Source>("general");
   const [selectedReportId, setSelectedReportId] = useState<string>("");
+  const [selectedOperationId, setSelectedOperationId] = useState<string>("");
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string>("");
   const [uploadedFileReady, setUploadedFileReady] = useState(false);
@@ -98,6 +100,7 @@ export default function NewReportPage() {
   const { data: dimensionsData = [] } = useDimensions();
   const { data: attributeOrder = [] } = useAttributeOrder();
   const { data: predefinedReports = [] } = usePredefinedReports();
+  const { data: operations = [] } = useOperations();
 
   const sortedReports = useMemo(() => sortReportsByDisplayOrder(predefinedReports), [predefinedReports]);
 
@@ -123,16 +126,20 @@ export default function NewReportPage() {
   }, []);
 
   const selectedReport = sortedReports.find((r) => r.id === selectedReportId);
+  const selectedOperation = operations.find((op) => op.id === selectedOperationId);
 
   const records = useMemo(() => {
     if (source === "file" && csvCodes.length > 0) {
       return allRecords.filter((r) => csvCodes.includes(r.codigoJaivana));
     }
     if (source === "report" && selectedReport) {
-      return getRecordsForReport(allRecords, selectedReport);
+      return getRecordsForReport(allRecords, selectedReport, operations);
+    }
+    if (source === "operation" && selectedOperation) {
+      return allRecords.filter((r) => evaluateOperation(r, selectedOperation, operations));
     }
     return allRecords;
-  }, [source, csvCodes, allRecords, selectedReport]);
+  }, [source, csvCodes, allRecords, selectedReport, selectedOperation, operations]);
 
   const attrResults = useMemo(() => {
     if (step !== "results") return [];
@@ -237,14 +244,16 @@ export default function NewReportPage() {
     setUploadedTotalRows(0);
     setSource("general");
     setSelectedReportId("");
+    setSelectedOperationId("");
   };
 
   const universeLabel = useMemo(() => {
     if (source === "general") return "Base general del PIM";
     if (source === "report" && selectedReport) return selectedReport.universe;
+    if (source === "operation" && selectedOperation) return `Operación: ${selectedOperation.name}`;
     if (source === "file" && uploadedFileName) return `Universo de productos personalizado (${uploadedFileName})`;
     return "";
-  }, [source, selectedReport, uploadedFileName]);
+  }, [source, selectedReport, selectedOperation, uploadedFileName]);
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -267,6 +276,10 @@ export default function NewReportPage() {
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="report" id="src-report" />
                   <Label htmlFor="src-report" className="text-sm cursor-pointer">Informe predefinido</Label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="operation" id="src-operation" />
+                  <Label htmlFor="src-operation" className="text-sm cursor-pointer">Operación</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <RadioGroupItem value="file" id="src-file" />
@@ -318,6 +331,25 @@ export default function NewReportPage() {
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>
+                  )}
+                </div>
+              )}
+
+              {source === "operation" && (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">Utiliza una operación existente para definir el universo de productos que se analizará.</p>
+                  <Select value={selectedOperationId} onValueChange={setSelectedOperationId}>
+                    <SelectTrigger className="w-72">
+                      <SelectValue placeholder="Seleccionar operación" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {operations.filter((op) => op.active).map((op) => (
+                        <SelectItem key={op.id} value={op.id}>{op.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedOperation && selectedOperation.description && (
+                    <p className="text-xs text-muted-foreground">{selectedOperation.description}</p>
                   )}
                 </div>
               )}

@@ -25,6 +25,7 @@ import {
   usePredefinedReports,
   useAttributeOrder,
   useUpdateReportAttributes,
+  useUpdateReportOperation,
   getEvaluableAttributes,
   getFullAttributeList,
   getAttributeClassification,
@@ -102,6 +103,7 @@ export default function AdminPage() {
   const { data: pimRecords = [] } = usePimRecords();
   const { data: operations = [], isLoading: operationsLoading } = useOperations();
   const updateReportAttrs = useUpdateReportAttributes();
+  const updateReportOp = useUpdateReportOperation();
 
   // --- Operations state ---
   const [opDialog, setOpDialog] = useState(false);
@@ -319,6 +321,7 @@ export default function AdminPage() {
   const [reportDialog, setReportDialog] = useState(false);
   const [editingReportId, setEditingReportId] = useState<string | null>(null);
   const [reportAttrs, setReportAttrs] = useState<string[]>([]);
+  const [reportOperationId, setReportOperationId] = useState<string | null>(null);
   const [attrSearch, setAttrSearch] = useState("");
   const [attrTypeFilter, setAttrTypeFilter] = useState("todos");
 
@@ -328,6 +331,7 @@ export default function AdminPage() {
     if (!report) return;
     setEditingReportId(reportId);
     setAttrSearch("");
+    setReportOperationId(report.operationId);
     const isPimGeneral = report.name.toLowerCase().includes("general");
     const evaluableAttrs = getEvaluableAttributes(attributeOrder);
     if (isPimGeneral && (report.attributes.length === 0 || report.attributes.some((a) => !attributeOrder.includes(a)))) {
@@ -338,11 +342,13 @@ export default function AdminPage() {
     setReportDialog(true);
   };
 
-  const saveReportAttrs = async () => {
+  const saveReportConfig = async () => {
     if (!editingReportId) return;
     try {
+      // Save operation and attributes
+      await updateReportOp.mutateAsync({ reportId: editingReportId, operationId: reportOperationId });
       await updateReportAttrs.mutateAsync({ reportId: editingReportId, attributes: reportAttrs });
-      toast.success("Atributos del informe actualizados");
+      toast.success("Configuración del informe actualizada");
       setReportDialog(false);
     } catch (err) {
       toast.error(`Error al guardar: ${(err as Error).message}`);
@@ -1028,10 +1034,37 @@ export default function AdminPage() {
                 <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
                   <DialogHeader>
                     <DialogTitle>
-                      Configurar atributos — {editingReport?.name}
+                      Configurar informe — {editingReport?.name}
                     </DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-3 flex-1 overflow-hidden flex flex-col">
+                  <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+                    {/* Operation selector */}
+                    <div className="space-y-1.5">
+                      <Label className="text-sm font-semibold">Universo de productos</Label>
+                      <p className="text-xs text-muted-foreground">Selecciona la operación que define qué productos se analizan en este informe.</p>
+                      <Select
+                        value={reportOperationId || "none"}
+                        onValueChange={(v) => setReportOperationId(v === "none" ? null : v)}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Seleccionar operación…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Todos los SKUs (sin filtro)</SelectItem>
+                          {operations.filter((op) => op.active).map((op) => (
+                            <SelectItem key={op.id} value={op.id}>
+                              {op.name}
+                              {op.description ? ` — ${op.description}` : ""}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="border-t border-border" />
+
+                    {/* Attribute selector */}
+                    <Label className="text-sm font-semibold">Atributos a evaluar</Label>
                     <div className="flex items-center gap-2">
                       <div className="relative flex-1">
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -1052,7 +1085,7 @@ export default function AdminPage() {
                         <Square className="h-3 w-3" /> Ninguno
                       </Button>
                     </div>
-                    <div className="border rounded-md p-2 overflow-auto flex-1 min-h-0 max-h-[50vh]">
+                    <div className="border rounded-md p-2 overflow-auto flex-1 min-h-0 max-h-[40vh]">
                       {/* Código Jaivaná — always selected, not removable */}
                       <label className="flex items-center gap-2 text-sm py-1 px-1 rounded opacity-70">
                         <Checkbox checked={true} disabled />
@@ -1101,11 +1134,11 @@ export default function AdminPage() {
                       )}
                     </div>
                     <Button
-                      onClick={saveReportAttrs}
-                      disabled={updateReportAttrs.isPending}
+                      onClick={saveReportConfig}
+                      disabled={updateReportAttrs.isPending || updateReportOp.isPending}
                       className="w-full gap-2"
                     >
-                      {updateReportAttrs.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {(updateReportAttrs.isPending || updateReportOp.isPending) && <Loader2 className="h-4 w-4 animate-spin" />}
                       Guardar configuración
                     </Button>
                   </div>
@@ -1118,28 +1151,37 @@ export default function AdminPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nombre</TableHead>
-                        <TableHead>Universo</TableHead>
+                        <TableHead>Operación (universo)</TableHead>
                         <TableHead className="text-right">Atributos</TableHead>
                         <TableHead className="w-20">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sortReportsByDisplayOrder(dbReports).map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="font-medium">{r.name}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{r.universe}</TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
-                              {getEvaluableAttributes(r.attributes).length}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="icon" onClick={() => openReportDialog(r.id)}>
-                              <Pencil className="h-3 w-3" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {sortReportsByDisplayOrder(dbReports).map((r) => {
+                        const linkedOp = r.operationId ? operations.find((op) => op.id === r.operationId) : null;
+                        return (
+                          <TableRow key={r.id}>
+                            <TableCell className="font-medium">{r.name}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {linkedOp ? (
+                                <Badge variant="outline" className="text-xs font-normal">{linkedOp.name}</Badge>
+                              ) : (
+                                <span className="text-xs italic">Todos los SKUs</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
+                                {getEvaluableAttributes(r.attributes).length}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="icon" onClick={() => openReportDialog(r.id)}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                       {dbReports.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={4} className="text-center text-muted-foreground">

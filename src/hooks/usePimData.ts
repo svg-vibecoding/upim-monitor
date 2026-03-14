@@ -349,6 +349,7 @@ export function usePredefinedReports() {
         description: r.description,
         universe: r.universe,
         universeKey: ((r as any).universe_key || "all") as UniverseKey,
+        operationId: (r as any).operation_id || null,
         attributes: r.attributes || [],
       }));
     },
@@ -441,7 +442,15 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
   }).sort((a, b) => a.completeness - b.completeness);
 }
 
-export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedReport): PIMRecord[] {
+export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedReport, allOperations?: Operation[]): PIMRecord[] {
+  // If report has an operation, use it for filtering
+  if (report.operationId && allOperations) {
+    const operation = allOperations.find((op) => op.id === report.operationId);
+    if (operation) {
+      return allRecords.filter((r) => evaluateOperation(r, operation, allOperations));
+    }
+  }
+  // Fallback to legacy universe_key logic
   switch (report.universeKey) {
     case "active":
       return allRecords.filter((r) => r.estadoGlobal === "Activo");
@@ -463,6 +472,24 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
     default:
       return allRecords;
   }
+}
+
+// --- Mutation to update report operation ---
+export function useUpdateReportOperation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ reportId, operationId }: { reportId: string; operationId: string | null }) => {
+      const { error } = await supabase
+        .from("predefined_reports")
+        .update({ operation_id: operationId } as any)
+        .eq("id", reportId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
+      queryClient.invalidateQueries({ queryKey: ["report-completeness"] });
+    },
+  });
 }
 
 /** Canonical display order for predefined reports */

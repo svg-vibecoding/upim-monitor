@@ -10,7 +10,7 @@ import {
   usePimRecords, usePredefinedReports, useDimensions, useAttributeOrder,
   useReportCompleteness, NON_EVALUABLE_FIELDS, getFullAttributeList,
   computeAttributeResults, computeDimensionResults, getRecordsForReport,
-  filterRealAttributes, getEvaluableAttributes,
+  filterRealAttributes, getEvaluableAttributes, useOperations,
 } from "@/hooks/usePimData";
 import { downloadCSV } from "@/data/mockData";
 import { ArrowLeft, Download, Filter } from "lucide-react";
@@ -58,6 +58,7 @@ export default function ReportDetailPage() {
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
   const { data: attributeOrder } = useAttributeOrder();
+  const { data: operations = [] } = useOperations();
 
   const totalEvaluableAttrs = useMemo(() => {
     if (!attributeOrder) return 0;
@@ -105,7 +106,7 @@ export default function ReportDetailPage() {
   const totalSKUs = attrResults.length > 0 ? attrResults[0].totalSKUs : 0;
 
   const dimension = dimensions?.find((d) => d.id === selectedDimension);
-  const records = needsRecords ? getRecordsForReport(allRecords || [], report) : [];
+  const records = needsRecords ? getRecordsForReport(allRecords || [], report, operations) : [];
   const validAttrs = attrResults.map(a => a.name);
   const dimensionResults = dimension && needsRecords ? computeDimensionResults(records, validAttrs, dimension.field) : [];
 
