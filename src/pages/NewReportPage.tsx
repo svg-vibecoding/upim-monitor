@@ -85,6 +85,11 @@ export default function NewReportPage() {
   const [source, setSource] = useState<UniverseSource>("general");
   const [selectedReportId, setSelectedReportId] = useState<string>("");
   const [selectedOperationId, setSelectedOperationId] = useState<string>("");
+  const [opMode, setOpMode] = useState<OperationMode>("existing");
+  const [inlineOp, setInlineOp] = useState<InlineOperationDef>({
+    logicMode: "all",
+    conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
+  });
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string>("");
   const [uploadedFileReady, setUploadedFileReady] = useState(false);
