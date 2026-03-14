@@ -923,7 +923,7 @@ export default function AdminPage() {
             const allAttrsWithBase = ["Código Jaivaná", ...fullAttributeList];
             const classifiedAttrs = allAttrsWithBase.map((attr) => ({
               attr,
-              classification: getAttributeClassification(attr, dbReports, dbDimensions),
+              classification: getAttributeClassification(attr, dbReports, dbDimensions, operations),
             }));
             const filteredAttrs = attrTypeFilter === "todos"
               ? classifiedAttrs

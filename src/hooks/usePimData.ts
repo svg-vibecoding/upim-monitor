@@ -174,12 +174,28 @@ const BASE_CLASSIFICATION: Record<string, AttributeClassification> = {
 /** Non-evaluable attributes (regardless of dynamic type) */
 const NON_EVALUABLE_SET = new Set(["Código Jaivaná", "Estado (Global)"]);
 
-/** Compute dynamic classification for an attribute based on active reports and dimensions.
+/** Collect all attribute names used by active operations (including transitive refs) */
+function getOperationAttributes(operations: Operation[]): Set<string> {
+  const attrs = new Set<string>();
+  for (const op of operations) {
+    if (!op.active) continue;
+    for (const c of op.conditions) {
+      const source = c.sourceType || "attribute";
+      if (source === "attribute" && c.attribute) {
+        attrs.add(c.attribute);
+      }
+    }
+  }
+  return attrs;
+}
+
+/** Compute dynamic classification for an attribute based on active reports, dimensions, and operations.
  *  Priority: base > funcional > dimensión > general */
 export function getAttributeClassification(
   attr: string,
   reports?: PredefinedReport[],
   dimensions?: Dimension[],
+  operations?: Operation[],
 ): AttributeClassification {
   // Base attributes are always base
   if (BASE_CLASSIFICATION[attr]) return BASE_CLASSIFICATION[attr];
@@ -192,6 +208,12 @@ export function getAttributeClassification(
       const depAttr = UNIVERSE_KEY_ATTRIBUTE_MAP[r.universeKey];
       if (depAttr === attr) return { type: "funcional", evaluable };
     }
+  }
+
+  // Check if any active operation uses this attribute in its conditions
+  if (operations) {
+    const opAttrs = getOperationAttributes(operations);
+    if (opAttrs.has(attr)) return { type: "funcional", evaluable };
   }
 
   // Check if any dimension uses this attribute
@@ -211,10 +233,11 @@ export interface ProtectedAttribute {
   reason: string;
 }
 
-/** Compute all protected attributes from active reports and dimensions */
+/** Compute all protected attributes from active reports, dimensions, and operations */
 export function getProtectedAttributes(
   reports: PredefinedReport[],
   dimensions: Dimension[],
+  operations?: Operation[],
 ): ProtectedAttribute[] {
   const result: ProtectedAttribute[] = [
     { attr: "Código Jaivaná", type: "base", reason: "Llave única de identificación" },
@@ -230,6 +253,20 @@ export function getProtectedAttributes(
     }
   }
 
+  // Functional from operations
+  if (operations) {
+    for (const op of operations) {
+      if (!op.active) continue;
+      for (const c of op.conditions) {
+        const source = c.sourceType || "attribute";
+        if (source === "attribute" && c.attribute && !seen.has(c.attribute)) {
+          seen.add(c.attribute);
+          result.push({ attr: c.attribute, type: "funcional", reason: `Operación "${op.name}"` });
+        }
+      }
+    }
+  }
+
   // Dimension attributes
   for (const d of dimensions) {
     if (!seen.has(d.field)) {
@@ -241,11 +278,12 @@ export function getProtectedAttributes(
   return result;
 }
 
-/** Hook: returns protected attributes based on current reports and dimensions */
+/** Hook: returns protected attributes based on current reports, dimensions, and operations */
 export function useProtectedAttributes() {
   const { data: reports = [] } = usePredefinedReports();
   const { data: dimensions = [] } = useDimensions();
-  return useMemo(() => getProtectedAttributes(reports, dimensions), [reports, dimensions]);
+  const { data: operations = [] } = useOperations();
+  return useMemo(() => getProtectedAttributes(reports, dimensions, operations), [reports, dimensions, operations]);
 }
 
 
