@@ -490,7 +490,8 @@ export function computeFocusPoints(records: PIMRecord[], reports: PredefinedRepo
 
 // --- Operations ---
 
-export type OperatorType = "has_value" | "no_value" | "equals" | "not_equals" | "contains" | "not_contains";
+export type OperatorType = "has_value" | "no_value" | "equals" | "not_equals" | "contains" | "not_contains" | "meets_operation" | "not_meets_operation";
+export type ConditionSourceType = "attribute" | "operation";
 export type LogicMode = "all" | "any";
 export type LinkedKpi = "digital_base" | "visible_b2b" | "visible_b2c";
 
