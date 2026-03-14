@@ -192,6 +192,7 @@ export default function AdminPage() {
       const { error } = await supabase.from("operations" as any).update({ active: !op.active }).eq("id", op.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["operations"] });
+      refreshForOperation(op.id, dbReports).catch(() => {});
     } catch (err: any) {
       toast.error(err.message || "Error cambiando estado");
     }
