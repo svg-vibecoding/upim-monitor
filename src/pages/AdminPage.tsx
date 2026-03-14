@@ -1581,128 +1581,16 @@ export default function AdminPage() {
                   <Textarea value={opDescription} onChange={(e) => setOpDescription(e.target.value)} placeholder="Breve descripción de esta operación" rows={2} />
                 </div>
 
-                {/* Logic mode */}
-                <div>
-                  <Label className="mb-2 block">Modo lógico</Label>
-                  <RadioGroup value={opLogicMode} onValueChange={(v) => setOpLogicMode(v as LogicMode)} className="flex gap-6">
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="all" id="logic-all" />
-                      <Label htmlFor="logic-all" className="font-normal cursor-pointer">Cumplir todas</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <RadioGroupItem value="any" id="logic-any" />
-                      <Label htmlFor="logic-any" className="font-normal cursor-pointer">Cumplir cualquiera</Label>
-                    </div>
-                  </RadioGroup>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {opLogicMode === "all"
-                      ? "Incluirá productos que cumplan todas las condiciones."
-                      : "Incluirá productos que cumplan al menos una de las condiciones."}
-                  </p>
-                </div>
-
-                {/* Conditions */}
-                <div>
-                  <Label className="mb-2 block">Condiciones</Label>
-                  <div className="space-y-3">
-                    {opConditions.map((cond, idx) => (
-                      <div key={idx}>
-                        {idx > 0 && (
-                          <p className="text-xs font-medium text-muted-foreground py-1 pl-1">
-                            {opLogicMode === "all" ? "y" : "o"}
-                          </p>
-                        )}
-                        <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
-                          {/* Row 0: Source type toggle */}
-                          <div className="flex items-center gap-3">
-                            <ToggleGroup
-                              type="single"
-                              value={cond.sourceType || "attribute"}
-                              onValueChange={(v) => v && updateConditionSourceType(idx, v as ConditionSourceType)}
-                              className="h-7"
-                            >
-                              <ToggleGroupItem value="attribute" className="text-xs h-7 px-3">Atributo</ToggleGroupItem>
-                              <ToggleGroupItem value="operation" className="text-xs h-7 px-3">Operación</ToggleGroupItem>
-                            </ToggleGroup>
-                            <div className="flex-1" />
-                            {opConditions.length > 1 && (
-                              <Button variant="ghost" size="icon" className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removeCondition(idx)}>
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-
-                          {(cond.sourceType || "attribute") === "attribute" ? (
-                            <>
-                              {/* Attribute mode */}
-                              <div className="space-y-1">
-                                <span className="text-[11px] font-medium text-muted-foreground">Atributo</span>
-                                <Select value={cond.attribute} onValueChange={(v) => updateCondition(idx, "attribute", v)}>
-                                  <SelectTrigger className="w-full"><SelectValue placeholder="Seleccionar atributo…" /></SelectTrigger>
-                                  <SelectContent className="max-h-[300px]">
-                                    {fullAttributeList.map((a) => (
-                                      <SelectItem key={a} value={a}>{a}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Select value={cond.operator} onValueChange={(v) => updateCondition(idx, "operator", v)}>
-                                  <SelectTrigger className="w-[180px] shrink-0"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="has_value">Tiene valor</SelectItem>
-                                    <SelectItem value="no_value">No tiene valor</SelectItem>
-                                    <SelectItem value="equals">Es igual a</SelectItem>
-                                    <SelectItem value="not_equals">No es igual a</SelectItem>
-                                    <SelectItem value="contains">Contiene</SelectItem>
-                                    <SelectItem value="not_contains">No contiene</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                {cond.operator !== "has_value" && cond.operator !== "no_value" && (
-                                  <Input
-                                    value={cond.value || ""}
-                                    onChange={(e) => updateCondition(idx, "value", e.target.value)}
-                                    placeholder="Valor"
-                                    className="flex-1"
-                                  />
-                                )}
-                                {(cond.operator === "has_value" || cond.operator === "no_value") && <div className="flex-1" />}
-                              </div>
-                            </>
-                          ) : (
-                            <>
-                              {/* Operation mode */}
-                              <div className="space-y-1">
-                                <span className="text-[11px] font-medium text-muted-foreground">Operación</span>
-                                <Select value={cond.attribute} onValueChange={(v) => updateCondition(idx, "attribute", v)}>
-                                  <SelectTrigger className="w-full"><SelectValue placeholder="Seleccionar operación…" /></SelectTrigger>
-                                  <SelectContent className="max-h-[300px]">
-                                    {getValidOperationRefs(editingOpId, operations).map((op) => (
-                                      <SelectItem key={op.id} value={op.id}>{op.name}</SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Select value={cond.operator} onValueChange={(v) => updateCondition(idx, "operator", v)}>
-                                  <SelectTrigger className="w-[180px] shrink-0"><SelectValue /></SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="meets_operation">Cumple operación</SelectItem>
-                                    <SelectItem value="not_meets_operation">No cumple operación</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <div className="flex-1" />
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <Button variant="outline" size="sm" onClick={addCondition} className="mt-3 gap-1">
-                    <Plus className="h-3.5 w-3.5" /> Agregar condición
-                  </Button>
-                </div>
+                <OperationBuilder
+                  idPrefix="admin-op"
+                  logicMode={opLogicMode}
+                  onLogicModeChange={(v) => setOpLogicMode(v)}
+                  conditions={opConditions}
+                  onConditionsChange={setOpConditions}
+                  attributeList={fullAttributeList}
+                  allOperations={operations}
+                  editingOperationId={editingOpId}
+                />
 
                 {/* Link to KPI */}
                 <div>
