@@ -25,6 +25,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
+const PROFILE_TIMEOUT_MS = 8000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`${label}_timeout`)), ms)
+    ),
+  ]);
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -34,19 +45,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   /** Load profile + role from DB for a given auth user */
   const loadAppUser = useCallback(async (authUser: User): Promise<AppUser | null> => {
     try {
-      // Fetch profile
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("name, email, active, track_insights")
         .eq("id", authUser.id)
         .maybeSingle();
 
-      if (profileError || !profile) return null;
+      if (profileError || !profile) {
+        console.warn("[Auth] profile_query_error", profileError?.message);
+        return null;
+      }
 
-      // Check active
-      if (!profile.active) return null;
+      if (!profile.active) {
+        console.warn("[Auth] inactive_user");
+        return null;
+      }
 
-      // Fetch role
       const { data: roleData } = await supabase
         .from("user_roles")
         .select("role")
@@ -63,26 +77,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         active: profile.active,
         track_insights: profile.track_insights ?? true,
       };
-    } catch {
+    } catch (err) {
+      console.warn("[Auth] profile_query_error", err);
       return null;
     }
   }, []);
 
   // Listen for auth state changes
   useEffect(() => {
-    // Set up listener BEFORE checking session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         setSession(newSession);
         setSupabaseUser(newSession?.user ?? null);
 
         if (newSession?.user) {
-          // Use setTimeout to avoid potential Supabase auth deadlock
-          setTimeout(async () => {
-            const appUser = await loadAppUser(newSession.user);
+          try {
+            const appUser = await withTimeout(
+              loadAppUser(newSession.user),
+              PROFILE_TIMEOUT_MS,
+              "session_profile"
+            );
             if (appUser) {
               setUser((prev) => {
-                // Fire login_success when user transitions from null to authenticated
                 if (!prev && event === "SIGNED_IN" && appUser.track_insights) {
                   import("@/hooks/useTrackEvent").then(({ trackEventDirect }) => {
                     trackEventDirect(appUser.id, appUser.email, appUser.role, "login_success", undefined, true);
@@ -91,12 +107,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 return appUser;
               });
             } else {
-              // Inactive or no profile — sign out
               setUser(null);
               await supabase.auth.signOut();
             }
+          } catch {
+            console.warn("[Auth] session profile load timed out");
+            setUser(null);
+          } finally {
             setIsLoading(false);
-          }, 0);
+          }
         } else {
           setUser(null);
           setIsLoading(false);
@@ -104,54 +123,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Check existing session
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       if (!existingSession) {
         setIsLoading(false);
       }
-      // onAuthStateChange will handle the rest
     });
 
     return () => subscription.unsubscribe();
   }, [loadAppUser]);
 
-  const login = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
+      console.warn("[Auth] invalid_credentials");
       return { success: false, error: "Credenciales inválidas" };
     }
 
-    // Wait briefly for onAuthStateChange to fire and load the user
-    // The active check happens in loadAppUser
-    return new Promise<{ success: boolean; error?: string }>((resolve) => {
-      const checkInterval = setInterval(() => {
-        // Check if loading finished
-        if (!isLoading || user !== null) {
-          clearInterval(checkInterval);
-          clearTimeout(timeout);
-        }
-      }, 50);
+    // Deterministic profile load with timeout
+    try {
+      const appUser = await withTimeout(
+        loadAppUser(data.user),
+        PROFILE_TIMEOUT_MS,
+        "login_profile"
+      );
 
-      const timeout = setTimeout(async () => {
-        clearInterval(checkInterval);
-        // Check if user was set (active) or not (inactive/no profile)
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        if (currentSession) {
-          const appUser = await loadAppUser(currentSession.user);
-          if (!appUser) {
-            await supabase.auth.signOut();
-            resolve({ success: false, error: "Cuenta inactiva. Contacta al administrador." });
-            return;
-          }
-          setUser(appUser);
-          resolve({ success: true });
-        } else {
-          resolve({ success: false, error: "Error de autenticación" });
-        }
-      }, 1500);
-    });
-  }, [loadAppUser, isLoading, user]);
+      if (!appUser) {
+        await supabase.auth.signOut();
+        return { success: false, error: "Cuenta inactiva. Contacta al administrador." };
+      }
+
+      setUser(appUser);
+      return { success: true };
+    } catch {
+      console.warn("[Auth] login profile load timed out");
+      await supabase.auth.signOut();
+      return { success: false, error: "Problema de conexión. Intenta de nuevo." };
+    }
+  }, [loadAppUser]);
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
