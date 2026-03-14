@@ -298,6 +298,11 @@ export default function NewReportPage() {
                 selectedOperationId={selectedOperationId}
                 onOperationChange={setSelectedOperationId}
                 operations={operations}
+                operationMode={opMode}
+                onOperationModeChange={setOpMode}
+                inlineOperation={inlineOp}
+                onInlineOperationChange={setInlineOp}
+                attributeList={fullAttributes}
                 selectedReportId={selectedReportId}
                 onReportChange={setSelectedReportId}
                 sortedReports={sortedReports}
