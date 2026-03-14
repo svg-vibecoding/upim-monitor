@@ -133,10 +133,13 @@ export default function NewReportPage() {
       return allRecords.filter((r) => csvCodes.includes(r.codigoJaivana));
     }
     if (source === "report" && selectedReport) {
-      return getRecordsForReport(allRecords, selectedReport);
+      return getRecordsForReport(allRecords, selectedReport, operations);
+    }
+    if (source === "operation" && selectedOperation) {
+      return allRecords.filter((r) => evaluateOperation(r, selectedOperation, operations));
     }
     return allRecords;
-  }, [source, csvCodes, allRecords, selectedReport]);
+  }, [source, csvCodes, allRecords, selectedReport, selectedOperation, operations]);
 
   const attrResults = useMemo(() => {
     if (step !== "results") return [];
