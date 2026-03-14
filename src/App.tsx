@@ -11,6 +11,7 @@ import ReportsListPage from "@/pages/ReportsListPage";
 import ReportDetailPage from "@/pages/ReportDetailPage";
 import NewReportPage from "@/pages/NewReportPage";
 import AdminPage from "@/pages/AdminPage";
+import CreatePredefinedReportPage from "@/pages/CreatePredefinedReportPage";
 import InsightsPage from "@/pages/InsightsPage";
 import { Loader2 } from "lucide-react";
 
@@ -39,6 +40,7 @@ function AppRoutes() {
           <Route path="/informes/:reportId" element={<AppLayout><ReportDetailPage /></AppLayout>} />
           <Route path="/nuevo-informe" element={<AppLayout><NewReportPage /></AppLayout>} />
           <Route path="/admin" element={<AppLayout><AdminPage /></AppLayout>} />
+          <Route path="/admin/nuevo-informe" element={<AppLayout><CreatePredefinedReportPage /></AppLayout>} />
           <Route path="/insights" element={<AppLayout><InsightsPage /></AppLayout>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </>

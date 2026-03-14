@@ -27,7 +27,7 @@ import {
   useAttributeOrder,
   useUpdateReportAttributes,
   useUpdateReportOperation,
-  useCreatePredefinedReport,
+  
   getEvaluableAttributes,
   getFullAttributeList,
   getAttributeClassification,
@@ -48,7 +48,7 @@ import {
   type LogicMode,
   type LinkedKpi,
 } from "@/hooks/usePimData";
-import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import type { AppRole } from "@/contexts/AuthContext";
@@ -107,7 +107,7 @@ export default function AdminPage() {
   const { data: operations = [], isLoading: operationsLoading } = useOperations();
   const updateReportAttrs = useUpdateReportAttributes();
   const updateReportOp = useUpdateReportOperation();
-  const createReport = useCreatePredefinedReport();
+  
 
   // --- Operations state ---
   const [opDialog, setOpDialog] = useState(false);
@@ -329,90 +329,9 @@ export default function AdminPage() {
   const [attrSearch, setAttrSearch] = useState("");
   const [attrTypeFilter, setAttrTypeFilter] = useState("todos");
 
-  // Report create state
-  const [createReportDialog, setCreateReportDialog] = useState(false);
-  const [newReportName, setNewReportName] = useState("");
-  const [newReportDescription, setNewReportDescription] = useState("");
-  const [newReportSource, setNewReportSource] = useState<UniverseSource>("general");
-  const [newReportOperationId, setNewReportOperationId] = useState<string>("");
-  const [newReportOpMode, setNewReportOpMode] = useState<"existing" | "new">("existing");
-  const [newReportInlineOp, setNewReportInlineOp] = useState<{ logicMode: LogicMode; conditions: Condition[] }>({
-    logicMode: "all",
-    conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
-  });
-  const [newReportAttrs, setNewReportAttrs] = useState<string[]>([]);
-  const [newReportAttrSearch, setNewReportAttrSearch] = useState("");
-  const [newReportSaving, setNewReportSaving] = useState(false);
+  // Report create — now handled by dedicated page (/admin/nuevo-informe)
 
-  const openCreateReportDialog = () => {
-    setNewReportName("");
-    setNewReportDescription("");
-    setNewReportSource("general");
-    setNewReportOperationId("");
-    setNewReportOpMode("existing");
-    setNewReportInlineOp({
-      logicMode: "all",
-      conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
-    });
-    setNewReportAttrs([]);
-    setNewReportAttrSearch("");
-    setCreateReportDialog(true);
-  };
 
-  const saveNewReport = async () => {
-    if (!newReportName.trim()) { toast.error("El nombre es obligatorio"); return; }
-    if (newReportAttrs.length === 0) { toast.error("Selecciona al menos un atributo"); return; }
-
-    setNewReportSaving(true);
-    try {
-      let opId: string | null = null;
-
-      if (newReportSource === "operation") {
-        if (newReportOpMode === "existing" && newReportOperationId) {
-          opId = newReportOperationId;
-        } else if (newReportOpMode === "new") {
-          // Create inline operation first
-          const validConditions = newReportInlineOp.conditions.filter((c) => c.attribute.trim() !== "");
-          if (validConditions.length === 0) {
-            toast.error("Agrega al menos una condición válida a la operación");
-            setNewReportSaving(false);
-            return;
-          }
-          const opPayload = {
-            name: `Op: ${newReportName.trim()}`,
-            description: `Operación creada para el informe "${newReportName.trim()}"`,
-            logic_mode: newReportInlineOp.logicMode,
-            conditions: validConditions,
-            active: true,
-          };
-          const { data: opData, error: opError } = await supabase.from("operations" as any).insert(opPayload).select("id").single();
-          if (opError) throw opError;
-          opId = (opData as any).id;
-          queryClient.invalidateQueries({ queryKey: ["operations"] });
-        }
-      }
-
-      await createReport.mutateAsync({
-        name: newReportName.trim(),
-        description: newReportDescription.trim(),
-        operationId: opId,
-        attributes: newReportAttrs,
-      });
-      toast.success("Informe creado exitosamente");
-      setCreateReportDialog(false);
-    } catch (err) {
-      toast.error(`Error al crear: ${(err as Error).message}`);
-    } finally {
-      setNewReportSaving(false);
-    }
-  };
-
-  const newReportFilteredAttrs = useMemo(() => {
-    const full = getFullAttributeList(attributeOrder);
-    if (!newReportAttrSearch.trim()) return full;
-    const q = newReportAttrSearch.toLowerCase();
-    return full.filter((a) => a.toLowerCase().includes(q));
-  }, [attributeOrder, newReportAttrSearch]);
 
   // --- Reports: open edit dialog with current attrs from DB ---
   const openReportDialog = (reportId: string) => {
@@ -1119,111 +1038,10 @@ export default function AdminPage() {
           ) : (
             <>
               <div className="flex justify-end">
-                <Button onClick={openCreateReportDialog} className="gap-2">
+                <Button onClick={() => navigate("/admin/nuevo-informe")} className="gap-2">
                   <Plus className="h-4 w-4" /> Nuevo informe
                 </Button>
               </div>
-
-              {/* Create report dialog */}
-              <Dialog open={createReportDialog} onOpenChange={setCreateReportDialog}>
-                <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>Nuevo informe predefinido</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-                    <div className="space-y-3">
-                      <div>
-                        <Label>Nombre del informe</Label>
-                        <Input value={newReportName} onChange={(e) => setNewReportName(e.target.value)} placeholder="Ej: Portafolio premium" />
-                      </div>
-                      <div>
-                        <Label>Descripción (opcional)</Label>
-                        <Textarea value={newReportDescription} onChange={(e) => setNewReportDescription(e.target.value)} placeholder="Breve descripción del informe" rows={2} />
-                      </div>
-                    </div>
-
-                    <div className="border-t border-border pt-3">
-                      <UniverseSelector
-                        source={newReportSource}
-                        onSourceChange={setNewReportSource}
-                        availableSources={["general", "operation"]}
-                        selectedOperationId={newReportOperationId}
-                        onOperationChange={setNewReportOperationId}
-                        operations={operations}
-                        operationMode={newReportOpMode}
-                        onOperationModeChange={setNewReportOpMode}
-                        inlineOperation={newReportInlineOp}
-                        onInlineOperationChange={setNewReportInlineOp}
-                        attributeList={fullAttributeList}
-                      />
-                    </div>
-
-                    <div className="border-t border-border pt-3" />
-
-                    <Label className="text-sm font-semibold">Atributos a evaluar</Label>
-                    <div className="flex items-center gap-2">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Buscar atributo..."
-                          value={newReportAttrSearch}
-                          onChange={(e) => setNewReportAttrSearch(e.target.value)}
-                          className="pl-9"
-                        />
-                      </div>
-                      <Badge variant="secondary">{newReportAttrs.length} seleccionados</Badge>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => setNewReportAttrs(getEvaluableAttributes(getFullAttributeList(attributeOrder)))}>
-                        <CheckSquare className="h-3 w-3" /> Todos
-                      </Button>
-                      <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => setNewReportAttrs([])}>
-                        <Square className="h-3 w-3" /> Ninguno
-                      </Button>
-                    </div>
-                    <div className="border rounded-md p-2 overflow-auto flex-1 min-h-0 max-h-[30vh]">
-                      <label className="flex items-center gap-2 text-sm py-1 px-1 rounded opacity-70">
-                        <Checkbox checked={true} disabled />
-                        <span className="truncate">Código Jaivaná</span>
-                        <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
-                      </label>
-                      {newReportFilteredAttrs.map((attr) => {
-                        const classification = getAttributeClassification(attr, dbReports, dbDimensions);
-                        const nonEvaluable = !classification.evaluable;
-                        const showTypeBadge = classification.type !== "general";
-                        return (
-                          <label
-                            key={attr}
-                            className={`flex items-center gap-2 text-sm cursor-pointer py-1 px-1 rounded hover:bg-muted/50 ${nonEvaluable ? "opacity-60" : ""}`}
-                          >
-                            <Checkbox
-                              checked={newReportAttrs.includes(attr)}
-                              onCheckedChange={() => setNewReportAttrs((prev) => prev.includes(attr) ? prev.filter((a) => a !== attr) : [...prev, attr])}
-                            />
-                            <span className="truncate">{attr}</span>
-                            <span className="ml-auto flex gap-1 shrink-0">
-                              {showTypeBadge && (
-                                <Badge variant="outline" className="text-[10px]">{classification.type}</Badge>
-                              )}
-                              {nonEvaluable && (
-                                <Badge variant="secondary" className="text-[10px]">no evaluable</Badge>
-                              )}
-                            </span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                    <Button
-                      onClick={saveNewReport}
-                      disabled={newReportSaving}
-                      className="w-full gap-2"
-                    >
-                      {newReportSaving && <Loader2 className="h-4 w-4 animate-spin" />}
-                      Crear informe
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
 
               {/* Report attribute edit dialog */}
               <Dialog open={reportDialog} onOpenChange={setReportDialog}>
