@@ -328,6 +328,50 @@ export default function AdminPage() {
   const [attrSearch, setAttrSearch] = useState("");
   const [attrTypeFilter, setAttrTypeFilter] = useState("todos");
 
+  // Report create state
+  const [createReportDialog, setCreateReportDialog] = useState(false);
+  const [newReportName, setNewReportName] = useState("");
+  const [newReportDescription, setNewReportDescription] = useState("");
+  const [newReportSource, setNewReportSource] = useState<UniverseSource>("general");
+  const [newReportOperationId, setNewReportOperationId] = useState<string>("");
+  const [newReportAttrs, setNewReportAttrs] = useState<string[]>([]);
+  const [newReportAttrSearch, setNewReportAttrSearch] = useState("");
+
+  const openCreateReportDialog = () => {
+    setNewReportName("");
+    setNewReportDescription("");
+    setNewReportSource("general");
+    setNewReportOperationId("");
+    setNewReportAttrs([]);
+    setNewReportAttrSearch("");
+    setCreateReportDialog(true);
+  };
+
+  const saveNewReport = async () => {
+    if (!newReportName.trim()) { toast.error("El nombre es obligatorio"); return; }
+    if (newReportAttrs.length === 0) { toast.error("Selecciona al menos un atributo"); return; }
+    const opId = newReportSource === "operation" && newReportOperationId ? newReportOperationId : null;
+    try {
+      await createReport.mutateAsync({
+        name: newReportName.trim(),
+        description: newReportDescription.trim(),
+        operationId: opId,
+        attributes: newReportAttrs,
+      });
+      toast.success("Informe creado exitosamente");
+      setCreateReportDialog(false);
+    } catch (err) {
+      toast.error(`Error al crear: ${(err as Error).message}`);
+    }
+  };
+
+  const newReportFilteredAttrs = useMemo(() => {
+    const full = getFullAttributeList(attributeOrder);
+    if (!newReportAttrSearch.trim()) return full;
+    const q = newReportAttrSearch.toLowerCase();
+    return full.filter((a) => a.toLowerCase().includes(q));
+  }, [attributeOrder, newReportAttrSearch]);
+
   // --- Reports: open edit dialog with current attrs from DB ---
   const openReportDialog = (reportId: string) => {
     const report = dbReports.find((r) => r.id === reportId);
