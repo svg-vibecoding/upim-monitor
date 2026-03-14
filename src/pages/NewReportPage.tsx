@@ -84,6 +84,7 @@ export default function NewReportPage() {
 
   const [source, setSource] = useState<Source>("general");
   const [selectedReportId, setSelectedReportId] = useState<string>("");
+  const [selectedOperationId, setSelectedOperationId] = useState<string>("");
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string>("");
   const [uploadedFileReady, setUploadedFileReady] = useState(false);
@@ -99,6 +100,7 @@ export default function NewReportPage() {
   const { data: dimensionsData = [] } = useDimensions();
   const { data: attributeOrder = [] } = useAttributeOrder();
   const { data: predefinedReports = [] } = usePredefinedReports();
+  const { data: operations = [] } = useOperations();
 
   const sortedReports = useMemo(() => sortReportsByDisplayOrder(predefinedReports), [predefinedReports]);
 
