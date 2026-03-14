@@ -331,6 +331,7 @@ export default function AdminPage() {
     if (!report) return;
     setEditingReportId(reportId);
     setAttrSearch("");
+    setReportOperationId(report.operationId);
     const isPimGeneral = report.name.toLowerCase().includes("general");
     const evaluableAttrs = getEvaluableAttributes(attributeOrder);
     if (isPimGeneral && (report.attributes.length === 0 || report.attributes.some((a) => !attributeOrder.includes(a)))) {
