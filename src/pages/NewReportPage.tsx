@@ -267,6 +267,8 @@ export default function NewReportPage() {
     setSource("general");
     setSelectedReportId("");
     setSelectedOperationId("");
+    setOpMode("existing");
+    setInlineOp({ logicMode: "all", conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }] });
   };
 
   const universeLabel = useMemo(() => {
