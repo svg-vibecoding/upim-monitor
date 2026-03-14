@@ -331,60 +331,7 @@ export default function AdminPage() {
 
   // Report create — now handled by dedicated page (/admin/nuevo-informe)
 
-  const saveNewReport = async () => {
-    if (!newReportName.trim()) { toast.error("El nombre es obligatorio"); return; }
-    if (newReportAttrs.length === 0) { toast.error("Selecciona al menos un atributo"); return; }
 
-    setNewReportSaving(true);
-    try {
-      let opId: string | null = null;
-
-      if (newReportSource === "operation") {
-        if (newReportOpMode === "existing" && newReportOperationId) {
-          opId = newReportOperationId;
-        } else if (newReportOpMode === "new") {
-          // Create inline operation first
-          const validConditions = newReportInlineOp.conditions.filter((c) => c.attribute.trim() !== "");
-          if (validConditions.length === 0) {
-            toast.error("Agrega al menos una condición válida a la operación");
-            setNewReportSaving(false);
-            return;
-          }
-          const opPayload = {
-            name: `Op: ${newReportName.trim()}`,
-            description: `Operación creada para el informe "${newReportName.trim()}"`,
-            logic_mode: newReportInlineOp.logicMode,
-            conditions: validConditions,
-            active: true,
-          };
-          const { data: opData, error: opError } = await supabase.from("operations" as any).insert(opPayload).select("id").single();
-          if (opError) throw opError;
-          opId = (opData as any).id;
-          queryClient.invalidateQueries({ queryKey: ["operations"] });
-        }
-      }
-
-      await createReport.mutateAsync({
-        name: newReportName.trim(),
-        description: newReportDescription.trim(),
-        operationId: opId,
-        attributes: newReportAttrs,
-      });
-      toast.success("Informe creado exitosamente");
-      setCreateReportDialog(false);
-    } catch (err) {
-      toast.error(`Error al crear: ${(err as Error).message}`);
-    } finally {
-      setNewReportSaving(false);
-    }
-  };
-
-  const newReportFilteredAttrs = useMemo(() => {
-    const full = getFullAttributeList(attributeOrder);
-    if (!newReportAttrSearch.trim()) return full;
-    const q = newReportAttrSearch.toLowerCase();
-    return full.filter((a) => a.toLowerCase().includes(q));
-  }, [attributeOrder, newReportAttrSearch]);
 
   // --- Reports: open edit dialog with current attrs from DB ---
   const openReportDialog = (reportId: string) => {
