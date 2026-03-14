@@ -490,7 +490,8 @@ export function computeFocusPoints(records: PIMRecord[], reports: PredefinedRepo
 
 // --- Operations ---
 
-export type OperatorType = "has_value" | "no_value" | "equals" | "not_equals" | "contains" | "not_contains";
+export type OperatorType = "has_value" | "no_value" | "equals" | "not_equals" | "contains" | "not_contains" | "meets_operation" | "not_meets_operation";
+export type ConditionSourceType = "attribute" | "operation";
 export type LogicMode = "all" | "any";
 export type LinkedKpi = "digital_base" | "visible_b2b" | "visible_b2c";
 
@@ -501,7 +502,8 @@ export const LINKED_KPI_LABELS: Record<LinkedKpi, string> = {
 };
 
 export interface Condition {
-  attribute: string;
+  sourceType?: ConditionSourceType; // defaults to "attribute" for backward compat
+  attribute: string; // attribute name OR operation id depending on sourceType
   operator: OperatorType;
   value: string | null;
 }
@@ -547,7 +549,17 @@ export function useOperations() {
   });
 }
 
-function matchCondition(record: PIMRecord, cond: Condition): boolean {
+function matchCondition(record: PIMRecord, cond: Condition, allOperations?: Operation[], visited?: Set<string>): boolean {
+  const source = cond.sourceType || "attribute";
+
+  if (source === "operation") {
+    // cond.attribute holds the operation ID
+    const refOp = allOperations?.find((o) => o.id === cond.attribute);
+    if (!refOp) return false;
+    const result = evaluateOperationSafe(record, refOp, allOperations || [], visited);
+    return cond.operator === "meets_operation" ? result : !result;
+  }
+
   const raw = record[cond.attribute];
   const isEmpty = raw === null || raw === undefined || String(raw).trim() === "";
   switch (cond.operator) {
@@ -561,13 +573,61 @@ function matchCondition(record: PIMRecord, cond: Condition): boolean {
   }
 }
 
-export function evaluateOperation(record: PIMRecord, operation: Operation): boolean {
+/** Evaluate operation with circular reference protection */
+function evaluateOperationSafe(record: PIMRecord, operation: Operation, allOperations: Operation[], visited?: Set<string>): boolean {
+  const seen = visited ? new Set(visited) : new Set<string>();
+  if (seen.has(operation.id)) return false; // circular ref → fail safe
+  seen.add(operation.id);
   if (operation.conditions.length === 0) return true;
   const fn = operation.logicMode === "any" ? "some" : "every";
-  return operation.conditions[fn]((c) => matchCondition(record, c));
+  return operation.conditions[fn]((c) => matchCondition(record, c, allOperations, seen));
 }
 
-// --- Upload history ---
+export function evaluateOperation(record: PIMRecord, operation: Operation, allOperations?: Operation[]): boolean {
+  return evaluateOperationSafe(record, operation, allOperations || [], new Set());
+}
+
+/** Check if adding opRefId as a dependency of currentOpId would create a circular reference */
+export function wouldCreateCircularRef(
+  currentOpId: string | null,
+  opRefId: string,
+  allOperations: Operation[],
+): boolean {
+  if (!currentOpId) return false;
+  if (opRefId === currentOpId) return true;
+
+  // BFS: check if opRefId (directly or transitively) depends on currentOpId
+  const visited = new Set<string>();
+  const queue = [opRefId];
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    if (visited.has(id)) continue;
+    visited.add(id);
+    const op = allOperations.find((o) => o.id === id);
+    if (!op) continue;
+    for (const c of op.conditions) {
+      if ((c.sourceType || "attribute") === "operation") {
+        if (c.attribute === currentOpId) return true;
+        queue.push(c.attribute);
+      }
+    }
+  }
+  return false;
+}
+
+/** Get list of operation IDs that are valid references (no self-ref, no circular) */
+export function getValidOperationRefs(
+  currentOpId: string | null,
+  allOperations: Operation[],
+): Operation[] {
+  return allOperations.filter((op) => {
+    if (op.id === currentOpId) return false;
+    if (currentOpId && wouldCreateCircularRef(currentOpId, op.id, allOperations)) return false;
+    return true;
+  });
+}
+
+
 export interface PimUploadRecord {
   id: string;
   file_name: string;
