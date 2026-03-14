@@ -140,11 +140,28 @@ export default function NewReportPage() {
     if (source === "report" && selectedReport) {
       return getRecordsForReport(allRecords, selectedReport, operations);
     }
-    if (source === "operation" && selectedOperation) {
-      return allRecords.filter((r) => evaluateOperation(r, selectedOperation, operations));
+    if (source === "operation") {
+      if (opMode === "existing" && selectedOperation) {
+        return allRecords.filter((r) => evaluateOperation(r, selectedOperation, operations));
+      }
+      if (opMode === "new" && inlineOp.conditions.some((c) => c.attribute.trim() !== "")) {
+        // Build a temporary operation object for evaluation
+        const tempOp = {
+          id: "__inline__",
+          name: "Inline",
+          description: "",
+          active: true,
+          logicMode: inlineOp.logicMode,
+          conditions: inlineOp.conditions.filter((c) => c.attribute.trim() !== ""),
+          linkedKpi: null,
+          createdAt: "",
+          updatedAt: "",
+        };
+        return allRecords.filter((r) => evaluateOperation(r, tempOp, operations));
+      }
     }
     return allRecords;
-  }, [source, csvCodes, allRecords, selectedReport, selectedOperation, operations]);
+  }, [source, csvCodes, allRecords, selectedReport, selectedOperation, operations, opMode, inlineOp]);
 
   const attrResults = useMemo(() => {
     if (step !== "results") return [];
