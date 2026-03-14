@@ -875,5 +875,8 @@ export function useInvalidatePimData() {
     queryClient.invalidateQueries({ queryKey: ["pim-attribute-order"] });
     queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
     queryClient.invalidateQueries({ queryKey: ["operations"] });
+    queryClient.invalidateQueries({ queryKey: ["computed-result"] });
+    queryClient.invalidateQueries({ queryKey: ["report-completeness-live"] });
+    queryClient.invalidateQueries({ queryKey: ["operation-count-live"] });
   };
 }

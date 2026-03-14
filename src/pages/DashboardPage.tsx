@@ -15,8 +15,7 @@ import {
   sortReportsByDisplayOrder,
   NON_EVALUABLE_FIELDS,
   useOperations,
-  usePimRecords,
-  evaluateOperation,
+  useOperationCount,
   LINKED_KPI_LABELS,
   type LinkedKpi,
 } from "@/hooks/usePimData";
@@ -76,38 +75,32 @@ export default function DashboardPage() {
   const { data: attributeOrder } = useAttributeOrder();
   const { data: operations = [] } = useOperations();
 
-  // Only load PIM records if there are linked operations (to evaluate client-side)
-  const linkedOpsMap = useMemo(() => {
-    const map: Partial<Record<LinkedKpi, true>> = {};
-    for (const op of operations) {
-      if (op.active && op.linkedKpi) map[op.linkedKpi] = true;
-    }
-    return map;
-  }, [operations]);
-  const hasLinkedOps = Object.keys(linkedOpsMap).length > 0;
-  const { data: pimRecords = [], isLoading: loadingRecords } = usePimRecords({ enabled: hasLinkedOps });
-
-  // While records are loading for linked KPIs, track that we're still resolving
-  const kpiOverridesReady = !hasLinkedOps || (!loadingRecords && pimRecords.length >= 0);
-
-  // Compute operation-based KPI overrides
-  const operationKpis = useMemo(() => {
-    if (!hasLinkedOps || loadingRecords) return null;
-    const result: Partial<Record<LinkedKpi, number>> = {};
+  // Identify linked KPI operations (server-side counts via computed_results)
+  const linkedOps = useMemo(() => {
+    const result: { kpi: LinkedKpi; opId: string }[] = [];
     for (const op of operations) {
       if (op.active && op.linkedKpi) {
-        result[op.linkedKpi] = pimRecords.filter((r) => evaluateOperation(r, op, operations)).length;
+        result.push({ kpi: op.linkedKpi, opId: op.id });
       }
     }
-    return Object.keys(result).length > 0 ? result : null;
-  }, [operations, pimRecords, hasLinkedOps, loadingRecords]);
+    return result;
+  }, [operations]);
+
+  const digitalBaseOp = linkedOps.find((o) => o.kpi === "digital_base");
+  const visibleB2BOp = linkedOps.find((o) => o.kpi === "visible_b2b");
+  const visibleB2COp = linkedOps.find((o) => o.kpi === "visible_b2c");
+
+  // Server-side operation counts (from computed_results)
+  const { data: digitalBaseOpCount, isLoading: loadingDBCount } = useOperationCount(digitalBaseOp?.opId);
+  const { data: visibleB2BOpCount, isLoading: loadingB2BCount } = useOperationCount(visibleB2BOp?.opId);
+  const { data: visibleB2COpCount, isLoading: loadingB2CCount } = useOperationCount(visibleB2COp?.opId);
 
   const totalEvaluableAttrs = useMemo(() => {
     if (!attributeOrder) return 0;
     return getEvaluableAttributes(getFullAttributeList(attributeOrder)).length;
   }, [attributeOrder]);
 
-  const isLoading = loadingKPIs || loadingReports || (hasLinkedOps && loadingRecords);
+  const isLoading = loadingKPIs || loadingReports;
   const hasData = kpis && kpis.total > 0;
 
   const focusReports = useMemo(
@@ -153,16 +146,10 @@ export default function DashboardPage() {
     ? format(new Date(kpis.lastUpdated), "d 'de' MMMM yyyy, HH:mm", { locale: es })
     : "Sin datos cargados";
 
-  // Use operation overrides when available; for linked KPIs use operation value (even if 0)
-  const digitalBaseCount = linkedOpsMap.digital_base
-    ? (operationKpis?.digital_base ?? 0)
-    : (kpis?.digitalBase ?? 0);
-  const visibleB2BCount = linkedOpsMap.visible_b2b
-    ? (operationKpis?.visible_b2b ?? 0)
-    : (kpis?.visibleB2B ?? 0);
-  const visibleB2CCount = linkedOpsMap.visible_b2c
-    ? (operationKpis?.visible_b2c ?? 0)
-    : (kpis?.visibleB2C ?? 0);
+  // Use operation overrides when available; fallback to standard KPIs
+  const digitalBaseCount = digitalBaseOp ? (digitalBaseOpCount ?? 0) : (kpis?.digitalBase ?? 0);
+  const visibleB2BCount = visibleB2BOp ? (visibleB2BOpCount ?? 0) : (kpis?.visibleB2B ?? 0);
+  const visibleB2CCount = visibleB2COp ? (visibleB2COpCount ?? 0) : (kpis?.visibleB2C ?? 0);
   const pctDigitalBase = kpis && kpis.total > 0 ? Math.round((digitalBaseCount / kpis.total) * 100) : 0;
 
   return (
