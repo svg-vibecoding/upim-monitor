@@ -14,10 +14,11 @@ import {
   getAttributeClassification, isNonEvaluable, usePredefinedReports,
   sortReportsByDisplayOrder, getRecordsForReport, getEvaluableAttributes,
   useOperations, evaluateOperation,
+  type Condition, type LogicMode,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Filter, ArrowLeft, Download } from "lucide-react";
-import { UniverseSelector, type UniverseSource } from "@/components/UniverseSelector";
+import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 
@@ -84,6 +85,11 @@ export default function NewReportPage() {
   const [source, setSource] = useState<UniverseSource>("general");
   const [selectedReportId, setSelectedReportId] = useState<string>("");
   const [selectedOperationId, setSelectedOperationId] = useState<string>("");
+  const [opMode, setOpMode] = useState<OperationMode>("existing");
+  const [inlineOp, setInlineOp] = useState<InlineOperationDef>({
+    logicMode: "all",
+    conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
+  });
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string>("");
   const [uploadedFileReady, setUploadedFileReady] = useState(false);
@@ -134,11 +140,28 @@ export default function NewReportPage() {
     if (source === "report" && selectedReport) {
       return getRecordsForReport(allRecords, selectedReport, operations);
     }
-    if (source === "operation" && selectedOperation) {
-      return allRecords.filter((r) => evaluateOperation(r, selectedOperation, operations));
+    if (source === "operation") {
+      if (opMode === "existing" && selectedOperation) {
+        return allRecords.filter((r) => evaluateOperation(r, selectedOperation, operations));
+      }
+      if (opMode === "new" && inlineOp.conditions.some((c) => c.attribute.trim() !== "")) {
+        // Build a temporary operation object for evaluation
+        const tempOp = {
+          id: "__inline__",
+          name: "Inline",
+          description: "",
+          active: true,
+          logicMode: inlineOp.logicMode,
+          conditions: inlineOp.conditions.filter((c) => c.attribute.trim() !== ""),
+          linkedKpi: null,
+          createdAt: "",
+          updatedAt: "",
+        };
+        return allRecords.filter((r) => evaluateOperation(r, tempOp, operations));
+      }
     }
     return allRecords;
-  }, [source, csvCodes, allRecords, selectedReport, selectedOperation, operations]);
+  }, [source, csvCodes, allRecords, selectedReport, selectedOperation, operations, opMode, inlineOp]);
 
   const attrResults = useMemo(() => {
     if (step !== "results") return [];
@@ -244,15 +267,20 @@ export default function NewReportPage() {
     setSource("general");
     setSelectedReportId("");
     setSelectedOperationId("");
+    setOpMode("existing");
+    setInlineOp({ logicMode: "all", conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }] });
   };
 
   const universeLabel = useMemo(() => {
     if (source === "general") return "Base general del PIM";
     if (source === "report" && selectedReport) return selectedReport.universe;
-    if (source === "operation" && selectedOperation) return `Operación: ${selectedOperation.name}`;
+    if (source === "operation") {
+      if (opMode === "existing" && selectedOperation) return `Operación: ${selectedOperation.name}`;
+      if (opMode === "new") return "Operación personalizada";
+    }
     if (source === "file" && uploadedFileName) return `Universo de productos personalizado (${uploadedFileName})`;
     return "";
-  }, [source, selectedReport, selectedOperation, uploadedFileName]);
+  }, [source, selectedReport, selectedOperation, uploadedFileName, opMode]);
 
   return (
     <div className="space-y-6 max-w-6xl">
@@ -270,6 +298,11 @@ export default function NewReportPage() {
                 selectedOperationId={selectedOperationId}
                 onOperationChange={setSelectedOperationId}
                 operations={operations}
+                operationMode={opMode}
+                onOperationModeChange={setOpMode}
+                inlineOperation={inlineOp}
+                onInlineOperationChange={setInlineOp}
+                attributeList={fullAttributes}
                 selectedReportId={selectedReportId}
                 onReportChange={setSelectedReportId}
                 sortedReports={sortedReports}

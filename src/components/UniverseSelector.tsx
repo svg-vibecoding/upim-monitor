@@ -1,24 +1,38 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Upload, FileSpreadsheet, X, CheckCircle2 } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { OperationBuilder } from "@/components/OperationBuilder";
 import type { PredefinedReport } from "@/data/mockData";
-import type { Operation } from "@/hooks/usePimData";
+import type { Operation, Condition, LogicMode } from "@/hooks/usePimData";
 
 export type UniverseSource = "general" | "file" | "report" | "operation";
+export type OperationMode = "existing" | "new";
+
+export interface InlineOperationDef {
+  logicMode: LogicMode;
+  conditions: Condition[];
+}
 
 export interface UniverseSelectorProps {
   source: UniverseSource;
   onSourceChange: (source: UniverseSource) => void;
-  /** Which source options to show. Defaults to all four. */
   availableSources?: UniverseSource[];
-  // Operation
+  // Operation — existing
   selectedOperationId: string;
   onOperationChange: (id: string) => void;
   operations: Operation[];
+  // Operation — inline creation
+  operationMode?: OperationMode;
+  onOperationModeChange?: (mode: OperationMode) => void;
+  inlineOperation?: InlineOperationDef;
+  onInlineOperationChange?: (def: InlineOperationDef) => void;
+  /** PIM attribute list needed for inline OperationBuilder */
+  attributeList?: string[];
   // Report (optional)
   selectedReportId?: string;
   onReportChange?: (id: string) => void;
@@ -49,6 +63,11 @@ export const UniverseSelector = memo(function UniverseSelector({
   selectedOperationId,
   onOperationChange,
   operations,
+  operationMode = "existing",
+  onOperationModeChange,
+  inlineOperation,
+  onInlineOperationChange,
+  attributeList = [],
   selectedReportId = "",
   onReportChange,
   sortedReports = [],
@@ -64,6 +83,8 @@ export const UniverseSelector = memo(function UniverseSelector({
   const activeOperations = useMemo(() => operations.filter((op) => op.active), [operations]);
   const selectedOperation = useMemo(() => operations.find((op) => op.id === selectedOperationId), [operations, selectedOperationId]);
   const selectedReport = useMemo(() => sortedReports.find((r) => r.id === selectedReportId), [sortedReports, selectedReportId]);
+
+  const supportsInline = !!onOperationModeChange && !!onInlineOperationChange;
 
   return (
     <div className="space-y-3">
@@ -93,22 +114,66 @@ export const UniverseSelector = memo(function UniverseSelector({
       )}
 
       {source === "operation" && (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            Utiliza una operación existente para definir el universo de productos que se analizará.
+            Define o selecciona una operación para determinar el universo de productos que se analizará.
           </p>
-          <Select value={selectedOperationId} onValueChange={onOperationChange}>
-            <SelectTrigger className="w-72">
-              <SelectValue placeholder="Seleccionar operación" />
-            </SelectTrigger>
-            <SelectContent>
-              {activeOperations.map((op) => (
-                <SelectItem key={op.id} value={op.id}>{op.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {selectedOperation?.description && (
-            <p className="text-xs text-muted-foreground">{selectedOperation.description}</p>
+
+          {supportsInline && (
+            <ToggleGroup
+              type="single"
+              value={operationMode}
+              onValueChange={(v) => v && onOperationModeChange!(v as OperationMode)}
+              className="justify-start"
+            >
+              <ToggleGroupItem
+                value="existing"
+                className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              >
+                Seleccionar existente
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="new"
+                className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              >
+                Crear nueva
+              </ToggleGroupItem>
+            </ToggleGroup>
+          )}
+
+          {operationMode === "existing" || !supportsInline ? (
+            <div className="space-y-2">
+              <Select value={selectedOperationId} onValueChange={onOperationChange}>
+                <SelectTrigger className="w-72">
+                  <SelectValue placeholder="Seleccionar operación" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeOperations.map((op) => (
+                    <SelectItem key={op.id} value={op.id}>{op.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedOperation?.description && (
+                <p className="text-xs text-muted-foreground">{selectedOperation.description}</p>
+              )}
+            </div>
+          ) : inlineOperation && (
+            <div className="rounded-md border border-border bg-muted/10 p-4">
+              <OperationBuilder
+                idPrefix="universe-op"
+                logicMode={inlineOperation.logicMode}
+                onLogicModeChange={(mode) =>
+                  onInlineOperationChange!({ ...inlineOperation, logicMode: mode })
+                }
+                conditions={inlineOperation.conditions}
+                onConditionsChange={(conds) =>
+                  onInlineOperationChange!({ ...inlineOperation, conditions: conds })
+                }
+                attributeList={attributeList}
+                allOperations={operations}
+                editingOperationId={null}
+              />
+            </div>
           )}
         </div>
       )}
