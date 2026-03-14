@@ -468,6 +468,7 @@ export default function AdminPage() {
   const [pendingUploadId, setPendingUploadId] = useState<string | null>(null);
   const [pendingAttributeOrder, setPendingAttributeOrder] = useState<string[]>([]);
   const [activating, setActivating] = useState(false);
+  const [isRecalculating, setIsRecalculating] = useState(false);
   const [csvResult, setCsvResult] = useState<{
     success: boolean;
     totalRows?: number;
