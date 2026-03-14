@@ -126,6 +126,7 @@ export default function NewReportPage() {
   }, []);
 
   const selectedReport = sortedReports.find((r) => r.id === selectedReportId);
+  const selectedOperation = operations.find((op) => op.id === selectedOperationId);
 
   const records = useMemo(() => {
     if (source === "file" && csvCodes.length > 0) {
