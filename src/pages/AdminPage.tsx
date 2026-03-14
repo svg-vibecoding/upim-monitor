@@ -815,6 +815,42 @@ export default function AdminPage() {
             </CardContent>
           </Card>
 
+          {/* RECALCULAR DATOS */}
+          <Card>
+            <CardContent className="pt-6 space-y-3">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                  <Settings2 className="h-5 w-5 text-primary" />
+                  Recalcular datos de la app
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Recalcula KPIs, completitud de informes y conteos de operaciones sin modificar la Base PIM.
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                className="gap-2"
+                disabled={isRecalculating}
+                onClick={async () => {
+                  setIsRecalculating(true);
+                  try {
+                    await refreshAll();
+                    queryClient.invalidateQueries({ queryKey: ["computed-result"] });
+                    queryClient.invalidateQueries({ queryKey: ["pim-kpis"] });
+                    toast.success("Datos recalculados correctamente");
+                  } catch (err: any) {
+                    toast.error(err.message || "Error al recalcular los datos");
+                  } finally {
+                    setIsRecalculating(false);
+                  }
+                }}
+              >
+                {isRecalculating ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                {isRecalculating ? "Recalculando..." : "Recalcular datos"}
+              </Button>
+            </CardContent>
+          </Card>
+
           {/* HISTÓRICO DE BASES PIM */}
           <Card>
             <CardContent className="pt-6 space-y-4">
