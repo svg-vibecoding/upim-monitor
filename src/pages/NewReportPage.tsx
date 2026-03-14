@@ -82,7 +82,7 @@ AttributeCheckboxItem.displayName = "AttributeCheckboxItem";
 export default function NewReportPage() {
   const trackEvent = useTrackEvent();
 
-  const [source, setSource] = useState<Source>("general");
+  const [source, setSource] = useState<UniverseSource>("general");
   const [selectedReportId, setSelectedReportId] = useState<string>("");
   const [selectedOperationId, setSelectedOperationId] = useState<string>("");
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
