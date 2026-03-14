@@ -352,6 +352,8 @@ export default function NewReportPage() {
                     <p className="text-xs text-muted-foreground">{selectedOperation.description}</p>
                   )}
                 </div>
+              )}
+
               {source === "report" && (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">Utiliza el universo de productos definido en un informe existente como base para el análisis.</p>
