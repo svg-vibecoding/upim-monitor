@@ -34,7 +34,14 @@ import {
   useDimensions,
   sortReportsByDisplayOrder,
   useProtectedAttributes,
+  useOperations,
+  LINKED_KPI_LABELS,
   type AttributeType,
+  type Operation,
+  type Condition,
+  type OperatorType,
+  type LogicMode,
+  type LinkedKpi,
 } from "@/hooks/usePimData";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
