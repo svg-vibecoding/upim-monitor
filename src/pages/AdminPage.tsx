@@ -95,6 +95,7 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const invalidatePimData = useInvalidatePimData();
   const queryClient = useQueryClient();
+  const { refreshAll, refreshForOperation, refreshForReport } = useRefreshComputed();
 
   // DB-driven data
   const { data: dbReports = [], isLoading: reportsLoading } = usePredefinedReports();
@@ -102,7 +103,6 @@ export default function AdminPage() {
   const { data: uploadHistory = [], isLoading: historyLoading } = usePimUploadHistory();
   const { data: dbUsers = [], isLoading: usersLoading } = useUsers();
   const { data: dbDimensions = [], isLoading: dimensionsLoading } = useDimensions();
-  const { data: pimRecords = [] } = usePimRecords();
   const { data: operations = [], isLoading: operationsLoading } = useOperations();
   const updateReportAttrs = useUpdateReportAttributes();
   const updateReportOp = useUpdateReportOperation();
