@@ -335,14 +335,25 @@ export default function AdminPage() {
   const [newReportDescription, setNewReportDescription] = useState("");
   const [newReportSource, setNewReportSource] = useState<UniverseSource>("general");
   const [newReportOperationId, setNewReportOperationId] = useState<string>("");
+  const [newReportOpMode, setNewReportOpMode] = useState<"existing" | "new">("existing");
+  const [newReportInlineOp, setNewReportInlineOp] = useState<{ logicMode: LogicMode; conditions: Condition[] }>({
+    logicMode: "all",
+    conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
+  });
   const [newReportAttrs, setNewReportAttrs] = useState<string[]>([]);
   const [newReportAttrSearch, setNewReportAttrSearch] = useState("");
+  const [newReportSaving, setNewReportSaving] = useState(false);
 
   const openCreateReportDialog = () => {
     setNewReportName("");
     setNewReportDescription("");
     setNewReportSource("general");
     setNewReportOperationId("");
+    setNewReportOpMode("existing");
+    setNewReportInlineOp({
+      logicMode: "all",
+      conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
+    });
     setNewReportAttrs([]);
     setNewReportAttrSearch("");
     setCreateReportDialog(true);
@@ -351,8 +362,36 @@ export default function AdminPage() {
   const saveNewReport = async () => {
     if (!newReportName.trim()) { toast.error("El nombre es obligatorio"); return; }
     if (newReportAttrs.length === 0) { toast.error("Selecciona al menos un atributo"); return; }
-    const opId = newReportSource === "operation" && newReportOperationId ? newReportOperationId : null;
+
+    setNewReportSaving(true);
     try {
+      let opId: string | null = null;
+
+      if (newReportSource === "operation") {
+        if (newReportOpMode === "existing" && newReportOperationId) {
+          opId = newReportOperationId;
+        } else if (newReportOpMode === "new") {
+          // Create inline operation first
+          const validConditions = newReportInlineOp.conditions.filter((c) => c.attribute.trim() !== "");
+          if (validConditions.length === 0) {
+            toast.error("Agrega al menos una condición válida a la operación");
+            setNewReportSaving(false);
+            return;
+          }
+          const opPayload = {
+            name: `Op: ${newReportName.trim()}`,
+            description: `Operación creada para el informe "${newReportName.trim()}"`,
+            logic_mode: newReportInlineOp.logicMode,
+            conditions: validConditions,
+            active: true,
+          };
+          const { data: opData, error: opError } = await supabase.from("operations" as any).insert(opPayload).select("id").single();
+          if (opError) throw opError;
+          opId = (opData as any).id;
+          queryClient.invalidateQueries({ queryKey: ["operations"] });
+        }
+      }
+
       await createReport.mutateAsync({
         name: newReportName.trim(),
         description: newReportDescription.trim(),
@@ -363,6 +402,8 @@ export default function AdminPage() {
       setCreateReportDialog(false);
     } catch (err) {
       toast.error(`Error al crear: ${(err as Error).message}`);
+    } finally {
+      setNewReportSaving(false);
     }
   };
 
