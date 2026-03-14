@@ -213,6 +213,7 @@ export type Database = {
           description: string
           id: string
           name: string
+          operation_id: string | null
           universe: string
           universe_key: string
           updated_at: string
@@ -223,6 +224,7 @@ export type Database = {
           description?: string
           id?: string
           name: string
+          operation_id?: string | null
           universe?: string
           universe_key?: string
           updated_at?: string
@@ -233,11 +235,20 @@ export type Database = {
           description?: string
           id?: string
           name?: string
+          operation_id?: string | null
           universe?: string
           universe_key?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "predefined_reports_operation_id_fkey"
+            columns: ["operation_id"]
+            isOneToOne: false
+            referencedRelation: "operations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -335,7 +346,22 @@ export type Database = {
         Args: { p_upload_id: string }
         Returns: undefined
       }
+      evaluate_record_against_operation: {
+        Args: {
+          p_depth?: number
+          p_operation_id: string
+          p_record: Database["public"]["Tables"]["pim_records"]["Row"]
+        }
+        Returns: boolean
+      }
       get_pim_kpis: { Args: never; Returns: Json }
+      get_record_attr_value: {
+        Args: {
+          p_attr_name: string
+          p_record: Database["public"]["Tables"]["pim_records"]["Row"]
+        }
+        Returns: string
+      }
       get_report_completeness: { Args: { p_report_id: string }; Returns: Json }
       has_role: {
         Args: {
