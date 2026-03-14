@@ -549,7 +549,17 @@ export function useOperations() {
   });
 }
 
-function matchCondition(record: PIMRecord, cond: Condition): boolean {
+function matchCondition(record: PIMRecord, cond: Condition, allOperations?: Operation[], visited?: Set<string>): boolean {
+  const source = cond.sourceType || "attribute";
+
+  if (source === "operation") {
+    // cond.attribute holds the operation ID
+    const refOp = allOperations?.find((o) => o.id === cond.attribute);
+    if (!refOp) return false;
+    const result = evaluateOperationSafe(record, refOp, allOperations || [], visited);
+    return cond.operator === "meets_operation" ? result : !result;
+  }
+
   const raw = record[cond.attribute];
   const isEmpty = raw === null || raw === undefined || String(raw).trim() === "";
   switch (cond.operator) {
@@ -563,10 +573,18 @@ function matchCondition(record: PIMRecord, cond: Condition): boolean {
   }
 }
 
-export function evaluateOperation(record: PIMRecord, operation: Operation): boolean {
+/** Evaluate operation with circular reference protection */
+function evaluateOperationSafe(record: PIMRecord, operation: Operation, allOperations: Operation[], visited?: Set<string>): boolean {
+  const seen = visited ? new Set(visited) : new Set<string>();
+  if (seen.has(operation.id)) return false; // circular ref → fail safe
+  seen.add(operation.id);
   if (operation.conditions.length === 0) return true;
   const fn = operation.logicMode === "any" ? "some" : "every";
-  return operation.conditions[fn]((c) => matchCondition(record, c));
+  return operation.conditions[fn]((c) => matchCondition(record, c, allOperations, seen));
+}
+
+export function evaluateOperation(record: PIMRecord, operation: Operation, allOperations?: Operation[]): boolean {
+  return evaluateOperationSafe(record, operation, allOperations || [], new Set());
 }
 
 // --- Upload history ---
