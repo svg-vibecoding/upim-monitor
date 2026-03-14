@@ -587,7 +587,47 @@ export function evaluateOperation(record: PIMRecord, operation: Operation, allOp
   return evaluateOperationSafe(record, operation, allOperations || [], new Set());
 }
 
-// --- Upload history ---
+/** Check if adding opRefId as a dependency of currentOpId would create a circular reference */
+export function wouldCreateCircularRef(
+  currentOpId: string | null,
+  opRefId: string,
+  allOperations: Operation[],
+): boolean {
+  if (!currentOpId) return false;
+  if (opRefId === currentOpId) return true;
+
+  // BFS: check if opRefId (directly or transitively) depends on currentOpId
+  const visited = new Set<string>();
+  const queue = [opRefId];
+  while (queue.length > 0) {
+    const id = queue.shift()!;
+    if (visited.has(id)) continue;
+    visited.add(id);
+    const op = allOperations.find((o) => o.id === id);
+    if (!op) continue;
+    for (const c of op.conditions) {
+      if ((c.sourceType || "attribute") === "operation") {
+        if (c.attribute === currentOpId) return true;
+        queue.push(c.attribute);
+      }
+    }
+  }
+  return false;
+}
+
+/** Get list of operation IDs that are valid references (no self-ref, no circular) */
+export function getValidOperationRefs(
+  currentOpId: string | null,
+  allOperations: Operation[],
+): Operation[] {
+  return allOperations.filter((op) => {
+    if (op.id === currentOpId) return false;
+    if (currentOpId && wouldCreateCircularRef(currentOpId, op.id, allOperations)) return false;
+    return true;
+  });
+}
+
+
 export interface PimUploadRecord {
   id: string;
   file_name: string;
