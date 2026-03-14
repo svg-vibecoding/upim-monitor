@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      computed_results: {
+        Row: {
+          computed_at: string
+          entity_id: string
+          result: Json
+          result_type: string
+        }
+        Insert: {
+          computed_at?: string
+          entity_id?: string
+          result?: Json
+          result_type: string
+        }
+        Update: {
+          computed_at?: string
+          entity_id?: string
+          result?: Json
+          result_type?: string
+        }
+        Relationships: []
+      }
       dimensions: {
         Row: {
           created_at: string
@@ -346,6 +367,10 @@ export type Database = {
         Args: { p_upload_id: string }
         Returns: undefined
       }
+      build_operation_where: {
+        Args: { p_depth?: number; p_operation_id: string }
+        Returns: string
+      }
       evaluate_record_against_operation: {
         Args: {
           p_depth?: number
@@ -354,6 +379,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_operation_count: { Args: { p_operation_id: string }; Returns: number }
       get_pim_kpis: { Args: never; Returns: Json }
       get_record_attr_value: {
         Args: {
@@ -369,6 +395,11 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      refresh_all_computed_results: { Args: never; Returns: undefined }
+      refresh_computed_result: {
+        Args: { p_entity_id?: string; p_type: string }
+        Returns: undefined
       }
     }
     Enums: {

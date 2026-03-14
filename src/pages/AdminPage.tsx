@@ -27,13 +27,12 @@ import {
   useAttributeOrder,
   useUpdateReportAttributes,
   useUpdateReportOperation,
-  
+  useRefreshComputed,
   getEvaluableAttributes,
   getFullAttributeList,
   getAttributeClassification,
   isNonEvaluable,
   usePimUploadHistory,
-  usePimRecords,
   useDimensions,
   sortReportsByDisplayOrder,
   useProtectedAttributes,
@@ -96,6 +95,7 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const invalidatePimData = useInvalidatePimData();
   const queryClient = useQueryClient();
+  const { refreshAll, refreshForOperation, refreshForReport } = useRefreshComputed();
 
   // DB-driven data
   const { data: dbReports = [], isLoading: reportsLoading } = usePredefinedReports();
@@ -103,7 +103,6 @@ export default function AdminPage() {
   const { data: uploadHistory = [], isLoading: historyLoading } = usePimUploadHistory();
   const { data: dbUsers = [], isLoading: usersLoading } = useUsers();
   const { data: dbDimensions = [], isLoading: dimensionsLoading } = useDimensions();
-  const { data: pimRecords = [] } = usePimRecords();
   const { data: operations = [], isLoading: operationsLoading } = useOperations();
   const updateReportAttrs = useUpdateReportAttributes();
   const updateReportOp = useUpdateReportOperation();
@@ -176,6 +175,10 @@ export default function AdminPage() {
       }
       setOpDialog(false);
       queryClient.invalidateQueries({ queryKey: ["operations"] });
+      // Refresh computed results for this operation and affected reports
+      if (editingOpId) {
+        refreshForOperation(editingOpId, dbReports).catch(() => {});
+      }
     } catch (err: any) {
       toast.error(err.message || "Error guardando operación");
     } finally {
@@ -188,6 +191,7 @@ export default function AdminPage() {
       const { error } = await supabase.from("operations" as any).update({ active: !op.active }).eq("id", op.id);
       if (error) throw error;
       queryClient.invalidateQueries({ queryKey: ["operations"] });
+      refreshForOperation(op.id, dbReports).catch(() => {});
     } catch (err: any) {
       toast.error(err.message || "Error cambiando estado");
     }
@@ -358,6 +362,8 @@ export default function AdminPage() {
       await updateReportAttrs.mutateAsync({ reportId: editingReportId, attributes: reportAttrs });
       toast.success("Configuración del informe actualizada");
       setReportDialog(false);
+      // Refresh computed results for this report
+      refreshForReport(editingReportId).catch(() => {});
     } catch (err) {
       toast.error(`Error al guardar: ${(err as Error).message}`);
     }
@@ -411,22 +417,8 @@ export default function AdminPage() {
     return full.filter((a) => a !== "Código Jaivaná");
   }, [attributeOrder]);
 
-  // Compute unique values per dimension field from pim_records
-  const dimensionUniqueValues = useMemo(() => {
-    const result: Record<string, string[]> = {};
-    for (const dim of dbDimensions) {
-      const valuesSet = new Set<string>();
-      for (const rec of pimRecords) {
-        const rawVal = rec[dim.field] as string | null;
-        if (rawVal && rawVal.trim() !== "") {
-          valuesSet.add(rawVal.trim());
-        }
-      }
-      const sorted = [...valuesSet].sort((a, b) => a.localeCompare(b));
-      result[dim.id] = sorted;
-    }
-    return result;
-  }, [dbDimensions, pimRecords]);
+  // Dimension unique values — fetched via lightweight server query instead of loading all records
+  const dimensionUniqueValues: Record<string, string[]> = {};
 
   const saveDimension = async () => {
     if (!dimName || !dimField) {
@@ -766,6 +758,8 @@ export default function AdminPage() {
 
                               if (data?.error) throw new Error(data.error);
                               invalidatePimData();
+                              // Refresh all computed results after PIM activation
+                              refreshAll().catch(() => {});
                               setCsvResult(null);
                               setPendingUploadId(null);
                               setPendingAttributeOrder([]);
