@@ -77,12 +77,22 @@ export default function DashboardPage() {
   const { data: operations = [] } = useOperations();
 
   // Only load PIM records if there are linked operations (to evaluate client-side)
-  const hasLinkedOps = useMemo(() => operations.some((o) => o.active && o.linkedKpi), [operations]);
-  const { data: pimRecords = [] } = usePimRecords({ enabled: hasLinkedOps });
+  const linkedOpsMap = useMemo(() => {
+    const map: Partial<Record<LinkedKpi, true>> = {};
+    for (const op of operations) {
+      if (op.active && op.linkedKpi) map[op.linkedKpi] = true;
+    }
+    return map;
+  }, [operations]);
+  const hasLinkedOps = Object.keys(linkedOpsMap).length > 0;
+  const { data: pimRecords = [], isLoading: loadingRecords } = usePimRecords({ enabled: hasLinkedOps });
+
+  // While records are loading for linked KPIs, track that we're still resolving
+  const kpiOverridesReady = !hasLinkedOps || (!loadingRecords && pimRecords.length >= 0);
 
   // Compute operation-based KPI overrides
   const operationKpis = useMemo(() => {
-    if (!hasLinkedOps || pimRecords.length === 0) return null;
+    if (!hasLinkedOps || loadingRecords) return null;
     const result: Partial<Record<LinkedKpi, number>> = {};
     for (const op of operations) {
       if (op.active && op.linkedKpi) {
@@ -90,7 +100,7 @@ export default function DashboardPage() {
       }
     }
     return Object.keys(result).length > 0 ? result : null;
-  }, [operations, pimRecords, hasLinkedOps]);
+  }, [operations, pimRecords, hasLinkedOps, loadingRecords]);
 
   const totalEvaluableAttrs = useMemo(() => {
     if (!attributeOrder) return 0;
