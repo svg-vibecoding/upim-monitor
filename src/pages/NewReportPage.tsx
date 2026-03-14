@@ -23,7 +23,6 @@ import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 type Step = "config" | "results";
 type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
-type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
 
 function getSeverity(pct: number): SeverityLevel {
   if (pct <= 25) return "critical";
