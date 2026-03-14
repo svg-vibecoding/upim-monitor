@@ -1126,7 +1126,7 @@ export default function AdminPage() {
 
               {/* Create report dialog */}
               <Dialog open={createReportDialog} onOpenChange={setCreateReportDialog}>
-                <DialogContent className="max-w-lg max-h-[85vh] flex flex-col">
+                <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Nuevo informe predefinido</DialogTitle>
                   </DialogHeader>
