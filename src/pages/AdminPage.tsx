@@ -342,11 +342,13 @@ export default function AdminPage() {
     setReportDialog(true);
   };
 
-  const saveReportAttrs = async () => {
+  const saveReportConfig = async () => {
     if (!editingReportId) return;
     try {
+      // Save operation and attributes
+      await updateReportOp.mutateAsync({ reportId: editingReportId, operationId: reportOperationId });
       await updateReportAttrs.mutateAsync({ reportId: editingReportId, attributes: reportAttrs });
-      toast.success("Atributos del informe actualizados");
+      toast.success("Configuración del informe actualizada");
       setReportDialog(false);
     } catch (err) {
       toast.error(`Error al guardar: ${(err as Error).message}`);
