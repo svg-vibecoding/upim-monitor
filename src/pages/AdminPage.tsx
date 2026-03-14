@@ -204,13 +204,27 @@ export default function AdminPage() {
       if (i !== idx) return c;
       if (field === "operator") {
         const op = value as OperatorType;
-        return { ...c, operator: op, value: (op === "has_value" || op === "no_value") ? null : c.value };
+        return { ...c, operator: op, value: (op === "has_value" || op === "no_value" || op === "meets_operation" || op === "not_meets_operation") ? null : c.value };
       }
       return { ...c, [field]: value };
     }));
   };
 
-  const addCondition = () => setOpConditions((prev) => [...prev, { attribute: "", operator: "has_value", value: null }]);
+  const updateConditionSourceType = (idx: number, newSource: ConditionSourceType) => {
+    setOpConditions((prev) => prev.map((c, i) => {
+      if (i !== idx) return c;
+      // Reset attribute and operator when switching source type
+      return {
+        ...c,
+        sourceType: newSource,
+        attribute: "",
+        operator: newSource === "operation" ? "meets_operation" : "has_value",
+        value: null,
+      };
+    }));
+  };
+
+  const addCondition = () => setOpConditions((prev) => [...prev, { sourceType: "attribute", attribute: "", operator: "has_value", value: null }]);
   const removeCondition = (idx: number) => setOpConditions((prev) => prev.length <= 1 ? prev : prev.filter((_, i) => i !== idx));
 
   // KPI assignment info for the select
