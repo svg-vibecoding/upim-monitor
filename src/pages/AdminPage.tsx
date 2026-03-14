@@ -758,6 +758,8 @@ export default function AdminPage() {
 
                               if (data?.error) throw new Error(data.error);
                               invalidatePimData();
+                              // Refresh all computed results after PIM activation
+                              refreshAll().catch(() => {});
                               setCsvResult(null);
                               setPendingUploadId(null);
                               setPendingAttributeOrder([]);
