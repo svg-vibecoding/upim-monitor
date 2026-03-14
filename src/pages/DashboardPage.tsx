@@ -77,12 +77,22 @@ export default function DashboardPage() {
   const { data: operations = [] } = useOperations();
 
   // Only load PIM records if there are linked operations (to evaluate client-side)
-  const hasLinkedOps = useMemo(() => operations.some((o) => o.active && o.linkedKpi), [operations]);
-  const { data: pimRecords = [] } = usePimRecords({ enabled: hasLinkedOps });
+  const linkedOpsMap = useMemo(() => {
+    const map: Partial<Record<LinkedKpi, true>> = {};
+    for (const op of operations) {
+      if (op.active && op.linkedKpi) map[op.linkedKpi] = true;
+    }
+    return map;
+  }, [operations]);
+  const hasLinkedOps = Object.keys(linkedOpsMap).length > 0;
+  const { data: pimRecords = [], isLoading: loadingRecords } = usePimRecords({ enabled: hasLinkedOps });
+
+  // While records are loading for linked KPIs, track that we're still resolving
+  const kpiOverridesReady = !hasLinkedOps || (!loadingRecords && pimRecords.length >= 0);
 
   // Compute operation-based KPI overrides
   const operationKpis = useMemo(() => {
-    if (!hasLinkedOps || pimRecords.length === 0) return null;
+    if (!hasLinkedOps || loadingRecords) return null;
     const result: Partial<Record<LinkedKpi, number>> = {};
     for (const op of operations) {
       if (op.active && op.linkedKpi) {
@@ -90,14 +100,14 @@ export default function DashboardPage() {
       }
     }
     return Object.keys(result).length > 0 ? result : null;
-  }, [operations, pimRecords, hasLinkedOps]);
+  }, [operations, pimRecords, hasLinkedOps, loadingRecords]);
 
   const totalEvaluableAttrs = useMemo(() => {
     if (!attributeOrder) return 0;
     return getEvaluableAttributes(getFullAttributeList(attributeOrder)).length;
   }, [attributeOrder]);
 
-  const isLoading = loadingKPIs || loadingReports;
+  const isLoading = loadingKPIs || loadingReports || (hasLinkedOps && loadingRecords);
   const hasData = kpis && kpis.total > 0;
 
   const focusReports = useMemo(
@@ -143,10 +153,16 @@ export default function DashboardPage() {
     ? format(new Date(kpis.lastUpdated), "d 'de' MMMM yyyy, HH:mm", { locale: es })
     : "Sin datos cargados";
 
-  // Use operation overrides when available, fallback to SQL KPIs
-  const digitalBaseCount = operationKpis?.digital_base ?? kpis?.digitalBase ?? 0;
-  const visibleB2BCount = operationKpis?.visible_b2b ?? kpis?.visibleB2B ?? 0;
-  const visibleB2CCount = operationKpis?.visible_b2c ?? kpis?.visibleB2C ?? 0;
+  // Use operation overrides when available; for linked KPIs use operation value (even if 0)
+  const digitalBaseCount = linkedOpsMap.digital_base
+    ? (operationKpis?.digital_base ?? 0)
+    : (kpis?.digitalBase ?? 0);
+  const visibleB2BCount = linkedOpsMap.visible_b2b
+    ? (operationKpis?.visible_b2b ?? 0)
+    : (kpis?.visibleB2B ?? 0);
+  const visibleB2CCount = linkedOpsMap.visible_b2c
+    ? (operationKpis?.visible_b2c ?? 0)
+    : (kpis?.visibleB2C ?? 0);
   const pctDigitalBase = kpis && kpis.total > 0 ? Math.round((digitalBaseCount / kpis.total) * 100) : 0;
 
   return (
