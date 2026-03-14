@@ -103,6 +103,7 @@ export default function AdminPage() {
   const { data: pimRecords = [] } = usePimRecords();
   const { data: operations = [], isLoading: operationsLoading } = useOperations();
   const updateReportAttrs = useUpdateReportAttributes();
+  const updateReportOp = useUpdateReportOperation();
 
   // --- Operations state ---
   const [opDialog, setOpDialog] = useState(false);
