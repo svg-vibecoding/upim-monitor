@@ -58,6 +58,7 @@ export default function ReportDetailPage() {
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
   const { data: attributeOrder } = useAttributeOrder();
+  const { data: operations = [] } = useOperations();
 
   const totalEvaluableAttrs = useMemo(() => {
     if (!attributeOrder) return 0;
