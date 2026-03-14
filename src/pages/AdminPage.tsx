@@ -1375,46 +1375,88 @@ export default function AdminPage() {
                           </p>
                         )}
                         <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
-                          {/* Row 1: Attribute (full width) */}
-                          <div className="space-y-1">
-                            <span className="text-[11px] font-medium text-muted-foreground">Atributo</span>
-                            <Select value={cond.attribute} onValueChange={(v) => updateCondition(idx, "attribute", v)}>
-                              <SelectTrigger className="w-full"><SelectValue placeholder="Seleccionar atributo…" /></SelectTrigger>
-                              <SelectContent className="max-h-[300px]">
-                                {fullAttributeList.map((a) => (
-                                  <SelectItem key={a} value={a}>{a}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          {/* Row 2: Operator + Value + Remove */}
-                          <div className="flex items-center gap-2">
-                            <Select value={cond.operator} onValueChange={(v) => updateCondition(idx, "operator", v)}>
-                              <SelectTrigger className="w-[180px] shrink-0"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="has_value">Tiene valor</SelectItem>
-                                <SelectItem value="no_value">No tiene valor</SelectItem>
-                                <SelectItem value="equals">Es igual a</SelectItem>
-                                <SelectItem value="not_equals">No es igual a</SelectItem>
-                                <SelectItem value="contains">Contiene</SelectItem>
-                                <SelectItem value="not_contains">No contiene</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            {cond.operator !== "has_value" && cond.operator !== "no_value" && (
-                              <Input
-                                value={cond.value || ""}
-                                onChange={(e) => updateCondition(idx, "value", e.target.value)}
-                                placeholder="Valor"
-                                className="flex-1"
-                              />
-                            )}
-                            {cond.operator === "has_value" || cond.operator === "no_value" ? <div className="flex-1" /> : null}
+                          {/* Row 0: Source type toggle */}
+                          <div className="flex items-center gap-3">
+                            <ToggleGroup
+                              type="single"
+                              value={cond.sourceType || "attribute"}
+                              onValueChange={(v) => v && updateConditionSourceType(idx, v as ConditionSourceType)}
+                              className="h-7"
+                            >
+                              <ToggleGroupItem value="attribute" className="text-xs h-7 px-3">Atributo</ToggleGroupItem>
+                              <ToggleGroupItem value="operation" className="text-xs h-7 px-3">Operación</ToggleGroupItem>
+                            </ToggleGroup>
+                            <div className="flex-1" />
                             {opConditions.length > 1 && (
-                              <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => removeCondition(idx)}>
+                              <Button variant="ghost" size="icon" className="shrink-0 h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removeCondition(idx)}>
                                 <X className="h-4 w-4" />
                               </Button>
                             )}
                           </div>
+
+                          {(cond.sourceType || "attribute") === "attribute" ? (
+                            <>
+                              {/* Attribute mode */}
+                              <div className="space-y-1">
+                                <span className="text-[11px] font-medium text-muted-foreground">Atributo</span>
+                                <Select value={cond.attribute} onValueChange={(v) => updateCondition(idx, "attribute", v)}>
+                                  <SelectTrigger className="w-full"><SelectValue placeholder="Seleccionar atributo…" /></SelectTrigger>
+                                  <SelectContent className="max-h-[300px]">
+                                    {fullAttributeList.map((a) => (
+                                      <SelectItem key={a} value={a}>{a}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Select value={cond.operator} onValueChange={(v) => updateCondition(idx, "operator", v)}>
+                                  <SelectTrigger className="w-[180px] shrink-0"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="has_value">Tiene valor</SelectItem>
+                                    <SelectItem value="no_value">No tiene valor</SelectItem>
+                                    <SelectItem value="equals">Es igual a</SelectItem>
+                                    <SelectItem value="not_equals">No es igual a</SelectItem>
+                                    <SelectItem value="contains">Contiene</SelectItem>
+                                    <SelectItem value="not_contains">No contiene</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                {cond.operator !== "has_value" && cond.operator !== "no_value" && (
+                                  <Input
+                                    value={cond.value || ""}
+                                    onChange={(e) => updateCondition(idx, "value", e.target.value)}
+                                    placeholder="Valor"
+                                    className="flex-1"
+                                  />
+                                )}
+                                {(cond.operator === "has_value" || cond.operator === "no_value") && <div className="flex-1" />}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              {/* Operation mode */}
+                              <div className="space-y-1">
+                                <span className="text-[11px] font-medium text-muted-foreground">Operación</span>
+                                <Select value={cond.attribute} onValueChange={(v) => updateCondition(idx, "attribute", v)}>
+                                  <SelectTrigger className="w-full"><SelectValue placeholder="Seleccionar operación…" /></SelectTrigger>
+                                  <SelectContent className="max-h-[300px]">
+                                    {getValidOperationRefs(editingOpId, operations).map((op) => (
+                                      <SelectItem key={op.id} value={op.id}>{op.name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Select value={cond.operator} onValueChange={(v) => updateCondition(idx, "operator", v)}>
+                                  <SelectTrigger className="w-[180px] shrink-0"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="meets_operation">Cumple operación</SelectItem>
+                                    <SelectItem value="not_meets_operation">No cumple operación</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <div className="flex-1" />
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
