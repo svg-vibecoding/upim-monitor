@@ -265,10 +265,10 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
-                        {kpis!.visibleB2C.toLocaleString()}
+                        {visibleB2CCount.toLocaleString()}
                       </span>
                       <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {kpis!.digitalBase > 0 ? Math.round((kpis!.visibleB2C / kpis!.digitalBase) * 100) : 0}%
+                        {digitalBaseCount > 0 ? Math.round((visibleB2CCount / digitalBaseCount) * 100) : 0}%
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
