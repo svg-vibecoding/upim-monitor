@@ -1218,7 +1218,7 @@ export default function AdminPage() {
                       disabled={createReport.isPending}
                       className="w-full gap-2"
                     >
-                      {createReport.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {newReportSaving && <Loader2 className="h-4 w-4 animate-spin" />}
                       Crear informe
                     </Button>
                   </div>
