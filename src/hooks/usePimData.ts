@@ -111,20 +111,133 @@ export interface AttributeCompleteness {
   completeness: number;
 }
 
-export function useReportCompleteness(reportId: string | null | undefined) {
+// --- Computed results layer (precomputed cache) ---
+
+export function useComputedResult<T = unknown>(resultType: string, entityId?: string | null) {
+  const key = entityId || "__global__";
   return useQuery({
-    queryKey: ["report-completeness", reportId],
+    queryKey: ["computed-result", resultType, key],
+    queryFn: async (): Promise<{ result: T; computed_at: string } | null> => {
+      const { data, error } = await supabase
+        .from("computed_results" as any)
+        .select("result, computed_at")
+        .eq("result_type", resultType)
+        .eq("entity_id", key)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      return { result: (data as any).result as T, computed_at: (data as any).computed_at };
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+export function useRefreshComputed() {
+  const queryClient = useQueryClient();
+
+  const refreshOne = async (type: string, entityId?: string | null) => {
+    await supabase.rpc("refresh_computed_result" as any, {
+      p_type: type,
+      p_entity_id: entityId || null,
+    });
+    const key = entityId || "__global__";
+    queryClient.invalidateQueries({ queryKey: ["computed-result", type, key] });
+  };
+
+  const refreshAll = async () => {
+    await supabase.rpc("refresh_all_computed_results" as any);
+    queryClient.invalidateQueries({ queryKey: ["computed-result"] });
+    queryClient.invalidateQueries({ queryKey: ["pim-kpis"] });
+    queryClient.invalidateQueries({ queryKey: ["report-completeness"] });
+  };
+
+  const refreshForOperation = async (opId: string, reports: PredefinedReport[]) => {
+    // Refresh this operation's count
+    await refreshOne("operation_count", opId);
+    // Refresh completeness for reports that use this operation
+    for (const r of reports) {
+      if (r.operationId === opId) {
+        await refreshOne("report_completeness", r.id);
+      }
+    }
+    // Also refresh dashboard KPIs since operation counts feed into them
+    await refreshOne("dashboard_kpis");
+  };
+
+  const refreshForReport = async (reportId: string) => {
+    await refreshOne("report_completeness", reportId);
+  };
+
+  return { refreshOne, refreshAll, refreshForOperation, refreshForReport };
+}
+
+export function useOperationCount(operationId: string | null | undefined) {
+  const cached = useComputedResult<number>("operation_count", operationId);
+  const shouldFallback = !!operationId && cached.data === null && !cached.isLoading;
+
+  // If no cached result exists, trigger a one-time computation
+  const fallback = useQuery({
+    queryKey: ["operation-count-live", operationId],
+    queryFn: async (): Promise<number> => {
+      // Trigger computation and store
+      await supabase.rpc("refresh_computed_result" as any, {
+        p_type: "operation_count",
+        p_entity_id: operationId,
+      });
+      // Now read the result
+      const { data, error } = await supabase
+        .from("computed_results" as any)
+        .select("result")
+        .eq("result_type", "operation_count")
+        .eq("entity_id", operationId!)
+        .maybeSingle();
+      if (error) throw error;
+      return (data as any)?.result ?? 0;
+    },
+    enabled: shouldFallback,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  if (cached.data !== null && cached.data !== undefined) {
+    return { data: cached.data.result, isLoading: cached.isLoading };
+  }
+  return { data: fallback.data ?? 0, isLoading: cached.isLoading || fallback.isLoading };
+}
+
+export function useReportCompleteness(reportId: string | null | undefined) {
+  // Try cached result first
+  const cached = useComputedResult<AttributeCompleteness[]>("report_completeness", reportId);
+  const hasCached = cached.data !== null && cached.data !== undefined;
+  const shouldFallbackLive = !!reportId && !hasCached && !cached.isLoading;
+
+  // Fallback: compute live and store
+  const live = useQuery({
+    queryKey: ["report-completeness-live", reportId],
     queryFn: async (): Promise<AttributeCompleteness[]> => {
       if (!reportId) return [];
-      const { data, error } = await supabase.rpc("get_report_completeness" as any, {
-        p_report_id: reportId,
+      // Trigger computation & store
+      await supabase.rpc("refresh_computed_result" as any, {
+        p_type: "report_completeness",
+        p_entity_id: reportId,
       });
+      // Read from cache
+      const { data, error } = await supabase
+        .from("computed_results" as any)
+        .select("result")
+        .eq("result_type", "report_completeness")
+        .eq("entity_id", reportId)
+        .maybeSingle();
       if (error) throw error;
-      return (data as AttributeCompleteness[]) || [];
+      return ((data as any)?.result as AttributeCompleteness[]) || [];
     },
-    enabled: !!reportId,
+    enabled: shouldFallbackLive,
     staleTime: 5 * 60 * 1000,
   });
+
+  if (hasCached) {
+    return { data: cached.data!.result, isLoading: cached.isLoading };
+  }
+  return { data: live.data, isLoading: cached.isLoading || live.isLoading };
 }
 
 // --- Attribute order from pim_metadata ---
