@@ -22,7 +22,7 @@ import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 
 type Step = "config" | "results";
-type Source = "general" | "file" | "report" | "operation";
+type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
 type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
 
 function getSeverity(pct: number): SeverityLevel {
