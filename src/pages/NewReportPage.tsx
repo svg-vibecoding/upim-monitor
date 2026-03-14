@@ -6,7 +6,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CompletenessBar } from "@/components/CompletenessBar";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
 } from "@/data/mockData";
@@ -17,7 +16,8 @@ import {
   useOperations, evaluateOperation,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { Upload, FileText, FileSpreadsheet, X, CheckCircle2, Filter, ArrowLeft, Download, Settings2 } from "lucide-react";
+import { FileText, Filter, ArrowLeft, Download } from "lucide-react";
+import { UniverseSelector, type UniverseSource } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 

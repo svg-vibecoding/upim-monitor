@@ -492,6 +492,37 @@ export function useUpdateReportOperation() {
   });
 }
 
+// --- Mutation to create a new predefined report ---
+export function useCreatePredefinedReport() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      name,
+      description,
+      operationId,
+      attributes,
+    }: {
+      name: string;
+      description: string;
+      operationId: string | null;
+      attributes: string[];
+    }) => {
+      const { error } = await supabase.from("predefined_reports").insert({
+        name,
+        description,
+        universe: operationId ? "" : "Base general del PIM",
+        universe_key: operationId ? "all" : "all",
+        operation_id: operationId,
+        attributes,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
+    },
+  });
+}
+
 /** Canonical display order for predefined reports */
 export const REPORT_DISPLAY_ORDER = ["PIM General", "Portafolio foco", "SumaGO B2B", "SumaGO B2C", "Operaciones"];
 
