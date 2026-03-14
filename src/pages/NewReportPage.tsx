@@ -244,6 +244,7 @@ export default function NewReportPage() {
     setUploadedTotalRows(0);
     setSource("general");
     setSelectedReportId("");
+    setSelectedOperationId("");
   };
 
   const universeLabel = useMemo(() => {
