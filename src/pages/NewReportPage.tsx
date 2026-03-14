@@ -85,7 +85,7 @@ export default function NewReportPage() {
   const [source, setSource] = useState<UniverseSource>("general");
   const [selectedReportId, setSelectedReportId] = useState<string>("");
   const [selectedOperationId, setSelectedOperationId] = useState<string>("");
-  const [opMode, setOpMode] = useState<OperationMode>("existing");
+  const [opMode, setOpMode] = useState<OperationMode>("new");
   const [inlineOp, setInlineOp] = useState<InlineOperationDef>({
     logicMode: "all",
     conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
