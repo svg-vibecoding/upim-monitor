@@ -14,6 +14,11 @@ import {
   getEvaluableAttributes,
   sortReportsByDisplayOrder,
   NON_EVALUABLE_FIELDS,
+  useOperations,
+  usePimRecords,
+  evaluateOperation,
+  LINKED_KPI_LABELS,
+  type LinkedKpi,
 } from "@/hooks/usePimData";
 import {
   PlusCircle,
@@ -69,6 +74,23 @@ export default function DashboardPage() {
   const { data: kpis, isLoading: loadingKPIs } = usePimKPIs();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: attributeOrder } = useAttributeOrder();
+  const { data: operations = [] } = useOperations();
+
+  // Only load PIM records if there are linked operations (to evaluate client-side)
+  const hasLinkedOps = useMemo(() => operations.some((o) => o.active && o.linkedKpi), [operations]);
+  const { data: pimRecords = [] } = usePimRecords({ enabled: hasLinkedOps });
+
+  // Compute operation-based KPI overrides
+  const operationKpis = useMemo(() => {
+    if (!hasLinkedOps || pimRecords.length === 0) return null;
+    const result: Partial<Record<LinkedKpi, number>> = {};
+    for (const op of operations) {
+      if (op.active && op.linkedKpi) {
+        result[op.linkedKpi] = pimRecords.filter((r) => evaluateOperation(r, op)).length;
+      }
+    }
+    return Object.keys(result).length > 0 ? result : null;
+  }, [operations, pimRecords, hasLinkedOps]);
 
   const totalEvaluableAttrs = useMemo(() => {
     if (!attributeOrder) return 0;
@@ -121,7 +143,11 @@ export default function DashboardPage() {
     ? format(new Date(kpis.lastUpdated), "d 'de' MMMM yyyy, HH:mm", { locale: es })
     : "Sin datos cargados";
 
-  const pctDigitalBase = kpis && kpis.total > 0 ? Math.round((kpis.digitalBase / kpis.total) * 100) : 0;
+  // Use operation overrides when available, fallback to SQL KPIs
+  const digitalBaseCount = operationKpis?.digital_base ?? kpis?.digitalBase ?? 0;
+  const visibleB2BCount = operationKpis?.visible_b2b ?? kpis?.visibleB2B ?? 0;
+  const visibleB2CCount = operationKpis?.visible_b2c ?? kpis?.visibleB2C ?? 0;
+  const pctDigitalBase = kpis && kpis.total > 0 ? Math.round((digitalBaseCount / kpis.total) * 100) : 0;
 
   return (
     <div className="space-y-8 max-w-6xl">
@@ -216,7 +242,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-baseline gap-2 mt-3">
                   <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
-                    {kpis!.digitalBase.toLocaleString()}
+                    {digitalBaseCount.toLocaleString()}
                   </p>
                   <span className="text-xs text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
                 </div>
@@ -225,10 +251,10 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
-                        {kpis!.visibleB2B.toLocaleString()}
+                        {visibleB2BCount.toLocaleString()}
                       </span>
                       <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {kpis!.digitalBase > 0 ? Math.round((kpis!.visibleB2B / kpis!.digitalBase) * 100) : 0}%
+                        {digitalBaseCount > 0 ? Math.round((visibleB2BCount / digitalBaseCount) * 100) : 0}%
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
@@ -239,10 +265,10 @@ export default function DashboardPage() {
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
-                        {kpis!.visibleB2C.toLocaleString()}
+                        {visibleB2CCount.toLocaleString()}
                       </span>
                       <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {kpis!.digitalBase > 0 ? Math.round((kpis!.visibleB2C / kpis!.digitalBase) * 100) : 0}%
+                        {digitalBaseCount > 0 ? Math.round((visibleB2CCount / digitalBaseCount) * 100) : 0}%
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">

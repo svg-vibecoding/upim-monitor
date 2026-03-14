@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,8 +11,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw, UserPlus, Trash2, ChevronRight, Inbox } from "lucide-react";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw, UserPlus, Trash2, ChevronRight, Inbox, Settings2, X } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
@@ -32,7 +34,14 @@ import {
   useDimensions,
   sortReportsByDisplayOrder,
   useProtectedAttributes,
+  useOperations,
+  LINKED_KPI_LABELS,
   type AttributeType,
+  type Operation,
+  type Condition,
+  type OperatorType,
+  type LogicMode,
+  type LinkedKpi,
 } from "@/hooks/usePimData";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
@@ -89,7 +98,129 @@ export default function AdminPage() {
   const { data: dbUsers = [], isLoading: usersLoading } = useUsers();
   const { data: dbDimensions = [], isLoading: dimensionsLoading } = useDimensions();
   const { data: pimRecords = [] } = usePimRecords();
+  const { data: operations = [], isLoading: operationsLoading } = useOperations();
   const updateReportAttrs = useUpdateReportAttributes();
+
+  // --- Operations state ---
+  const [opDialog, setOpDialog] = useState(false);
+  const [editingOpId, setEditingOpId] = useState<string | null>(null);
+  const [opName, setOpName] = useState("");
+  const [opDescription, setOpDescription] = useState("");
+  const [opLogicMode, setOpLogicMode] = useState<LogicMode>("all");
+  const [opConditions, setOpConditions] = useState<Condition[]>([{ attribute: "", operator: "has_value", value: null }]);
+  const [opLinkedKpi, setOpLinkedKpi] = useState<LinkedKpi | "none">("none");
+  const [opSaving, setOpSaving] = useState(false);
+  const [deleteOpId, setDeleteOpId] = useState<string | null>(null);
+
+  const openOpDialog = useCallback((op?: Operation) => {
+    if (op) {
+      setEditingOpId(op.id);
+      setOpName(op.name);
+      setOpDescription(op.description);
+      setOpLogicMode(op.logicMode);
+      setOpConditions(op.conditions.length > 0 ? op.conditions : [{ attribute: "", operator: "has_value", value: null }]);
+      setOpLinkedKpi(op.linkedKpi || "none");
+    } else {
+      setEditingOpId(null);
+      setOpName("");
+      setOpDescription("");
+      setOpLogicMode("all");
+      setOpConditions([{ attribute: "", operator: "has_value", value: null }]);
+      setOpLinkedKpi("none");
+    }
+    setOpDialog(true);
+  }, []);
+
+  const saveOperation = async () => {
+    if (!opName.trim()) { toast.error("El nombre es obligatorio"); return; }
+    const validConditions = opConditions.filter((c) => c.attribute.trim() !== "");
+    if (validConditions.length === 0) { toast.error("Agrega al menos una condición con atributo"); return; }
+
+    const linkedKpiValue = opLinkedKpi === "none" ? null : opLinkedKpi;
+
+    // Validate uniqueness of linked_kpi (only one active op per KPI)
+    if (linkedKpiValue) {
+      const conflict = operations.find((o) => o.linkedKpi === linkedKpiValue && o.active && o.id !== editingOpId);
+      if (conflict) {
+        // Unlink the conflicting operation
+        await supabase.from("operations" as any).update({ linked_kpi: null }).eq("id", conflict.id);
+      }
+    }
+
+    setOpSaving(true);
+    try {
+      const payload = {
+        name: opName.trim(),
+        description: opDescription.trim(),
+        logic_mode: opLogicMode,
+        conditions: validConditions,
+        linked_kpi: linkedKpiValue,
+      };
+
+      if (editingOpId) {
+        const { error } = await supabase.from("operations" as any).update(payload).eq("id", editingOpId);
+        if (error) throw error;
+        toast.success("Operación actualizada");
+      } else {
+        const { error } = await supabase.from("operations" as any).insert(payload);
+        if (error) throw error;
+        toast.success("Operación creada");
+      }
+      setOpDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["operations"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error guardando operación");
+    } finally {
+      setOpSaving(false);
+    }
+  };
+
+  const toggleOpActive = async (op: Operation) => {
+    try {
+      const { error } = await supabase.from("operations" as any).update({ active: !op.active }).eq("id", op.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["operations"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error cambiando estado");
+    }
+  };
+
+  const deleteOperation = async (opId: string) => {
+    try {
+      const { error } = await supabase.from("operations" as any).delete().eq("id", opId);
+      if (error) throw error;
+      toast.success("Operación eliminada");
+      queryClient.invalidateQueries({ queryKey: ["operations"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error eliminando operación");
+    }
+    setDeleteOpId(null);
+  };
+
+  const updateCondition = (idx: number, field: keyof Condition, value: string) => {
+    setOpConditions((prev) => prev.map((c, i) => {
+      if (i !== idx) return c;
+      if (field === "operator") {
+        const op = value as OperatorType;
+        return { ...c, operator: op, value: (op === "has_value" || op === "no_value") ? null : c.value };
+      }
+      return { ...c, [field]: value };
+    }));
+  };
+
+  const addCondition = () => setOpConditions((prev) => [...prev, { attribute: "", operator: "has_value", value: null }]);
+  const removeCondition = (idx: number) => setOpConditions((prev) => prev.length <= 1 ? prev : prev.filter((_, i) => i !== idx));
+
+  // KPI assignment info for the select
+  const kpiAssignments = useMemo(() => {
+    const map: Partial<Record<LinkedKpi, string>> = {};
+    for (const op of operations) {
+      if (op.linkedKpi && op.active && op.id !== editingOpId) {
+        map[op.linkedKpi] = op.name;
+      }
+    }
+    return map;
+  }, [operations, editingOpId]);
 
   // User form
   const [userDialog, setUserDialog] = useState(false);
@@ -447,6 +578,7 @@ export default function AdminPage() {
           <TabsTrigger value="attributes">Atributos</TabsTrigger>
           <TabsTrigger value="reports">Informes</TabsTrigger>
           <TabsTrigger value="dimensions">Dimensiones</TabsTrigger>
+          <TabsTrigger value="operations">Operaciones</TabsTrigger>
           <TabsTrigger value="users">Usuarios</TabsTrigger>
         </TabsList>
 
@@ -1111,6 +1243,209 @@ export default function AdminPage() {
               })}
             </Accordion>
           )}
+        </TabsContent>
+
+        {/* OPERATIONS */}
+        <TabsContent value="operations" className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => openOpDialog()} className="gap-2">
+              <Plus className="h-4 w-4" /> Nueva operación
+            </Button>
+          </div>
+
+          {operationsLoading ? (
+            <div className="flex items-center gap-2 p-8 text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Cargando operaciones...
+            </div>
+          ) : operations.length === 0 ? (
+            <Card>
+              <CardContent className="pt-6 text-center text-muted-foreground">
+                <Settings2 className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
+                <p>No hay operaciones definidas.</p>
+                <p className="text-sm mt-1">Crea una operación para definir reglas reutilizables sobre atributos del PIM.</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="pt-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nombre</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="w-28">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {operations.map((op) => (
+                      <TableRow key={op.id} className={!op.active ? "opacity-50" : ""}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-foreground">{op.name}</span>
+                            <Badge variant="outline" className="text-[10px]">{op.conditions.length} cond.</Badge>
+                            {op.linkedKpi && (
+                              <Badge variant="secondary" className="text-[10px]">{LINKED_KPI_LABELS[op.linkedKpi]}</Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{op.description || "—"}</TableCell>
+                        <TableCell>
+                          <Switch checked={op.active} onCheckedChange={() => toggleOpActive(op)} />
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => openOpDialog(op)}>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => setDeleteOpId(op.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Operation CRUD Dialog */}
+          <Dialog open={opDialog} onOpenChange={setOpDialog}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{editingOpId ? "Editar operación" : "Nueva operación"}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-5 pt-2">
+                <div>
+                  <Label>Nombre</Label>
+                  <Input value={opName} onChange={(e) => setOpName(e.target.value)} placeholder="Ej: Base Digital" />
+                </div>
+                <div>
+                  <Label>Descripción (opcional)</Label>
+                  <Textarea value={opDescription} onChange={(e) => setOpDescription(e.target.value)} placeholder="Breve descripción de esta operación" rows={2} />
+                </div>
+
+                {/* Logic mode */}
+                <div>
+                  <Label className="mb-2 block">Modo lógico</Label>
+                  <RadioGroup value={opLogicMode} onValueChange={(v) => setOpLogicMode(v as LogicMode)} className="flex gap-6">
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="all" id="logic-all" />
+                      <Label htmlFor="logic-all" className="font-normal cursor-pointer">Cumplir todas</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <RadioGroupItem value="any" id="logic-any" />
+                      <Label htmlFor="logic-any" className="font-normal cursor-pointer">Cumplir cualquiera</Label>
+                    </div>
+                  </RadioGroup>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {opLogicMode === "all"
+                      ? "Incluirá productos que cumplan todas las condiciones."
+                      : "Incluirá productos que cumplan al menos una de las condiciones."}
+                  </p>
+                </div>
+
+                {/* Conditions */}
+                <div>
+                  <Label className="mb-2 block">Condiciones</Label>
+                  <div className="space-y-2">
+                    {opConditions.map((cond, idx) => (
+                      <div key={idx}>
+                        {idx > 0 && (
+                          <p className="text-xs font-medium text-muted-foreground py-1 pl-1">
+                            {opLogicMode === "all" ? "y" : "o"}
+                          </p>
+                        )}
+                        <div className="flex items-start gap-2">
+                          {/* Attribute */}
+                          <Select value={cond.attribute} onValueChange={(v) => updateCondition(idx, "attribute", v)}>
+                            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Atributo" /></SelectTrigger>
+                            <SelectContent>
+                              {fullAttributeList.map((a) => (
+                                <SelectItem key={a} value={a}>{a}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {/* Operator */}
+                          <Select value={cond.operator} onValueChange={(v) => updateCondition(idx, "operator", v)}>
+                            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="has_value">Tiene valor</SelectItem>
+                              <SelectItem value="no_value">No tiene valor</SelectItem>
+                              <SelectItem value="equals">Es igual a</SelectItem>
+                              <SelectItem value="not_equals">No es igual a</SelectItem>
+                              <SelectItem value="contains">Contiene</SelectItem>
+                              <SelectItem value="not_contains">No contiene</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {/* Value (hidden for presence operators) */}
+                          {cond.operator !== "has_value" && cond.operator !== "no_value" && (
+                            <Input
+                              value={cond.value || ""}
+                              onChange={(e) => updateCondition(idx, "value", e.target.value)}
+                              placeholder="Valor"
+                              className="flex-1"
+                            />
+                          )}
+                          {/* Remove */}
+                          {opConditions.length > 1 && (
+                            <Button variant="ghost" size="icon" className="shrink-0 h-10 w-10 text-muted-foreground hover:text-destructive" onClick={() => removeCondition(idx)}>
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button variant="outline" size="sm" onClick={addCondition} className="mt-3 gap-1">
+                    <Plus className="h-3.5 w-3.5" /> Agregar condición
+                  </Button>
+                </div>
+
+                {/* Link to KPI */}
+                <div>
+                  <Label className="mb-2 block">Vincular a indicador del dashboard</Label>
+                  <Select value={opLinkedKpi} onValueChange={(v) => setOpLinkedKpi(v as LinkedKpi | "none")}>
+                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">(Ninguno)</SelectItem>
+                      {(Object.entries(LINKED_KPI_LABELS) as [LinkedKpi, string][]).map(([key, label]) => (
+                        <SelectItem key={key} value={key}>
+                          {label}
+                          {kpiAssignments[key] ? ` (actual: ${kpiAssignments[key]})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Si se vincula, el conteo del dashboard usará esta operación en lugar de la lógica predeterminada.
+                  </p>
+                </div>
+
+                <Button onClick={saveOperation} className="w-full" disabled={opSaving}>
+                  {opSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Guardando...</> : editingOpId ? "Guardar cambios" : "Crear operación"}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete confirmation */}
+          <AlertDialog open={!!deleteOpId} onOpenChange={(open) => !open && setDeleteOpId(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Eliminar operación?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Esta acción no se puede deshacer. Si la operación está vinculada a un indicador del dashboard, este volverá a su lógica predeterminada.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => deleteOpId && deleteOperation(deleteOpId)}>Eliminar</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </TabsContent>
 
         {/* USERS */}

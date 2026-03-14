@@ -488,6 +488,85 @@ export function computeFocusPoints(records: PIMRecord[], reports: PredefinedRepo
   return results.sort((a, b) => a.completeness - b.completeness).slice(0, 5);
 }
 
+// --- Operations ---
+
+export type OperatorType = "has_value" | "no_value" | "equals" | "not_equals" | "contains" | "not_contains";
+export type LogicMode = "all" | "any";
+export type LinkedKpi = "digital_base" | "visible_b2b" | "visible_b2c";
+
+export const LINKED_KPI_LABELS: Record<LinkedKpi, string> = {
+  digital_base: "Base Digital",
+  visible_b2b: "Visibles B2B",
+  visible_b2c: "Visibles B2C",
+};
+
+export interface Condition {
+  attribute: string;
+  operator: OperatorType;
+  value: string | null;
+}
+
+export interface Operation {
+  id: string;
+  name: string;
+  description: string;
+  active: boolean;
+  logicMode: LogicMode;
+  conditions: Condition[];
+  linkedKpi: LinkedKpi | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function dbRowToOperation(row: any): Operation {
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description || "",
+    active: row.active,
+    logicMode: row.logic_mode || "all",
+    conditions: (Array.isArray(row.conditions) ? row.conditions : []) as Condition[],
+    linkedKpi: row.linked_kpi || null,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function useOperations() {
+  return useQuery({
+    queryKey: ["operations"],
+    queryFn: async (): Promise<Operation[]> => {
+      const { data, error } = await supabase
+        .from("operations" as any)
+        .select("*")
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return (data || []).map(dbRowToOperation);
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+function matchCondition(record: PIMRecord, cond: Condition): boolean {
+  const raw = record[cond.attribute];
+  const isEmpty = raw === null || raw === undefined || String(raw).trim() === "";
+  switch (cond.operator) {
+    case "has_value": return !isEmpty;
+    case "no_value": return isEmpty;
+    case "equals": return !isEmpty && String(raw).toLowerCase() === (cond.value ?? "").toLowerCase();
+    case "not_equals": return isEmpty || String(raw).toLowerCase() !== (cond.value ?? "").toLowerCase();
+    case "contains": return !isEmpty && String(raw).toLowerCase().includes((cond.value ?? "").toLowerCase());
+    case "not_contains": return isEmpty || !String(raw).toLowerCase().includes((cond.value ?? "").toLowerCase());
+    default: return false;
+  }
+}
+
+export function evaluateOperation(record: PIMRecord, operation: Operation): boolean {
+  if (operation.conditions.length === 0) return true;
+  const fn = operation.logicMode === "any" ? "some" : "every";
+  return operation.conditions[fn]((c) => matchCondition(record, c));
+}
+
 // --- Upload history ---
 export interface PimUploadRecord {
   id: string;
@@ -526,5 +605,6 @@ export function useInvalidatePimData() {
     queryClient.invalidateQueries({ queryKey: ["dimensions"] });
     queryClient.invalidateQueries({ queryKey: ["pim-attribute-order"] });
     queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
+    queryClient.invalidateQueries({ queryKey: ["operations"] });
   };
 }

@@ -35,6 +35,42 @@ export type Database = {
         }
         Relationships: []
       }
+      operations: {
+        Row: {
+          active: boolean
+          conditions: Json
+          created_at: string
+          description: string
+          id: string
+          linked_kpi: string | null
+          logic_mode: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          conditions?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          linked_kpi?: string | null
+          logic_mode?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          conditions?: Json
+          created_at?: string
+          description?: string
+          id?: string
+          linked_kpi?: string | null
+          logic_mode?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pim_metadata: {
         Row: {
           attribute_order: string[]
