@@ -91,7 +91,7 @@ export const UniverseSelector = memo(function UniverseSelector({
       <div>
         <Label className="text-sm font-semibold">Universo de productos</Label>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Selecciona el universo de productos sobre el cual se construirá el informe.
+          Define el universo de productos sobre el cual se construirá el informe.
         </p>
       </div>
       <RadioGroup
