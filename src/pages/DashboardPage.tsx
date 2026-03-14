@@ -107,7 +107,7 @@ export default function DashboardPage() {
     return getEvaluableAttributes(getFullAttributeList(attributeOrder)).length;
   }, [attributeOrder]);
 
-  const isLoading = loadingKPIs || loadingReports;
+  const isLoading = loadingKPIs || loadingReports || (hasLinkedOps && loadingRecords);
   const hasData = kpis && kpis.total > 0;
 
   const focusReports = useMemo(
