@@ -502,7 +502,8 @@ export const LINKED_KPI_LABELS: Record<LinkedKpi, string> = {
 };
 
 export interface Condition {
-  attribute: string;
+  sourceType?: ConditionSourceType; // defaults to "attribute" for backward compat
+  attribute: string; // attribute name OR operation id depending on sourceType
   operator: OperatorType;
   value: string | null;
 }
