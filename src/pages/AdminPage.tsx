@@ -1150,6 +1150,11 @@ export default function AdminPage() {
                         selectedOperationId={newReportOperationId}
                         onOperationChange={setNewReportOperationId}
                         operations={operations}
+                        operationMode={newReportOpMode}
+                        onOperationModeChange={setNewReportOpMode}
+                        inlineOperation={newReportInlineOp}
+                        onInlineOperationChange={setNewReportInlineOp}
+                        attributeList={fullAttributeList}
                       />
                     </div>
 
