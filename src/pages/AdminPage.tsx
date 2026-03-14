@@ -26,6 +26,7 @@ import {
   useAttributeOrder,
   useUpdateReportAttributes,
   useUpdateReportOperation,
+  useCreatePredefinedReport,
   getEvaluableAttributes,
   getFullAttributeList,
   getAttributeClassification,
@@ -46,6 +47,7 @@ import {
   type LogicMode,
   type LinkedKpi,
 } from "@/hooks/usePimData";
+import { UniverseSelector, type UniverseSource } from "@/components/UniverseSelector";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import type { AppRole } from "@/contexts/AuthContext";
