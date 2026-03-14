@@ -349,6 +349,7 @@ export function usePredefinedReports() {
         description: r.description,
         universe: r.universe,
         universeKey: ((r as any).universe_key || "all") as UniverseKey,
+        operationId: (r as any).operation_id || null,
         attributes: r.attributes || [],
       }));
     },
