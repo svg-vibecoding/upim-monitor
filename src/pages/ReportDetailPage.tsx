@@ -10,7 +10,7 @@ import {
   usePimRecords, usePredefinedReports, useDimensions, useAttributeOrder,
   useReportCompleteness, NON_EVALUABLE_FIELDS, getFullAttributeList,
   computeAttributeResults, computeDimensionResults, getRecordsForReport,
-  filterRealAttributes, getEvaluableAttributes,
+  filterRealAttributes, getEvaluableAttributes, useOperations,
 } from "@/hooks/usePimData";
 import { downloadCSV } from "@/data/mockData";
 import { ArrowLeft, Download, Filter } from "lucide-react";
