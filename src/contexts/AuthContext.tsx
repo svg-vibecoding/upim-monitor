@@ -26,6 +26,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const PROFILE_TIMEOUT_MS = 8000;
+const SESSION_REFRESH_TIMEOUT_MS = 15000;
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([
