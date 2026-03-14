@@ -175,6 +175,11 @@ export default function AdminPage() {
       }
       setOpDialog(false);
       queryClient.invalidateQueries({ queryKey: ["operations"] });
+      // Refresh computed results for this operation and affected reports
+      const opId = editingOpId || (await supabase.from("operations" as any).select("id").eq("name", payload.name).maybeSingle()).data?.id;
+      if (opId) {
+        refreshForOperation(opId, dbReports).catch(() => {});
+      }
     } catch (err: any) {
       toast.error(err.message || "Error guardando operación");
     } finally {
