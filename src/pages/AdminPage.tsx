@@ -1189,7 +1189,7 @@ export default function AdminPage() {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              <Button variant="ghost" size="icon" onClick={() => openReportDialog(r.id)}>
+                              <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/editar-informe/${r.id}`)}>
                                 <Pencil className="h-3 w-3" />
                               </Button>
                             </TableCell>
