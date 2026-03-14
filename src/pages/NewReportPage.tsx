@@ -335,6 +335,23 @@ export default function NewReportPage() {
                 </div>
               )}
 
+              {source === "operation" && (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">Utiliza una operación existente para definir el universo de productos que se analizará.</p>
+                  <Select value={selectedOperationId} onValueChange={setSelectedOperationId}>
+                    <SelectTrigger className="w-72">
+                      <SelectValue placeholder="Seleccionar operación" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {operations.filter((op) => op.active).map((op) => (
+                        <SelectItem key={op.id} value={op.id}>{op.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedOperation && selectedOperation.description && (
+                    <p className="text-xs text-muted-foreground">{selectedOperation.description}</p>
+                  )}
+                </div>
               {source === "report" && (
                 <div className="space-y-2">
                   <p className="text-xs text-muted-foreground">Utiliza el universo de productos definido en un informe existente como base para el análisis.</p>

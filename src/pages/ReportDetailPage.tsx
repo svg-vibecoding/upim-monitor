@@ -106,7 +106,7 @@ export default function ReportDetailPage() {
   const totalSKUs = attrResults.length > 0 ? attrResults[0].totalSKUs : 0;
 
   const dimension = dimensions?.find((d) => d.id === selectedDimension);
-  const records = needsRecords ? getRecordsForReport(allRecords || [], report) : [];
+  const records = needsRecords ? getRecordsForReport(allRecords || [], report, operations) : [];
   const validAttrs = attrResults.map(a => a.name);
   const dimensionResults = dimension && needsRecords ? computeDimensionResults(records, validAttrs, dimension.field) : [];
 
