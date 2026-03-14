@@ -96,7 +96,7 @@ export default function DashboardPage() {
     const result: Partial<Record<LinkedKpi, number>> = {};
     for (const op of operations) {
       if (op.active && op.linkedKpi) {
-        result[op.linkedKpi] = pimRecords.filter((r) => evaluateOperation(r, op)).length;
+        result[op.linkedKpi] = pimRecords.filter((r) => evaluateOperation(r, op, operations)).length;
       }
     }
     return Object.keys(result).length > 0 ? result : null;
