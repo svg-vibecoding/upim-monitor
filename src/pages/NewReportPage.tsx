@@ -264,114 +264,24 @@ export default function NewReportPage() {
           {/* Step 1: Universe */}
           <Card>
             <CardContent className="pt-4 space-y-3">
-              <div>
-                <Label className="text-sm font-semibold">1. Seleccionar universo</Label>
-                <p className="text-xs text-muted-foreground mt-0.5">Selecciona el universo de productos sobre el cual se construirá el informe.</p>
-              </div>
-              <RadioGroup value={source} onValueChange={(v) => setSource(v as Source)} className="flex flex-wrap gap-4">
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="general" id="src-gen" />
-                  <Label htmlFor="src-gen" className="text-sm cursor-pointer">Base general del PIM</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="report" id="src-report" />
-                  <Label htmlFor="src-report" className="text-sm cursor-pointer">Informe predefinido</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="operation" id="src-operation" />
-                  <Label htmlFor="src-operation" className="text-sm cursor-pointer">Operación</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="file" id="src-file" />
-                  <Label htmlFor="src-file" className="text-sm cursor-pointer">Cargar archivo Excel</Label>
-                </div>
-              </RadioGroup>
-
-              {source === "general" && (
-                <p className="text-xs text-muted-foreground">SKUs totales (activos e inactivos)</p>
-              )}
-
-              {source === "file" && (
-                <div className="space-y-3">
-                  <p className="text-xs text-muted-foreground">El archivo debe tener una columna con Código Jaivaná. Se aceptan archivos .xlsx y .xls.</p>
-                  {!uploadedFileName ? (
-                    <label className="flex items-center gap-2 cursor-pointer border border-dashed border-input rounded-md px-4 py-3 text-sm hover:bg-accent transition-colors w-fit">
-                      <Upload className="h-4 w-4 text-muted-foreground" />
-                      <span>Seleccionar archivo</span>
-                      <input type="file" accept=".xlsx,.xls" onChange={handleFileUpload} className="hidden" />
-                    </label>
-                  ) : (
-                    <div className="flex items-center gap-3 border border-input rounded-md px-4 py-3 bg-muted/30">
-                      <FileSpreadsheet className="h-5 w-5 text-success shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{uploadedFileName}</p>
-                        {uploadedFileReady ? (
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            {csvCodes.length > 0 ? (
-                              <>
-                                <CheckCircle2 className="h-3 w-3 text-success" />
-                                <span className="text-xs text-muted-foreground">
-                                  {uploadedTotalRows} fila{uploadedTotalRows !== 1 ? "s" : ""} · {csvCodes.length} código{csvCodes.length !== 1 ? "s" : ""} detectado{csvCodes.length !== 1 ? "s" : ""}
-                                </span>
-                                {allRecords.length > 0 && (
-                                  <span className="text-xs text-muted-foreground">
-                                    · {allRecords.filter((r) => csvCodes.includes(r.codigoJaivana)).length} coinciden en la base
-                                  </span>
-                                )}
-                              </>
-                            ) : (
-                              <span className="text-xs text-destructive">No se encontraron códigos en el archivo</span>
-                            )}
-                          </div>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Procesando…</span>
-                        )}
-                      </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={handleClearFile}>
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {source === "operation" && (
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Utiliza una operación existente para definir el universo de productos que se analizará.</p>
-                  <Select value={selectedOperationId} onValueChange={setSelectedOperationId}>
-                    <SelectTrigger className="w-72">
-                      <SelectValue placeholder="Seleccionar operación" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {operations.filter((op) => op.active).map((op) => (
-                        <SelectItem key={op.id} value={op.id}>{op.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedOperation && selectedOperation.description && (
-                    <p className="text-xs text-muted-foreground">{selectedOperation.description}</p>
-                  )}
-                </div>
-              )}
-
-              {source === "report" && (
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">Utiliza el universo de productos definido en un informe existente como base para el análisis.</p>
-                  <Select value={selectedReportId} onValueChange={setSelectedReportId}>
-                    <SelectTrigger className="w-72">
-                      <SelectValue placeholder="Seleccionar informe" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {sortedReports.map((r) => (
-                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {selectedReport && (
-                    <p className="text-xs text-muted-foreground">{selectedReport.universe}</p>
-                  )}
-                </div>
-              )}
+              <Label className="text-sm font-semibold">1. Seleccionar universo</Label>
+              <UniverseSelector
+                source={source}
+                onSourceChange={setSource}
+                selectedOperationId={selectedOperationId}
+                onOperationChange={setSelectedOperationId}
+                operations={operations}
+                selectedReportId={selectedReportId}
+                onReportChange={setSelectedReportId}
+                sortedReports={sortedReports}
+                uploadedFileName={uploadedFileName}
+                uploadedFileReady={uploadedFileReady}
+                uploadedTotalRows={uploadedTotalRows}
+                csvCodesCount={csvCodes.length}
+                matchedCount={allRecords.length > 0 ? allRecords.filter((r) => csvCodes.includes(r.codigoJaivana)).length : undefined}
+                onFileUpload={handleFileUpload}
+                onClearFile={handleClearFile}
+              />
             </CardContent>
           </Card>
 
