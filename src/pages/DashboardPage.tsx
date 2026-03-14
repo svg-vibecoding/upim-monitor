@@ -153,10 +153,16 @@ export default function DashboardPage() {
     ? format(new Date(kpis.lastUpdated), "d 'de' MMMM yyyy, HH:mm", { locale: es })
     : "Sin datos cargados";
 
-  // Use operation overrides when available, fallback to SQL KPIs
-  const digitalBaseCount = operationKpis?.digital_base ?? kpis?.digitalBase ?? 0;
-  const visibleB2BCount = operationKpis?.visible_b2b ?? kpis?.visibleB2B ?? 0;
-  const visibleB2CCount = operationKpis?.visible_b2c ?? kpis?.visibleB2C ?? 0;
+  // Use operation overrides when available; for linked KPIs use operation value (even if 0)
+  const digitalBaseCount = linkedOpsMap.digital_base
+    ? (operationKpis?.digital_base ?? 0)
+    : (kpis?.digitalBase ?? 0);
+  const visibleB2BCount = linkedOpsMap.visible_b2b
+    ? (operationKpis?.visible_b2b ?? 0)
+    : (kpis?.visibleB2B ?? 0);
+  const visibleB2CCount = linkedOpsMap.visible_b2c
+    ? (operationKpis?.visible_b2c ?? 0)
+    : (kpis?.visibleB2C ?? 0);
   const pctDigitalBase = kpis && kpis.total > 0 ? Math.round((digitalBaseCount / kpis.total) * 100) : 0;
 
   return (
