@@ -25,6 +25,7 @@ import {
   usePredefinedReports,
   useAttributeOrder,
   useUpdateReportAttributes,
+  useUpdateReportOperation,
   getEvaluableAttributes,
   getFullAttributeList,
   getAttributeClassification,
