@@ -40,6 +40,7 @@ function AppRoutes() {
           <Route path="/informes/:reportId" element={<AppLayout><ReportDetailPage /></AppLayout>} />
           <Route path="/nuevo-informe" element={<AppLayout><NewReportPage /></AppLayout>} />
           <Route path="/admin" element={<AppLayout><AdminPage /></AppLayout>} />
+          <Route path="/admin/nuevo-informe" element={<AppLayout><CreatePredefinedReportPage /></AppLayout>} />
           <Route path="/insights" element={<AppLayout><InsightsPage /></AppLayout>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </>
