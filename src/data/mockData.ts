@@ -42,6 +42,7 @@ export interface PredefinedReport {
   description: string;
   universe: string;
   universeKey: UniverseKey;
+  operationId: string | null;
   attributes: string[];
 }
 
