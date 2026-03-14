@@ -410,22 +410,8 @@ export default function AdminPage() {
     return full.filter((a) => a !== "Código Jaivaná");
   }, [attributeOrder]);
 
-  // Compute unique values per dimension field from pim_records
-  const dimensionUniqueValues = useMemo(() => {
-    const result: Record<string, string[]> = {};
-    for (const dim of dbDimensions) {
-      const valuesSet = new Set<string>();
-      for (const rec of pimRecords) {
-        const rawVal = rec[dim.field] as string | null;
-        if (rawVal && rawVal.trim() !== "") {
-          valuesSet.add(rawVal.trim());
-        }
-      }
-      const sorted = [...valuesSet].sort((a, b) => a.localeCompare(b));
-      result[dim.id] = sorted;
-    }
-    return result;
-  }, [dbDimensions, pimRecords]);
+  // Dimension unique values — fetched via lightweight server query instead of loading all records
+  const dimensionUniqueValues: Record<string, string[]> = {};
 
   const saveDimension = async () => {
     if (!dimName || !dimField) {
