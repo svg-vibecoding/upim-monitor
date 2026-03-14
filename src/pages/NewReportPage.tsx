@@ -14,10 +14,11 @@ import {
   getAttributeClassification, isNonEvaluable, usePredefinedReports,
   sortReportsByDisplayOrder, getRecordsForReport, getEvaluableAttributes,
   useOperations, evaluateOperation,
+  type Condition, type LogicMode,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Filter, ArrowLeft, Download } from "lucide-react";
-import { UniverseSelector, type UniverseSource } from "@/components/UniverseSelector";
+import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 
