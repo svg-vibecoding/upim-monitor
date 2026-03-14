@@ -17,12 +17,16 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const result = await login(email, password);
-    if (!result.success) {
-      setError(result.error || "Error de autenticación");
+    try {
+      const result = await login(email, password);
+      if (!result.success) {
+        setError(result.error || "Error de autenticación");
+      }
+    } catch {
+      setError("Error inesperado. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
     }
-    // login_success tracking is now handled in AuthContext
-    setLoading(false);
   };
 
   return (
