@@ -605,5 +605,6 @@ export function useInvalidatePimData() {
     queryClient.invalidateQueries({ queryKey: ["dimensions"] });
     queryClient.invalidateQueries({ queryKey: ["pim-attribute-order"] });
     queryClient.invalidateQueries({ queryKey: ["pim-upload-history"] });
+    queryClient.invalidateQueries({ queryKey: ["operations"] });
   };
 }
