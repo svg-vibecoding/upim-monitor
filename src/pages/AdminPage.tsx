@@ -98,7 +98,129 @@ export default function AdminPage() {
   const { data: dbUsers = [], isLoading: usersLoading } = useUsers();
   const { data: dbDimensions = [], isLoading: dimensionsLoading } = useDimensions();
   const { data: pimRecords = [] } = usePimRecords();
+  const { data: operations = [], isLoading: operationsLoading } = useOperations();
   const updateReportAttrs = useUpdateReportAttributes();
+
+  // --- Operations state ---
+  const [opDialog, setOpDialog] = useState(false);
+  const [editingOpId, setEditingOpId] = useState<string | null>(null);
+  const [opName, setOpName] = useState("");
+  const [opDescription, setOpDescription] = useState("");
+  const [opLogicMode, setOpLogicMode] = useState<LogicMode>("all");
+  const [opConditions, setOpConditions] = useState<Condition[]>([{ attribute: "", operator: "has_value", value: null }]);
+  const [opLinkedKpi, setOpLinkedKpi] = useState<LinkedKpi | "none">("none");
+  const [opSaving, setOpSaving] = useState(false);
+  const [deleteOpId, setDeleteOpId] = useState<string | null>(null);
+
+  const openOpDialog = useCallback((op?: Operation) => {
+    if (op) {
+      setEditingOpId(op.id);
+      setOpName(op.name);
+      setOpDescription(op.description);
+      setOpLogicMode(op.logicMode);
+      setOpConditions(op.conditions.length > 0 ? op.conditions : [{ attribute: "", operator: "has_value", value: null }]);
+      setOpLinkedKpi(op.linkedKpi || "none");
+    } else {
+      setEditingOpId(null);
+      setOpName("");
+      setOpDescription("");
+      setOpLogicMode("all");
+      setOpConditions([{ attribute: "", operator: "has_value", value: null }]);
+      setOpLinkedKpi("none");
+    }
+    setOpDialog(true);
+  }, []);
+
+  const saveOperation = async () => {
+    if (!opName.trim()) { toast.error("El nombre es obligatorio"); return; }
+    const validConditions = opConditions.filter((c) => c.attribute.trim() !== "");
+    if (validConditions.length === 0) { toast.error("Agrega al menos una condición con atributo"); return; }
+
+    const linkedKpiValue = opLinkedKpi === "none" ? null : opLinkedKpi;
+
+    // Validate uniqueness of linked_kpi (only one active op per KPI)
+    if (linkedKpiValue) {
+      const conflict = operations.find((o) => o.linkedKpi === linkedKpiValue && o.active && o.id !== editingOpId);
+      if (conflict) {
+        // Unlink the conflicting operation
+        await supabase.from("operations" as any).update({ linked_kpi: null }).eq("id", conflict.id);
+      }
+    }
+
+    setOpSaving(true);
+    try {
+      const payload = {
+        name: opName.trim(),
+        description: opDescription.trim(),
+        logic_mode: opLogicMode,
+        conditions: validConditions,
+        linked_kpi: linkedKpiValue,
+      };
+
+      if (editingOpId) {
+        const { error } = await supabase.from("operations" as any).update(payload).eq("id", editingOpId);
+        if (error) throw error;
+        toast.success("Operación actualizada");
+      } else {
+        const { error } = await supabase.from("operations" as any).insert(payload);
+        if (error) throw error;
+        toast.success("Operación creada");
+      }
+      setOpDialog(false);
+      queryClient.invalidateQueries({ queryKey: ["operations"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error guardando operación");
+    } finally {
+      setOpSaving(false);
+    }
+  };
+
+  const toggleOpActive = async (op: Operation) => {
+    try {
+      const { error } = await supabase.from("operations" as any).update({ active: !op.active }).eq("id", op.id);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["operations"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error cambiando estado");
+    }
+  };
+
+  const deleteOperation = async (opId: string) => {
+    try {
+      const { error } = await supabase.from("operations" as any).delete().eq("id", opId);
+      if (error) throw error;
+      toast.success("Operación eliminada");
+      queryClient.invalidateQueries({ queryKey: ["operations"] });
+    } catch (err: any) {
+      toast.error(err.message || "Error eliminando operación");
+    }
+    setDeleteOpId(null);
+  };
+
+  const updateCondition = (idx: number, field: keyof Condition, value: string) => {
+    setOpConditions((prev) => prev.map((c, i) => {
+      if (i !== idx) return c;
+      if (field === "operator") {
+        const op = value as OperatorType;
+        return { ...c, operator: op, value: (op === "has_value" || op === "no_value") ? null : c.value };
+      }
+      return { ...c, [field]: value };
+    }));
+  };
+
+  const addCondition = () => setOpConditions((prev) => [...prev, { attribute: "", operator: "has_value", value: null }]);
+  const removeCondition = (idx: number) => setOpConditions((prev) => prev.length <= 1 ? prev : prev.filter((_, i) => i !== idx));
+
+  // KPI assignment info for the select
+  const kpiAssignments = useMemo(() => {
+    const map: Partial<Record<LinkedKpi, string>> = {};
+    for (const op of operations) {
+      if (op.linkedKpi && op.active && op.id !== editingOpId) {
+        map[op.linkedKpi] = op.name;
+      }
+    }
+    return map;
+  }, [operations, editingOpId]);
 
   // User form
   const [userDialog, setUserDialog] = useState(false);
