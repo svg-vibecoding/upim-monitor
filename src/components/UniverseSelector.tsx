@@ -128,13 +128,13 @@ export const UniverseSelector = memo(function UniverseSelector({
             >
               <ToggleGroupItem
                 value="new"
-                className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                className="text-xs px-3 border border-input bg-accent/50 hover:bg-accent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
               >
                 Crear nueva operación
               </ToggleGroupItem>
               <ToggleGroupItem
                 value="existing"
-                className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+                className="text-xs px-3 border border-input bg-accent/50 hover:bg-accent data-[state=on]:bg-primary data-[state=on]:text-primary-foreground data-[state=on]:border-primary"
               >
                 Seleccionar existente
               </ToggleGroupItem>
