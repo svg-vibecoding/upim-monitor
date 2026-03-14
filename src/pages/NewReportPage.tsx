@@ -274,10 +274,13 @@ export default function NewReportPage() {
   const universeLabel = useMemo(() => {
     if (source === "general") return "Base general del PIM";
     if (source === "report" && selectedReport) return selectedReport.universe;
-    if (source === "operation" && selectedOperation) return `Operación: ${selectedOperation.name}`;
+    if (source === "operation") {
+      if (opMode === "existing" && selectedOperation) return `Operación: ${selectedOperation.name}`;
+      if (opMode === "new") return "Operación personalizada";
+    }
     if (source === "file" && uploadedFileName) return `Universo de productos personalizado (${uploadedFileName})`;
     return "";
-  }, [source, selectedReport, selectedOperation, uploadedFileName]);
+  }, [source, selectedReport, selectedOperation, uploadedFileName, opMode]);
 
   return (
     <div className="space-y-6 max-w-6xl">
