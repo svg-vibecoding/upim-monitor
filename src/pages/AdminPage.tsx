@@ -136,7 +136,7 @@ export default function AdminPage() {
   const saveOperation = async () => {
     if (!opName.trim()) { toast.error("El nombre es obligatorio"); return; }
     const validConditions = opConditions.filter((c) => c.attribute.trim() !== "");
-    if (validConditions.length === 0) { toast.error("Agrega al menos una condición con atributo"); return; }
+    if (validConditions.length === 0) { toast.error("Agrega al menos una condición válida"); return; }
 
     const linkedKpiValue = opLinkedKpi === "none" ? null : opLinkedKpi;
 
