@@ -1151,28 +1151,37 @@ export default function AdminPage() {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Nombre</TableHead>
-                        <TableHead>Universo</TableHead>
+                        <TableHead>Operación (universo)</TableHead>
                         <TableHead className="text-right">Atributos</TableHead>
                         <TableHead className="w-20">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {sortReportsByDisplayOrder(dbReports).map((r) => (
-                        <TableRow key={r.id}>
-                          <TableCell className="font-medium">{r.name}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{r.universe}</TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
-                              {getEvaluableAttributes(r.attributes).length}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Button variant="ghost" size="icon" onClick={() => openReportDialog(r.id)}>
-                              <Pencil className="h-3 w-3" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {sortReportsByDisplayOrder(dbReports).map((r) => {
+                        const linkedOp = r.operationId ? operations.find((op) => op.id === r.operationId) : null;
+                        return (
+                          <TableRow key={r.id}>
+                            <TableCell className="font-medium">{r.name}</TableCell>
+                            <TableCell className="text-sm text-muted-foreground">
+                              {linkedOp ? (
+                                <Badge variant="outline" className="text-xs font-normal">{linkedOp.name}</Badge>
+                              ) : (
+                                <span className="text-xs italic">Todos los SKUs</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
+                                {getEvaluableAttributes(r.attributes).length}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <Button variant="ghost" size="icon" onClick={() => openReportDialog(r.id)}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                       {dbReports.length === 0 && (
                         <TableRow>
                           <TableCell colSpan={4} className="text-center text-muted-foreground">
