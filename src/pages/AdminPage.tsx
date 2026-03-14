@@ -106,6 +106,7 @@ export default function AdminPage() {
   const { data: operations = [], isLoading: operationsLoading } = useOperations();
   const updateReportAttrs = useUpdateReportAttributes();
   const updateReportOp = useUpdateReportOperation();
+  const createReport = useCreatePredefinedReport();
 
   // --- Operations state ---
   const [opDialog, setOpDialog] = useState(false);
