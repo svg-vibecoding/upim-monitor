@@ -127,16 +127,16 @@ export const UniverseSelector = memo(function UniverseSelector({
               className="justify-start"
             >
               <ToggleGroupItem
-                value="existing"
-                className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
-              >
-                Seleccionar existente
-              </ToggleGroupItem>
-              <ToggleGroupItem
                 value="new"
                 className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
               >
                 Crear nueva
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="existing"
+                className="text-xs px-3 data-[state=on]:bg-primary data-[state=on]:text-primary-foreground"
+              >
+                Seleccionar existente
               </ToggleGroupItem>
             </ToggleGroup>
           )}
