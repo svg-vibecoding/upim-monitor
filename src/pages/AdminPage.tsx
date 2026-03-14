@@ -362,6 +362,8 @@ export default function AdminPage() {
       await updateReportAttrs.mutateAsync({ reportId: editingReportId, attributes: reportAttrs });
       toast.success("Configuración del informe actualizada");
       setReportDialog(false);
+      // Refresh computed results for this report
+      refreshForReport(editingReportId).catch(() => {});
     } catch (err) {
       toast.error(`Error al guardar: ${(err as Error).message}`);
     }
