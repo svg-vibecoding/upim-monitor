@@ -74,6 +74,23 @@ export default function DashboardPage() {
   const { data: kpis, isLoading: loadingKPIs } = usePimKPIs();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: attributeOrder } = useAttributeOrder();
+  const { data: operations = [] } = useOperations();
+
+  // Only load PIM records if there are linked operations (to evaluate client-side)
+  const hasLinkedOps = useMemo(() => operations.some((o) => o.active && o.linkedKpi), [operations]);
+  const { data: pimRecords = [] } = usePimRecords({ enabled: hasLinkedOps });
+
+  // Compute operation-based KPI overrides
+  const operationKpis = useMemo(() => {
+    if (!hasLinkedOps || pimRecords.length === 0) return null;
+    const result: Partial<Record<LinkedKpi, number>> = {};
+    for (const op of operations) {
+      if (op.active && op.linkedKpi) {
+        result[op.linkedKpi] = pimRecords.filter((r) => evaluateOperation(r, op)).length;
+      }
+    }
+    return Object.keys(result).length > 0 ? result : null;
+  }, [operations, pimRecords, hasLinkedOps]);
 
   const totalEvaluableAttrs = useMemo(() => {
     if (!attributeOrder) return 0;
@@ -126,7 +143,11 @@ export default function DashboardPage() {
     ? format(new Date(kpis.lastUpdated), "d 'de' MMMM yyyy, HH:mm", { locale: es })
     : "Sin datos cargados";
 
-  const pctDigitalBase = kpis && kpis.total > 0 ? Math.round((kpis.digitalBase / kpis.total) * 100) : 0;
+  // Use operation overrides when available, fallback to SQL KPIs
+  const digitalBaseCount = operationKpis?.digital_base ?? kpis?.digitalBase ?? 0;
+  const visibleB2BCount = operationKpis?.visible_b2b ?? kpis?.visibleB2B ?? 0;
+  const visibleB2CCount = operationKpis?.visible_b2c ?? kpis?.visibleB2C ?? 0;
+  const pctDigitalBase = kpis && kpis.total > 0 ? Math.round((digitalBaseCount / kpis.total) * 100) : 0;
 
   return (
     <div className="space-y-8 max-w-6xl">
