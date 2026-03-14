@@ -242,7 +242,7 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex items-baseline gap-2 mt-3">
                   <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
-                    {kpis!.digitalBase.toLocaleString()}
+                    {digitalBaseCount.toLocaleString()}
                   </p>
                   <span className="text-xs text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
                 </div>
