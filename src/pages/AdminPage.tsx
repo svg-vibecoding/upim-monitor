@@ -1350,7 +1350,7 @@ export default function AdminPage() {
                 {/* Conditions */}
                 <div>
                   <Label className="mb-2 block">Condiciones</Label>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {opConditions.map((cond, idx) => (
                       <div key={idx}>
                         {idx > 0 && (
@@ -1358,43 +1358,44 @@ export default function AdminPage() {
                             {opLogicMode === "all" ? "y" : "o"}
                           </p>
                         )}
-                        <div className="flex items-start gap-2">
-                          {/* Attribute */}
+                        <div className="rounded-md border border-border bg-muted/30 p-3 space-y-2">
+                          {/* Row 1: Attribute (full width) */}
                           <Select value={cond.attribute} onValueChange={(v) => updateCondition(idx, "attribute", v)}>
-                            <SelectTrigger className="w-[200px]"><SelectValue placeholder="Atributo" /></SelectTrigger>
-                            <SelectContent>
+                            <SelectTrigger className="w-full"><SelectValue placeholder="Seleccionar atributo…" /></SelectTrigger>
+                            <SelectContent className="max-h-[300px]">
                               {fullAttributeList.map((a) => (
                                 <SelectItem key={a} value={a}>{a}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
-                          {/* Operator */}
-                          <Select value={cond.operator} onValueChange={(v) => updateCondition(idx, "operator", v)}>
-                            <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="has_value">Tiene valor</SelectItem>
-                              <SelectItem value="no_value">No tiene valor</SelectItem>
-                              <SelectItem value="equals">Es igual a</SelectItem>
-                              <SelectItem value="not_equals">No es igual a</SelectItem>
-                              <SelectItem value="contains">Contiene</SelectItem>
-                              <SelectItem value="not_contains">No contiene</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {/* Value (hidden for presence operators) */}
-                          {cond.operator !== "has_value" && cond.operator !== "no_value" && (
-                            <Input
-                              value={cond.value || ""}
-                              onChange={(e) => updateCondition(idx, "value", e.target.value)}
-                              placeholder="Valor"
-                              className="flex-1"
-                            />
-                          )}
-                          {/* Remove */}
-                          {opConditions.length > 1 && (
-                            <Button variant="ghost" size="icon" className="shrink-0 h-10 w-10 text-muted-foreground hover:text-destructive" onClick={() => removeCondition(idx)}>
-                              <X className="h-4 w-4" />
-                            </Button>
-                          )}
+                          {/* Row 2: Operator + Value + Remove */}
+                          <div className="flex items-center gap-2">
+                            <Select value={cond.operator} onValueChange={(v) => updateCondition(idx, "operator", v)}>
+                              <SelectTrigger className="w-[180px] shrink-0"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="has_value">Tiene valor</SelectItem>
+                                <SelectItem value="no_value">No tiene valor</SelectItem>
+                                <SelectItem value="equals">Es igual a</SelectItem>
+                                <SelectItem value="not_equals">No es igual a</SelectItem>
+                                <SelectItem value="contains">Contiene</SelectItem>
+                                <SelectItem value="not_contains">No contiene</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {cond.operator !== "has_value" && cond.operator !== "no_value" && (
+                              <Input
+                                value={cond.value || ""}
+                                onChange={(e) => updateCondition(idx, "value", e.target.value)}
+                                placeholder="Valor"
+                                className="flex-1"
+                              />
+                            )}
+                            {cond.operator === "has_value" || cond.operator === "no_value" ? <div className="flex-1" /> : null}
+                            {opConditions.length > 1 && (
+                              <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 text-muted-foreground hover:text-destructive" onClick={() => removeCondition(idx)}>
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
