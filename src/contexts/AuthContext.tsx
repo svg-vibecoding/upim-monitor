@@ -133,17 +133,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [loadAppUser]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      console.warn("[Auth] invalid_credentials");
-      return { success: false, error: "Credenciales inválidas" };
-    }
-
-    // Deterministic profile load with timeout
     try {
+      const { data, error } = await withTimeout(
+        supabase.auth.signInWithPassword({ email, password }),
+        PROFILE_TIMEOUT_MS,
+        "sign_in"
+      );
+
+      if (error) {
+        console.warn("[Auth] invalid_credentials");
+        return { success: false, error: "Credenciales inválidas" };
+      }
+
+      const authUser = data?.user;
+      if (!authUser) {
+        console.warn("[Auth] missing_auth_user_after_sign_in");
+        return { success: false, error: "Problema de autenticación. Intenta de nuevo." };
+      }
+
       const appUser = await withTimeout(
-        loadAppUser(data.user),
+        loadAppUser(authUser),
         PROFILE_TIMEOUT_MS,
         "login_profile"
       );
@@ -155,8 +164,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       setUser(appUser);
       return { success: true };
-    } catch {
-      console.warn("[Auth] login profile load timed out");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "unknown";
+      console.warn("[Auth] login_timeout_or_network", message);
       await supabase.auth.signOut();
       return { success: false, error: "Problema de conexión. Intenta de nuevo." };
     }
