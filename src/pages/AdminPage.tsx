@@ -578,6 +578,7 @@ export default function AdminPage() {
           <TabsTrigger value="attributes">Atributos</TabsTrigger>
           <TabsTrigger value="reports">Informes</TabsTrigger>
           <TabsTrigger value="dimensions">Dimensiones</TabsTrigger>
+          <TabsTrigger value="operations">Operaciones</TabsTrigger>
           <TabsTrigger value="users">Usuarios</TabsTrigger>
         </TabsList>
 
