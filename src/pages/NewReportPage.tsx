@@ -278,6 +278,10 @@ export default function NewReportPage() {
                   <Label htmlFor="src-report" className="text-sm cursor-pointer">Informe predefinido</Label>
                 </div>
                 <div className="flex items-center gap-2">
+                  <RadioGroupItem value="operation" id="src-operation" />
+                  <Label htmlFor="src-operation" className="text-sm cursor-pointer">Operación</Label>
+                </div>
+                <div className="flex items-center gap-2">
                   <RadioGroupItem value="file" id="src-file" />
                   <Label htmlFor="src-file" className="text-sm cursor-pointer">Cargar archivo Excel</Label>
                 </div>
