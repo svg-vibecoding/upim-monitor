@@ -329,35 +329,7 @@ export default function AdminPage() {
   const [attrSearch, setAttrSearch] = useState("");
   const [attrTypeFilter, setAttrTypeFilter] = useState("todos");
 
-  // Report create state
-  const [createReportDialog, setCreateReportDialog] = useState(false);
-  const [newReportName, setNewReportName] = useState("");
-  const [newReportDescription, setNewReportDescription] = useState("");
-  const [newReportSource, setNewReportSource] = useState<UniverseSource>("general");
-  const [newReportOperationId, setNewReportOperationId] = useState<string>("");
-  const [newReportOpMode, setNewReportOpMode] = useState<"existing" | "new">("existing");
-  const [newReportInlineOp, setNewReportInlineOp] = useState<{ logicMode: LogicMode; conditions: Condition[] }>({
-    logicMode: "all",
-    conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
-  });
-  const [newReportAttrs, setNewReportAttrs] = useState<string[]>([]);
-  const [newReportAttrSearch, setNewReportAttrSearch] = useState("");
-  const [newReportSaving, setNewReportSaving] = useState(false);
-
-  const openCreateReportDialog = () => {
-    setNewReportName("");
-    setNewReportDescription("");
-    setNewReportSource("general");
-    setNewReportOperationId("");
-    setNewReportOpMode("existing");
-    setNewReportInlineOp({
-      logicMode: "all",
-      conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
-    });
-    setNewReportAttrs([]);
-    setNewReportAttrSearch("");
-    setCreateReportDialog(true);
-  };
+  // Report create — now handled by dedicated page (/admin/nuevo-informe)
 
   const saveNewReport = async () => {
     if (!newReportName.trim()) { toast.error("El nombre es obligatorio"); return; }
