@@ -26,6 +26,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const PROFILE_TIMEOUT_MS = 8000;
+const SESSION_REFRESH_TIMEOUT_MS = 15000;
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([
@@ -94,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             const appUser = await withTimeout(
               loadAppUser(newSession.user),
-              PROFILE_TIMEOUT_MS,
+              SESSION_REFRESH_TIMEOUT_MS,
               "session_profile"
             );
             if (appUser) {
@@ -106,13 +107,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
                 return appUser;
               });
-            } else {
+            } else if (event === "SIGNED_IN") {
+              // Solo cerrar sesión en login nuevo fallido (cuenta inactiva)
               setUser(null);
               await supabase.auth.signOut();
             }
+            // Si es TOKEN_REFRESHED y falla, mantener el user actual
           } catch {
-            console.warn("[Auth] session profile load timed out");
-            setUser(null);
+            console.warn("[Auth] session profile refresh timed out, keeping existing session");
+            // NO borrar usuario existente — mantener sesión
           } finally {
             setIsLoading(false);
           }
