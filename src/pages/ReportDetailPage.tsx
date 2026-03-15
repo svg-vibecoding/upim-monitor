@@ -78,7 +78,6 @@ export default function ReportDetailPage() {
 
   const isLoading = loadingReports || loadingDimensions || loadingCompleteness;
 
-  const report = reports?.find((r) => r.id === reportId);
 
   // Use server-side completeness data (already filtered by universe and evaluable)
   const attrResults = useMemo(() => (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name)), [completenessData]);
