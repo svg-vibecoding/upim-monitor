@@ -13,7 +13,7 @@ import {
   filterRealAttributes, getEvaluableAttributes, useOperations,
 } from "@/hooks/usePimData";
 import { downloadCSV } from "@/data/mockData";
-import { ArrowLeft, Download, Filter } from "lucide-react";
+import { ArrowLeft, Download, Filter, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 
@@ -53,6 +53,10 @@ export default function ReportDetailPage() {
   const trackEvent = useTrackEvent();
   const [selectedDimension, setSelectedDimension] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
+  type SortField = "completeness" | "attribute" | "pim_order";
+  type SortDir = "asc" | "desc";
+  const [sortField, setSortField] = useState<SortField>("completeness");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [tracked, setTracked] = useState(false);
 
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
@@ -73,6 +77,51 @@ export default function ReportDetailPage() {
   const { data: allRecords, isLoading: loadingRecords } = usePimRecords();
 
   const isLoading = loadingReports || loadingDimensions || loadingCompleteness;
+
+
+  // Use server-side completeness data (already filtered by universe and evaluable)
+  const attrResults = useMemo(() => (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name)), [completenessData]);
+  const avgCompleteness = attrResults.length > 0
+    ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
+    : 0;
+  const totalSKUs = attrResults.length > 0 ? attrResults[0].totalSKUs : 0;
+
+  const pimOrderList = useMemo(() => attributeOrder ? getFullAttributeList(attributeOrder) : [], [attributeOrder]);
+
+  const sortedAttrResults = useMemo(() => {
+    const filtered = attrResults.filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter);
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (sortField === "completeness") {
+        cmp = a.completeness - b.completeness;
+      } else if (sortField === "attribute") {
+        cmp = a.name.localeCompare(b.name, "es");
+      } else {
+        const idxA = pimOrderList.indexOf(a.name);
+        const idxB = pimOrderList.indexOf(b.name);
+        cmp = (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [attrResults, severityFilter, sortField, sortDir, pimOrderList]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
+    return sortDir === "asc"
+      ? <ArrowUp className="h-3.5 w-3.5 text-foreground" />
+      : <ArrowDown className="h-3.5 w-3.5 text-foreground" />;
+  };
 
   if (isLoading) {
     return (
@@ -98,59 +147,10 @@ export default function ReportDetailPage() {
     });
   }
 
-  // Use server-side completeness data (already filtered by universe and evaluable)
-  const attrResults = (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name));
-  const avgCompleteness = attrResults.length > 0
-    ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
-    : 0;
-  const totalSKUs = attrResults.length > 0 ? attrResults[0].totalSKUs : 0;
-
   const dimension = dimensions?.find((d) => d.id === selectedDimension);
   const records = needsRecords ? getRecordsForReport(allRecords || [], report, operations) : [];
   const validAttrs = attrResults.map(a => a.name);
   const dimensionResults = dimension && needsRecords ? computeDimensionResults(records, validAttrs, dimension.field) : [];
-
-  const handleDownload = () => {
-    const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
-    const rows: (string | number)[][] = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
-
-    if (dimensionResults.length > 0 && dimension) {
-      rows.push([]);
-      rows.push([`Distribución por ${dimension.name}`, "", "", ""]);
-      rows.push([dimension.name, "SKUs", "Poblados", "Completitud %"]);
-      dimensionResults.forEach((d) => rows.push([d.value, d.totalSKUs, d.populated, d.completeness]));
-    }
-
-    downloadCSV(`${report.name.replace(/\s/g, "_")}_resumen.csv`, headers, rows);
-    trackEvent("report_downloaded", {
-      report_id: report.id,
-      report_name: report.name,
-      report_type: "predefined",
-    });
-  };
-
-  return (
-    <div className="space-y-6 max-w-6xl">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/informes")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">{report.name}</h1>
-          <p className="text-sm text-muted-foreground">{report.universe}</p>
-        </div>
-        <Button variant="outline" onClick={handleDownload} className="gap-2">
-          <Download className="h-4 w-4" /> Descargar resumen
-        </Button>
-      </div>
-
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{totalSKUs.toLocaleString()}</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{attrResults.length}{totalEvaluableAttrs > 0 && <span className="text-sm font-normal text-muted-foreground"> de {totalEvaluableAttrs}</span>}</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos &lt;50%</p><p className="text-xl font-bold text-destructive">{attrResults.filter((a) => a.completeness < 50).length}</p></CardContent></Card>
-      </div>
 
       {/* Attribute table */}
       <Card>
@@ -180,16 +180,22 @@ export default function ReportDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Atributo</TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("attribute")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                      Atributo <SortIcon field="attribute" />
+                    </button>
+                  </TableHead>
                   <TableHead className="text-right w-28">SKUs evaluados</TableHead>
                   <TableHead className="text-right w-28">Poblados</TableHead>
-                  <TableHead className="w-48">Completitud</TableHead>
+                  <TableHead className="w-48">
+                    <button onClick={() => handleSort("completeness")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                      Completitud <SortIcon field="completeness" />
+                    </button>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {attrResults
-                  .filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter)
-                  .map((a) => (
+                {sortedAttrResults.map((a) => (
                   <TableRow key={a.name}>
                     <TableCell className="font-medium text-sm">{a.name}</TableCell>
                     <TableCell className="text-right tabular-nums">{a.totalSKUs.toLocaleString()}</TableCell>
