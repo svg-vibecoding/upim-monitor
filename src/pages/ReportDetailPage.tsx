@@ -222,16 +222,22 @@ export default function ReportDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Atributo</TableHead>
+                  <TableHead>
+                    <button onClick={() => handleSort("attribute")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                      Atributo <SortIcon field="attribute" />
+                    </button>
+                  </TableHead>
                   <TableHead className="text-right w-28">SKUs evaluados</TableHead>
                   <TableHead className="text-right w-28">Poblados</TableHead>
-                  <TableHead className="w-48">Completitud</TableHead>
+                  <TableHead className="w-48">
+                    <button onClick={() => handleSort("completeness")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                      Completitud <SortIcon field="completeness" />
+                    </button>
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {attrResults
-                  .filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter)
-                  .map((a) => (
+                {sortedAttrResults.map((a) => (
                   <TableRow key={a.name}>
                     <TableCell className="font-medium text-sm">{a.name}</TableCell>
                     <TableCell className="text-right tabular-nums">{a.totalSKUs.toLocaleString()}</TableCell>
