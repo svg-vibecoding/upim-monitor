@@ -78,41 +78,14 @@ export default function ReportDetailPage() {
 
   const isLoading = loadingReports || loadingDimensions || loadingCompleteness;
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6 max-w-6xl">
-        <Skeleton className="h-10 w-64" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
-        </div>
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-
-  if (!report) return <div className="p-6">Informe no encontrado.</div>;
-
-  // Track report viewed once data loads
-  if (!tracked && completenessData && report) {
-    setTracked(true);
-    trackEvent("report_viewed", {
-      report_id: report.id,
-      report_name: report.name,
-      report_type: "predefined",
-    });
-  }
+  const report = reports?.find((r) => r.id === reportId);
 
   // Use server-side completeness data (already filtered by universe and evaluable)
-  const attrResults = (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name));
+  const attrResults = useMemo(() => (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name)), [completenessData]);
   const avgCompleteness = attrResults.length > 0
     ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
     : 0;
   const totalSKUs = attrResults.length > 0 ? attrResults[0].totalSKUs : 0;
-
-  const dimension = dimensions?.find((d) => d.id === selectedDimension);
-  const records = needsRecords ? getRecordsForReport(allRecords || [], report, operations) : [];
-  const validAttrs = attrResults.map(a => a.name);
-  const dimensionResults = dimension && needsRecords ? computeDimensionResults(records, validAttrs, dimension.field) : [];
 
   const pimOrderList = useMemo(() => attributeOrder ? getFullAttributeList(attributeOrder) : [], [attributeOrder]);
 
@@ -126,7 +99,6 @@ export default function ReportDetailPage() {
       } else if (sortField === "attribute") {
         cmp = a.name.localeCompare(b.name, "es");
       } else {
-        // pim_order
         const idxA = pimOrderList.indexOf(a.name);
         const idxB = pimOrderList.indexOf(b.name);
         cmp = (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
@@ -152,47 +124,34 @@ export default function ReportDetailPage() {
       : <ArrowDown className="h-3.5 w-3.5 text-foreground" />;
   };
 
-  const handleDownload = () => {
-    const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
-    const rows: (string | number)[][] = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
+  if (isLoading) {
+    return (
+      <div className="space-y-6 max-w-6xl">
+        <Skeleton className="h-10 w-64" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
+        </div>
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
 
-    if (dimensionResults.length > 0 && dimension) {
-      rows.push([]);
-      rows.push([`Distribución por ${dimension.name}`, "", "", ""]);
-      rows.push([dimension.name, "SKUs", "Poblados", "Completitud %"]);
-      dimensionResults.forEach((d) => rows.push([d.value, d.totalSKUs, d.populated, d.completeness]));
-    }
+  if (!report) return <div className="p-6">Informe no encontrado.</div>;
 
-    downloadCSV(`${report.name.replace(/\s/g, "_")}_resumen.csv`, headers, rows);
-    trackEvent("report_downloaded", {
+  // Track report viewed once data loads
+  if (!tracked && completenessData && report) {
+    setTracked(true);
+    trackEvent("report_viewed", {
       report_id: report.id,
       report_name: report.name,
       report_type: "predefined",
     });
-  };
+  }
 
-  return (
-    <div className="space-y-6 max-w-6xl">
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/informes")}>
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">{report.name}</h1>
-          <p className="text-sm text-muted-foreground">{report.universe}</p>
-        </div>
-        <Button variant="outline" onClick={handleDownload} className="gap-2">
-          <Download className="h-4 w-4" /> Descargar resumen
-        </Button>
-      </div>
-
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{totalSKUs.toLocaleString()}</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{attrResults.length}{totalEvaluableAttrs > 0 && <span className="text-sm font-normal text-muted-foreground"> de {totalEvaluableAttrs}</span>}</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos &lt;50%</p><p className="text-xl font-bold text-destructive">{attrResults.filter((a) => a.completeness < 50).length}</p></CardContent></Card>
-      </div>
+  const dimension = dimensions?.find((d) => d.id === selectedDimension);
+  const records = needsRecords ? getRecordsForReport(allRecords || [], report, operations) : [];
+  const validAttrs = attrResults.map(a => a.name);
+  const dimensionResults = dimension && needsRecords ? computeDimensionResults(records, validAttrs, dimension.field) : [];
 
       {/* Attribute table */}
       <Card>
