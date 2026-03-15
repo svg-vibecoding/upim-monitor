@@ -114,6 +114,44 @@ export default function ReportDetailPage() {
   const validAttrs = attrResults.map(a => a.name);
   const dimensionResults = dimension && needsRecords ? computeDimensionResults(records, validAttrs, dimension.field) : [];
 
+  const pimOrderList = useMemo(() => attributeOrder ? getFullAttributeList(attributeOrder) : [], [attributeOrder]);
+
+  const sortedAttrResults = useMemo(() => {
+    const filtered = attrResults.filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter);
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (sortField === "completeness") {
+        cmp = a.completeness - b.completeness;
+      } else if (sortField === "attribute") {
+        cmp = a.name.localeCompare(b.name, "es");
+      } else {
+        // pim_order
+        const idxA = pimOrderList.indexOf(a.name);
+        const idxB = pimOrderList.indexOf(b.name);
+        cmp = (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [attrResults, severityFilter, sortField, sortDir, pimOrderList]);
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(prev => prev === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
+    return sortDir === "asc"
+      ? <ArrowUp className="h-3.5 w-3.5 text-foreground" />
+      : <ArrowDown className="h-3.5 w-3.5 text-foreground" />;
+  };
+
   const handleDownload = () => {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
     const rows: (string | number)[][] = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
