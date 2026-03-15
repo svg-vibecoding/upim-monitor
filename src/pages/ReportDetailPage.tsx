@@ -53,6 +53,10 @@ export default function ReportDetailPage() {
   const trackEvent = useTrackEvent();
   const [selectedDimension, setSelectedDimension] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
+  type SortField = "completeness" | "attribute" | "pim_order";
+  type SortDir = "asc" | "desc";
+  const [sortField, setSortField] = useState<SortField>("completeness");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [tracked, setTracked] = useState(false);
 
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
