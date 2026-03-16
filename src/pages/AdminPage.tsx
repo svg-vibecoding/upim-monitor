@@ -133,7 +133,6 @@ export default function AdminPage() {
   const [opDescription, setOpDescription] = useState("");
   const [opLogicMode, setOpLogicMode] = useState<LogicMode>("all");
   const [opConditions, setOpConditions] = useState<Condition[]>([{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }]);
-  const [opLinkedKpi, setOpLinkedKpi] = useState<LinkedKpi | "none">("none");
   const [opSaving, setOpSaving] = useState(false);
   const [deleteOpId, setDeleteOpId] = useState<string | null>(null);
 
