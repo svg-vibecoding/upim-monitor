@@ -371,56 +371,48 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
               <Input value={c2Label} onChange={(e) => setC2Label(e.target.value)} placeholder="Base Digital" className="h-8 text-sm" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Dato principal</p>
-                <div>
-                  <Label className="text-xs">Valor</Label>
-                  <Select value={c2MainOp} onValueChange={setC2MainOp}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                      <SelectItem value="total">Universo total</SelectItem>
-                      {opSelectItems}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Secundario 1</p>
-                <div>
-                  <Label className="text-xs">Valor</Label>
-                  <Select value={c2Sec1} onValueChange={setC2Sec1}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                      <SelectItem value="total">Universo total</SelectItem>
-                      {opSelectItems}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Label</Label>
-                  <Input value={c2Sec1Label} onChange={(e) => setC2Sec1Label(e.target.value)} placeholder="Label" className="h-7 text-xs" />
-                </div>
-              </div>
-              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Secundario 2</p>
-                <div>
-                  <Label className="text-xs">Valor</Label>
-                  <Select value={c2Sec2} onValueChange={setC2Sec2}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                      <SelectItem value="total">Universo total</SelectItem>
-                      {opSelectItems}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Label</Label>
-                  <Input value={c2Sec2Label} onChange={(e) => setC2Sec2Label(e.target.value)} placeholder="Label" className="h-7 text-xs" />
-                </div>
-              </div>
+              <DataPointConfig
+                title="Dato principal"
+                valueId={c2MainOp}
+                onValueChange={setC2MainOp}
+                label={c2MainLabel}
+                onLabelChange={setC2MainLabel}
+                color={c2MainColor}
+                onColorChange={setC2MainColor}
+                pct={c2MainPct}
+                onPctChange={setC2MainPct}
+                opSelectItems={opSelectItems}
+                includeDefault
+                pctTooltip="El % se calcula sobre el Universo total de la base"
+              />
+              <DataPointConfig
+                title="Secundario 1"
+                valueId={c2Sec1}
+                onValueChange={setC2Sec1}
+                label={c2Sec1Label}
+                onLabelChange={setC2Sec1Label}
+                color={c2Sec1Color}
+                onColorChange={setC2Sec1Color}
+                pct={c2Sec1Pct}
+                onPctChange={setC2Sec1Pct}
+                opSelectItems={opSelectItems}
+                includeDefault
+                pctTooltip="El % se calcula sobre el universo definido en el Dato principal de este card"
+              />
+              <DataPointConfig
+                title="Secundario 2"
+                valueId={c2Sec2}
+                onValueChange={setC2Sec2}
+                label={c2Sec2Label}
+                onLabelChange={setC2Sec2Label}
+                color={c2Sec2Color}
+                onColorChange={setC2Sec2Color}
+                pct={c2Sec2Pct}
+                onPctChange={setC2Sec2Pct}
+                opSelectItems={opSelectItems}
+                includeDefault
+                pctTooltip="El % se calcula sobre el universo definido en el Dato principal de este card"
+              />
             </div>
             <div className="flex justify-end">
               <Button onClick={saveCard2} size="sm" className="gap-2" disabled={c2Saving}>
