@@ -180,7 +180,7 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
               <Select value={c1MainValue} onValueChange={setC1MainValue}>
                 <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="total">Total SKUs</SelectItem>
+                  <SelectItem value="total">Universo total</SelectItem>
                   {opSelectItems}
                 </SelectContent>
               </Select>
