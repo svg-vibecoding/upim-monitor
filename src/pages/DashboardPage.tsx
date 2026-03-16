@@ -186,7 +186,7 @@ export default function DashboardPage() {
     : focusItems;
 
   const severityCounts = useMemo(() => {
-    const counts: Record<SeverityLevel, number> = { critical: 0, low: 0, medium: 0, acceptable: 0 };
+    const counts: Record<SeverityLevel, number> = { critical: 0, low: 0, medium: 0, good: 0, excellent: 0 };
     focusItems.forEach((fp) => counts[getSeverity(fp.completeness)]++);
     return counts;
   }, [focusItems]);
