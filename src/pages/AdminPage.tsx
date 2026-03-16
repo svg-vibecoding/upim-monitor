@@ -37,6 +37,8 @@ import {
   sortReportsByDisplayOrder,
   useProtectedAttributes,
   useOperations,
+  useDashboardCardsConfig,
+  useUpdateDashboardCard,
   LINKED_KPI_LABELS,
   getValidOperationRefs,
   type AttributeType,
@@ -46,6 +48,9 @@ import {
   type OperatorType,
   type LogicMode,
   type LinkedKpi,
+  type Card1Config,
+  type Card2Config,
+  type Card3Config,
 } from "@/hooks/usePimData";
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
