@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ import {
   type Card1Config,
   type Card2Config,
   type Card3Config,
+  type CardColor,
 } from "@/hooks/usePimData";
 import type { PredefinedReport } from "@/data/mockData";
 
@@ -23,25 +25,112 @@ interface Props {
 
 const NONE = "__none__";
 
+const COLOR_OPTIONS: { value: CardColor; label: string; css: string }[] = [
+  { value: "none", label: "Ninguno", css: "bg-transparent border border-dashed border-muted-foreground/30" },
+  { value: "green", label: "Verde", css: "bg-success" },
+  { value: "red", label: "Rojo", css: "bg-destructive" },
+  { value: "yellow", label: "Amarillo", css: "bg-warning" },
+  { value: "blue", label: "Azul", css: "bg-info" },
+  { value: "gray", label: "Gris", css: "bg-muted-foreground/50" },
+];
+
+function ColorSelector({ value, onChange }: { value: CardColor; onChange: (v: CardColor) => void }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      {COLOR_OPTIONS.map((opt) => (
+        <button
+          key={opt.value}
+          type="button"
+          title={opt.label}
+          onClick={() => onChange(opt.value)}
+          className={`h-5 w-5 rounded-full shrink-0 transition-all ${opt.css} ${value === opt.value ? "ring-2 ring-ring ring-offset-1 ring-offset-background" : "opacity-60 hover:opacity-100"}`}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Renders a data-point config block: value selector, label, color, percentage toggle */
+function DataPointConfig({
+  title,
+  valueId,
+  onValueChange,
+  label,
+  onLabelChange,
+  color,
+  onColorChange,
+  pct,
+  onPctChange,
+  opSelectItems,
+  includeDefault,
+}: {
+  title: string;
+  valueId: string;
+  onValueChange: (v: string) => void;
+  label: string;
+  onLabelChange: (v: string) => void;
+  color: CardColor;
+  onColorChange: (v: CardColor) => void;
+  pct: boolean;
+  onPctChange: (v: boolean) => void;
+  opSelectItems: React.ReactNode;
+  includeDefault?: boolean;
+}) {
+  return (
+    <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
+      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">{title}</p>
+      <div>
+        <Label className="text-xs">Valor</Label>
+        <Select value={valueId} onValueChange={onValueChange}>
+          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {includeDefault && <SelectItem value={NONE}>(Por defecto)</SelectItem>}
+            <SelectItem value="total">Universo total</SelectItem>
+            {opSelectItems}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label className="text-xs">Label</Label>
+        <Input value={label} onChange={(e) => onLabelChange(e.target.value)} placeholder="(vacío = sin label)" className="h-7 text-xs" />
+      </div>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <Label className="text-xs">Color</Label>
+          <ColorSelector value={color} onChange={onColorChange} />
+        </div>
+        <div className="flex items-center gap-2">
+          <Label className="text-xs">Mostrar %</Label>
+          <Switch checked={pct} onCheckedChange={onPctChange} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardCardsConfigSection({ operations, reports }: Props) {
   const { data: cardsConfig, isLoading } = useDashboardCardsConfig();
   const updateCard = useUpdateDashboardCard();
 
   const activeOps = operations.filter((o) => o.active);
 
-  // Card 1 state
-  const card1Raw = cardsConfig?.find((c) => c.card_key === "card_1");
-  const card1Defaults: Card1Config = { main_value: "total", secondary_1: null, secondary_1_label: "Activos", secondary_2: null, secondary_2_label: "Inactivos" };
+  // ── Card 1 state ──
   const [c1Label, setC1Label] = useState("");
   const [c1MainValue, setC1MainValue] = useState("total");
+  const [c1MainLabel, setC1MainLabel] = useState("");
+  const [c1MainColor, setC1MainColor] = useState<CardColor>("none");
+  const [c1MainPct, setC1MainPct] = useState(false);
   const [c1Sec1, setC1Sec1] = useState(NONE);
   const [c1Sec1Label, setC1Sec1Label] = useState("Activos");
+  const [c1Sec1Color, setC1Sec1Color] = useState<CardColor>("green");
+  const [c1Sec1Pct, setC1Sec1Pct] = useState(true);
   const [c1Sec2, setC1Sec2] = useState(NONE);
   const [c1Sec2Label, setC1Sec2Label] = useState("Inactivos");
+  const [c1Sec2Color, setC1Sec2Color] = useState<CardColor>("red");
+  const [c1Sec2Pct, setC1Sec2Pct] = useState(true);
   const [c1Saving, setC1Saving] = useState(false);
 
-  // Card 2 state
-  const card2Raw = cardsConfig?.find((c) => c.card_key === "card_2");
+  // ── Card 2 state ──
   const [c2Label, setC2Label] = useState("");
   const [c2MainOp, setC2MainOp] = useState(NONE);
   const [c2Sec1, setC2Sec1] = useState(NONE);
@@ -50,8 +139,7 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
   const [c2Sec2Label, setC2Sec2Label] = useState("Visibles B2C");
   const [c2Saving, setC2Saving] = useState(false);
 
-  // Card 3 state
-  const card3Raw = cardsConfig?.find((c) => c.card_key === "card_3");
+  // ── Card 3 state ──
   const [c3Label, setC3Label] = useState("");
   const [c3ReportId, setC3ReportId] = useState(NONE);
   const [c3Saving, setC3Saving] = useState(false);
@@ -64,10 +152,17 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
       const cfg = c1.config as Card1Config;
       setC1Label(c1.label);
       setC1MainValue(cfg.main_value || "total");
+      setC1MainLabel(cfg.main_label || "");
+      setC1MainColor(cfg.main_color || "none");
+      setC1MainPct(cfg.main_pct ?? false);
       setC1Sec1(cfg.secondary_1 || NONE);
       setC1Sec1Label(cfg.secondary_1_label || "Activos");
+      setC1Sec1Color(cfg.secondary_1_color || "green");
+      setC1Sec1Pct(cfg.secondary_1_pct ?? true);
       setC1Sec2(cfg.secondary_2 || NONE);
       setC1Sec2Label(cfg.secondary_2_label || "Inactivos");
+      setC1Sec2Color(cfg.secondary_2_color || "red");
+      setC1Sec2Pct(cfg.secondary_2_pct ?? true);
     }
     const c2 = cardsConfig.find((c) => c.card_key === "card_2");
     if (c2) {
@@ -95,10 +190,17 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
         label: c1Label,
         config: {
           main_value: c1MainValue,
+          main_label: c1MainLabel,
+          main_color: c1MainColor,
+          main_pct: c1MainPct,
           secondary_1: c1Sec1 === NONE ? null : c1Sec1,
           secondary_1_label: c1Sec1Label,
+          secondary_1_color: c1Sec1Color,
+          secondary_1_pct: c1Sec1Pct,
           secondary_2: c1Sec2 === NONE ? null : c1Sec2,
           secondary_2_label: c1Sec2Label,
+          secondary_2_color: c1Sec2Color,
+          secondary_2_pct: c1Sec2Pct,
         },
       });
       toast.success("Card 1 guardado");
@@ -167,50 +269,57 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
       </p>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* ── Card 1: Total del PIM ── */}
+        {/* ── Card 1: Universo total ── */}
         <Card>
           <CardContent className="pt-5 space-y-3">
-            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 1 — Total del PIM</p>
+            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 1 — Universo total</p>
             <div>
               <Label className="text-xs">Label del card</Label>
               <Input value={c1Label} onChange={(e) => setC1Label(e.target.value)} placeholder="Catálogo" className="h-8 text-sm" />
             </div>
-            <div>
-              <Label className="text-xs">Dato principal</Label>
-              <Select value={c1MainValue} onValueChange={setC1MainValue}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="total">Universo total</SelectItem>
-                  {opSelectItems}
-                </SelectContent>
-              </Select>
+
+            <DataPointConfig
+              title="Dato principal"
+              valueId={c1MainValue}
+              onValueChange={setC1MainValue}
+              label={c1MainLabel}
+              onLabelChange={setC1MainLabel}
+              color={c1MainColor}
+              onColorChange={setC1MainColor}
+              pct={c1MainPct}
+              onPctChange={setC1MainPct}
+              opSelectItems={opSelectItems}
+            />
+
+            <div className="grid grid-cols-1 gap-2">
+              <DataPointConfig
+                title="Secundario 1"
+                valueId={c1Sec1}
+                onValueChange={setC1Sec1}
+                label={c1Sec1Label}
+                onLabelChange={setC1Sec1Label}
+                color={c1Sec1Color}
+                onColorChange={setC1Sec1Color}
+                pct={c1Sec1Pct}
+                onPctChange={setC1Sec1Pct}
+                opSelectItems={opSelectItems}
+                includeDefault
+              />
+              <DataPointConfig
+                title="Secundario 2"
+                valueId={c1Sec2}
+                onValueChange={setC1Sec2}
+                label={c1Sec2Label}
+                onLabelChange={setC1Sec2Label}
+                color={c1Sec2Color}
+                onColorChange={setC1Sec2Color}
+                pct={c1Sec2Pct}
+                onPctChange={setC1Sec2Pct}
+                opSelectItems={opSelectItems}
+                includeDefault
+              />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs">Secundario 1</Label>
-                <Select value={c1Sec1} onValueChange={setC1Sec1}>
-                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                    <SelectItem value="total">Universo total</SelectItem>
-                    {opSelectItems}
-                  </SelectContent>
-                </Select>
-                <Input value={c1Sec1Label} onChange={(e) => setC1Sec1Label(e.target.value)} placeholder="Label" className="h-7 text-xs mt-1" />
-              </div>
-              <div>
-                <Label className="text-xs">Secundario 2</Label>
-                <Select value={c1Sec2} onValueChange={setC1Sec2}>
-                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                    <SelectItem value="total">Universo total</SelectItem>
-                    {opSelectItems}
-                  </SelectContent>
-                </Select>
-                <Input value={c1Sec2Label} onChange={(e) => setC1Sec2Label(e.target.value)} placeholder="Label" className="h-7 text-xs mt-1" />
-              </div>
-            </div>
+
             <Button onClick={saveCard1} size="sm" className="w-full gap-2" disabled={c1Saving}>
               {c1Saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
               Guardar

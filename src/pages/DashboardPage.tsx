@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import {
   usePimKPIs,
   usePredefinedReports,
