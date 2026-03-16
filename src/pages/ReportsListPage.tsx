@@ -75,6 +75,7 @@ export default function ReportsListPage() {
             <ReportCard
               key={report.id}
               report={report}
+              operationName={report.operationId ? (operations.find(o => o.id === report.operationId)?.name || null) : null}
               onClick={() => navigate(`/informes/${report.id}`)}
             />
           ))}

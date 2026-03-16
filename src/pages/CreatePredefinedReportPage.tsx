@@ -229,6 +229,7 @@ export default function CreatePredefinedReportPage() {
           operationId: opId,
           attributes: selectedAttrs,
           showInFocus,
+          universe: universeDesc.trim(),
         });
         toast.success("Informe creado exitosamente");
       }
