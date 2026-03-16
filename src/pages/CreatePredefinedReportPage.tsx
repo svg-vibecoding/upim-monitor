@@ -215,6 +215,7 @@ export default function CreatePredefinedReportPage() {
         const { error } = await supabase.from("predefined_reports").update({
           name: name.trim(),
           description: description.trim(),
+          universe: universeDesc.trim(),
           show_in_focus: showInFocus,
         } as any).eq("id", reportId!);
         if (error) throw error;
