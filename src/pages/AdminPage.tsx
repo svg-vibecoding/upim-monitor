@@ -240,16 +240,8 @@ export default function AdminPage() {
   const addCondition = () => setOpConditions((prev) => [...prev, { sourceType: "attribute", attribute: "", operator: "has_value", value: null }]);
   const removeCondition = (idx: number) => setOpConditions((prev) => prev.length <= 1 ? prev : prev.filter((_, i) => i !== idx));
 
-  // KPI assignment info for the select
-  const kpiAssignments = useMemo(() => {
-    const map: Partial<Record<LinkedKpi, string>> = {};
-    for (const op of operations) {
-      if (op.linkedKpi && op.active && op.id !== editingOpId) {
-        map[op.linkedKpi] = op.name;
-      }
-    }
-    return map;
-  }, [operations, editingOpId]);
+
+
 
   // User form
   const [userDialog, setUserDialog] = useState(false);
