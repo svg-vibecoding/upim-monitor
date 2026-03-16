@@ -1255,6 +1255,9 @@ export default function AdminPage() {
 
         {/* OPERATIONS */}
         <TabsContent value="operations" className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Una operación es una regla o conjunto de reglas que filtra productos del catálogo según condiciones definidas. Las operaciones se usan para definir el universo de productos de un informe y para alimentar los indicadores del dashboard.
+          </p>
           <div className="flex justify-end">
             <Button onClick={() => openOpDialog()} className="gap-2">
               <Plus className="h-4 w-4" /> Nueva operación
