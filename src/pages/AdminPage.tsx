@@ -1298,9 +1298,6 @@ export default function AdminPage() {
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-foreground">{op.name}</span>
                             <Badge variant="outline" className="text-[10px]">{op.conditions.length} cond.</Badge>
-                            {op.linkedKpi && (
-                              <Badge variant="secondary" className="text-[10px]">{LINKED_KPI_LABELS[op.linkedKpi]}</Badge>
-                            )}
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{op.description || "—"}</TableCell>
