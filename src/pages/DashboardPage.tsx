@@ -203,9 +203,9 @@ export default function DashboardPage() {
   // Card 1 config shortcuts
   const c1Cfg = card1Cfg.config;
   const c2Cfg = card2Cfg.config;
-  const card2MainValue = c2MainIsTotal ? total : (c2Cfg.main_operation ? (c2MainCount ?? 0) : (kpis?.digitalBase ?? 0));
-  const card2Sec1Value = c2Sec1IsTotal ? total : (c2Cfg.secondary_1 ? (c2Sec1Count ?? 0) : (kpis?.visibleB2B ?? 0));
-  const card2Sec2Value = c2Sec2IsTotal ? total : (c2Cfg.secondary_2 ? (c2Sec2Count ?? 0) : (kpis?.visibleB2C ?? 0));
+  const card2MainValue = c2MainIsTotal ? total : (c2Cfg.main_operation ? (c2MainCount ?? 0) : 0);
+  const card2Sec1Value = c2Sec1IsTotal ? total : (c2Cfg.secondary_1 ? (c2Sec1Count ?? 0) : 0);
+  const card2Sec2Value = c2Sec2IsTotal ? total : (c2Cfg.secondary_2 ? (c2Sec2Count ?? 0) : 0);
   const card2MainPct = total > 0 ? Math.round((card2MainValue / total) * 100) : 0;
   const card2Sec1Pct = card2MainValue > 0 ? Math.round((card2Sec1Value / card2MainValue) * 100) : 0;
   const card2Sec2Pct = card2MainValue > 0 ? Math.round((card2Sec2Value / card2MainValue) * 100) : 0;
