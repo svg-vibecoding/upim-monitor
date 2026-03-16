@@ -31,6 +31,9 @@
     --warning: 45 93% 47%;
     --warning-foreground: 0 0% 100%;
 
+    --caution: 48 96% 53%;
+    --caution-foreground: 0 0% 15%;
+
     --good: 210 76% 52%;
     --good-foreground: 0 0% 100%;
 
