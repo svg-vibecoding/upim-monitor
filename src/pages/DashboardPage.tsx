@@ -102,16 +102,21 @@ export default function DashboardPage() {
     return { label: raw?.label || "Completitud General", config: raw ? { ...defaults, ...(raw.config as Card3Config) } : defaults };
   }, [cardsConfig]);
 
-  // Card 1 operation counts
+  // Card 1 operation counts (skip fetch when value is "total")
   const c1MainIsOp = card1Cfg.config.main_value !== "total";
   const { data: c1MainOpCount } = useOpCount(c1MainIsOp ? card1Cfg.config.main_value : undefined);
-  const { data: c1Sec1Count } = useOpCount(card1Cfg.config.secondary_1);
-  const { data: c1Sec2Count } = useOpCount(card1Cfg.config.secondary_2);
+  const c1Sec1IsTotal = card1Cfg.config.secondary_1 === "total";
+  const { data: c1Sec1Count } = useOpCount(!c1Sec1IsTotal ? card1Cfg.config.secondary_1 : undefined);
+  const c1Sec2IsTotal = card1Cfg.config.secondary_2 === "total";
+  const { data: c1Sec2Count } = useOpCount(!c1Sec2IsTotal ? card1Cfg.config.secondary_2 : undefined);
 
-  // Card 2 operation counts
-  const { data: c2MainCount } = useOpCount(card2Cfg.config.main_operation);
-  const { data: c2Sec1Count } = useOpCount(card2Cfg.config.secondary_1);
-  const { data: c2Sec2Count } = useOpCount(card2Cfg.config.secondary_2);
+  // Card 2 operation counts (skip fetch when value is "total")
+  const c2MainIsTotal = card2Cfg.config.main_operation === "total";
+  const { data: c2MainCount } = useOpCount(!c2MainIsTotal ? card2Cfg.config.main_operation : undefined);
+  const c2Sec1IsTotal = card2Cfg.config.secondary_1 === "total";
+  const { data: c2Sec1Count } = useOpCount(!c2Sec1IsTotal ? card2Cfg.config.secondary_1 : undefined);
+  const c2Sec2IsTotal = card2Cfg.config.secondary_2 === "total";
+  const { data: c2Sec2Count } = useOpCount(!c2Sec2IsTotal ? card2Cfg.config.secondary_2 : undefined);
 
   const totalEvaluableAttrs = useMemo(() => {
     if (!attributeOrder) return 0;
