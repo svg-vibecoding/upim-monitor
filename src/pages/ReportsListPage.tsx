@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  usePimKPIs, usePredefinedReports, useReportCompleteness, NON_EVALUABLE_FIELDS,
+  usePimKPIs, usePredefinedReports, useReportCompleteness, useOperations, NON_EVALUABLE_FIELDS,
   sortReportsByDisplayOrder,
 } from "@/hooks/usePimData";
 import { FileText } from "lucide-react";
