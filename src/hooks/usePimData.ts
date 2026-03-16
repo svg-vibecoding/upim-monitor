@@ -656,6 +656,7 @@ export function useCreatePredefinedReport() {
       operationId,
       attributes,
       showInFocus = true,
+      universe,
     }: {
       name: string;
       description: string;

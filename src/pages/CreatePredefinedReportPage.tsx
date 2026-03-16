@@ -304,6 +304,20 @@ export default function CreatePredefinedReportPage() {
             onFileUpload={handleFileUpload}
             onClearFile={handleClearFile}
           />
+          <div className="pt-2">
+            <Label className="text-sm font-semibold">Descripción del universo</Label>
+            <Input
+              value={universeDesc}
+              onChange={(e) => setUniverseDesc(e.target.value)}
+              placeholder={
+                source === "operation" && selectedOperationId
+                  ? operations.find((o) => o.id === selectedOperationId)?.name || "Ej: Productos activos del canal B2B"
+                  : "Ej: Base general del PIM"
+              }
+              className="mt-1"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Texto que se mostrará en la tarjeta del informe. Si lo dejas vacío, se usará el nombre de la operación asignada.</p>
+          </div>
         </CardContent>
       </Card>
 
