@@ -113,7 +113,20 @@ export default function AdminPage() {
   const { data: operations = [], isLoading: operationsLoading } = useOperations();
   const updateReportAttrs = useUpdateReportAttributes();
   const updateReportOp = useUpdateReportOperation();
-  
+  const reorderReports = useReorderReports();
+
+  const handleMoveReport = useCallback((reportId: string, direction: "up" | "down") => {
+    const sorted = sortReportsByDisplayOrder(dbReports);
+    const idx = sorted.findIndex((r) => r.id === reportId);
+    if (idx < 0) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const updates = [
+      { id: sorted[idx].id, display_order: sorted[swapIdx].displayOrder },
+      { id: sorted[swapIdx].id, display_order: sorted[idx].displayOrder },
+    ];
+    reorderReports.mutate(updates);
+  }, [dbReports, reorderReports]);
 
   // --- Operations state ---
   const [opDialog, setOpDialog] = useState(false);
