@@ -751,7 +751,6 @@ function dbRowToOperation(row: any): Operation {
     active: row.active,
     logicMode: row.logic_mode || "all",
     conditions: (Array.isArray(row.conditions) ? row.conditions : []) as Condition[],
-    linkedKpi: row.linked_kpi || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

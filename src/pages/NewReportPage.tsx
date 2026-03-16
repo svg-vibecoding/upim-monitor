@@ -153,7 +153,6 @@ export default function NewReportPage() {
           active: true,
           logicMode: inlineOp.logicMode,
           conditions: inlineOp.conditions.filter((c) => c.attribute.trim() !== ""),
-          linkedKpi: null,
           createdAt: "",
           updatedAt: "",
         };
