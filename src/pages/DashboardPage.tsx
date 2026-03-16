@@ -213,7 +213,7 @@ export default function DashboardPage() {
   // Card 3 label for progress bar subtitle
   const completenessReportName = card3ReportId
     ? reports?.find((r) => r.id === card3ReportId)?.name || "Informe seleccionado"
-    : "PIM General";
+    : pimGeneralReport?.name || "Sin informe configurado";
 
   return (
     <div className="space-y-8 max-w-6xl">
