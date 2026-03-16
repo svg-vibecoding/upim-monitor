@@ -502,6 +502,7 @@ export function usePredefinedReports() {
         universeKey: ((r as any).universe_key || "all") as UniverseKey,
         operationId: (r as any).operation_id || null,
         attributes: r.attributes || [],
+        displayOrder: (r as any).display_order ?? 99,
       }));
     },
     staleTime: 5 * 60 * 1000,
