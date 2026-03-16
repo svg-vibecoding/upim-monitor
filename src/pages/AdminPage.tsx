@@ -1112,31 +1112,48 @@ export default function AdminPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {sortReportsByDisplayOrder(dbReports).map((r) => {
-                          const linkedOp = r.operationId ? operations.find((op) => op.id === r.operationId) : null;
-                          return (
-                            <TableRow key={r.id}>
-                              <TableCell className="font-medium">{r.name}</TableCell>
-                              <TableCell className="text-sm text-muted-foreground">
-                                {linkedOp ? (
-                                  <Badge variant="outline" className="text-xs font-normal">{linkedOp.name}</Badge>
-                                ) : (
-                                  <span className="text-xs italic">Todos los SKUs</span>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
-                                  {getEvaluableAttributes(r.attributes).length}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/editar-informe/${r.id}`)}>
-                                  <Pencil className="h-3 w-3" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
+                        {(() => {
+                          const sorted = sortReportsByDisplayOrder(dbReports);
+                          return sorted.map((r, idx) => {
+                            const linkedOp = r.operationId ? operations.find((op) => op.id === r.operationId) : null;
+                            const isFirst = idx === 0;
+                            const isLast = idx === sorted.length - 1;
+                            return (
+                              <TableRow key={r.id}>
+                                <TableCell className="font-medium">{r.name}</TableCell>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {linkedOp ? (
+                                    <Badge variant="outline" className="text-xs font-normal">{linkedOp.name}</Badge>
+                                  ) : (
+                                    <span className="text-xs italic">Todos los SKUs</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
+                                    {getEvaluableAttributes(r.attributes).length}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-0.5">
+                                    <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/editar-informe/${r.id}`)}>
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                    {!isFirst && (
+                                      <Button variant="ghost" size="icon" onClick={() => handleMoveReport(r.id, "up")} disabled={reorderReports.isPending}>
+                                        <ArrowUp className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                    {!isLast && (
+                                      <Button variant="ghost" size="icon" onClick={() => handleMoveReport(r.id, "down")} disabled={reorderReports.isPending}>
+                                        <ArrowDown className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          });
+                        })()}
                         {dbReports.length === 0 && (
                           <TableRow>
                             <TableCell colSpan={4} className="text-center text-muted-foreground">
