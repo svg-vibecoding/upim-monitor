@@ -147,7 +147,7 @@ export default function DashboardPage() {
   const hasData = kpis && kpis.total > 0;
 
   const focusReports = useMemo(
-    () => sortReportsByDisplayOrder((reports || []).filter((r) => ["PIM General", "Portafolio foco", "SumaGO B2B", "SumaGO B2C", "Operaciones"].includes(r.name))),
+    () => sortReportsByDisplayOrder(reports || []),
     [reports]
   );
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -203,9 +203,9 @@ export default function DashboardPage() {
   // Card 1 config shortcuts
   const c1Cfg = card1Cfg.config;
   const c2Cfg = card2Cfg.config;
-  const card2MainValue = c2MainIsTotal ? total : (c2Cfg.main_operation ? (c2MainCount ?? 0) : (kpis?.digitalBase ?? 0));
-  const card2Sec1Value = c2Sec1IsTotal ? total : (c2Cfg.secondary_1 ? (c2Sec1Count ?? 0) : (kpis?.visibleB2B ?? 0));
-  const card2Sec2Value = c2Sec2IsTotal ? total : (c2Cfg.secondary_2 ? (c2Sec2Count ?? 0) : (kpis?.visibleB2C ?? 0));
+  const card2MainValue = c2MainIsTotal ? total : (c2Cfg.main_operation ? (c2MainCount ?? 0) : 0);
+  const card2Sec1Value = c2Sec1IsTotal ? total : (c2Cfg.secondary_1 ? (c2Sec1Count ?? 0) : 0);
+  const card2Sec2Value = c2Sec2IsTotal ? total : (c2Cfg.secondary_2 ? (c2Sec2Count ?? 0) : 0);
   const card2MainPct = total > 0 ? Math.round((card2MainValue / total) * 100) : 0;
   const card2Sec1Pct = card2MainValue > 0 ? Math.round((card2Sec1Value / card2MainValue) * 100) : 0;
   const card2Sec2Pct = card2MainValue > 0 ? Math.round((card2Sec2Value / card2MainValue) * 100) : 0;
@@ -213,7 +213,7 @@ export default function DashboardPage() {
   // Card 3 label for progress bar subtitle
   const completenessReportName = card3ReportId
     ? reports?.find((r) => r.id === card3ReportId)?.name || "Informe seleccionado"
-    : "PIM General";
+    : pimGeneralReport?.name || "Sin informe configurado";
 
   return (
     <div className="space-y-8 max-w-6xl">
