@@ -70,6 +70,16 @@ function severityBarColor(s: SeverityLevel) {
   }
 }
 
+/* ── Color helper ── */
+const COLOR_DOT_MAP: Record<CardColor, string> = {
+  green: "bg-success",
+  red: "bg-destructive",
+  yellow: "bg-warning",
+  blue: "bg-info",
+  gray: "bg-muted-foreground/50",
+  none: "",
+};
+
 /* ── Small helper: use operation count or null ── */
 function useOpCount(opId: string | null | undefined) {
   return useOperationCount(opId || undefined);
