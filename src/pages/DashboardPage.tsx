@@ -88,7 +88,11 @@ export default function DashboardPage() {
   // Parse card configs with defaults
   const card1Cfg = useMemo(() => {
     const raw = cardsConfig?.find((c) => c.card_key === "card_1");
-    const defaults: Card1Config = { main_value: "total", secondary_1: null, secondary_1_label: "Activos", secondary_2: null, secondary_2_label: "Inactivos" };
+    const defaults: Card1Config = {
+      main_value: "total", main_label: "", main_color: "none", main_pct: false,
+      secondary_1: null, secondary_1_label: "Activos", secondary_1_color: "green", secondary_1_pct: true,
+      secondary_2: null, secondary_2_label: "Inactivos", secondary_2_color: "red", secondary_2_pct: true,
+    };
     return { label: raw?.label || "Catálogo", config: raw ? { ...defaults, ...(raw.config as Card1Config) } : defaults };
   }, [cardsConfig]);
 
