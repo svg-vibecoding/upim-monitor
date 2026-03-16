@@ -1341,25 +1341,8 @@ export default function AdminPage() {
                   editingOperationId={editingOpId}
                 />
 
-                {/* Link to KPI */}
-                <div>
-                  <Label className="mb-2 block">Vincular a indicador del dashboard</Label>
-                  <Select value={opLinkedKpi} onValueChange={(v) => setOpLinkedKpi(v as LinkedKpi | "none")}>
-                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">(Ninguno)</SelectItem>
-                      {(Object.entries(LINKED_KPI_LABELS) as [LinkedKpi, string][]).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>
-                          {label}
-                          {kpiAssignments[key] ? ` (actual: ${kpiAssignments[key]})` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Si se vincula, el conteo del dashboard usará esta operación en lugar de la lógica predeterminada.
-                  </p>
-                </div>
+
+
 
                 <Button onClick={saveOperation} className="w-full" disabled={opSaving}>
                   {opSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Guardando...</> : editingOpId ? "Guardar cambios" : "Crear operación"}
