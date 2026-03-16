@@ -903,10 +903,17 @@ export interface Card1Config {
 
 export interface Card2Config {
   main_operation: string | null;
+  main_label: string;
+  main_color: CardColor;
+  main_pct: boolean;
   secondary_1: string | null;
   secondary_1_label: string;
+  secondary_1_color: CardColor;
+  secondary_1_pct: boolean;
   secondary_2: string | null;
   secondary_2_label: string;
+  secondary_2_color: CardColor;
+  secondary_2_pct: boolean;
 }
 
 export interface Card3Config {
