@@ -16,8 +16,10 @@ import {
   NON_EVALUABLE_FIELDS,
   useOperations,
   useOperationCount,
-  LINKED_KPI_LABELS,
-  type LinkedKpi,
+  useDashboardCardsConfig,
+  type Card1Config,
+  type Card2Config,
+  type Card3Config,
 } from "@/hooks/usePimData";
 import {
   PlusCircle,
@@ -66,6 +68,11 @@ function severityBarColor(s: SeverityLevel) {
   }
 }
 
+/* ── Small helper: use operation count or null ── */
+function useOpCount(opId: string | null | undefined) {
+  return useOperationCount(opId || undefined);
+}
+
 /* ── Dashboard ──────────────────────────────────────────────────── */
 
 export default function DashboardPage() {
@@ -74,26 +81,37 @@ export default function DashboardPage() {
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: attributeOrder } = useAttributeOrder();
   const { data: operations = [] } = useOperations();
+  const { data: cardsConfig } = useDashboardCardsConfig();
 
-  // Identify linked KPI operations (server-side counts via computed_results)
-  const linkedOps = useMemo(() => {
-    const result: { kpi: LinkedKpi; opId: string }[] = [];
-    for (const op of operations) {
-      if (op.active && op.linkedKpi) {
-        result.push({ kpi: op.linkedKpi, opId: op.id });
-      }
-    }
-    return result;
-  }, [operations]);
+  // Parse card configs with defaults
+  const card1Cfg = useMemo(() => {
+    const raw = cardsConfig?.find((c) => c.card_key === "card_1");
+    const defaults: Card1Config = { main_value: "total", secondary_1: null, secondary_1_label: "Activos", secondary_2: null, secondary_2_label: "Inactivos" };
+    return { label: raw?.label || "Catálogo", config: raw ? { ...defaults, ...(raw.config as Card1Config) } : defaults };
+  }, [cardsConfig]);
 
-  const digitalBaseOp = linkedOps.find((o) => o.kpi === "digital_base");
-  const visibleB2BOp = linkedOps.find((o) => o.kpi === "visible_b2b");
-  const visibleB2COp = linkedOps.find((o) => o.kpi === "visible_b2c");
+  const card2Cfg = useMemo(() => {
+    const raw = cardsConfig?.find((c) => c.card_key === "card_2");
+    const defaults: Card2Config = { main_operation: null, secondary_1: null, secondary_1_label: "Visibles B2B", secondary_2: null, secondary_2_label: "Visibles B2C" };
+    return { label: raw?.label || "Base Digital", config: raw ? { ...defaults, ...(raw.config as Card2Config) } : defaults };
+  }, [cardsConfig]);
 
-  // Server-side operation counts (from computed_results)
-  const { data: digitalBaseOpCount, isLoading: loadingDBCount } = useOperationCount(digitalBaseOp?.opId);
-  const { data: visibleB2BOpCount, isLoading: loadingB2BCount } = useOperationCount(visibleB2BOp?.opId);
-  const { data: visibleB2COpCount, isLoading: loadingB2CCount } = useOperationCount(visibleB2COp?.opId);
+  const card3Cfg = useMemo(() => {
+    const raw = cardsConfig?.find((c) => c.card_key === "card_3");
+    const defaults: Card3Config = { report_id: null };
+    return { label: raw?.label || "Completitud General", config: raw ? { ...defaults, ...(raw.config as Card3Config) } : defaults };
+  }, [cardsConfig]);
+
+  // Card 1 operation counts
+  const c1MainIsOp = card1Cfg.config.main_value !== "total";
+  const { data: c1MainOpCount } = useOpCount(c1MainIsOp ? card1Cfg.config.main_value : undefined);
+  const { data: c1Sec1Count } = useOpCount(card1Cfg.config.secondary_1);
+  const { data: c1Sec2Count } = useOpCount(card1Cfg.config.secondary_2);
+
+  // Card 2 operation counts
+  const { data: c2MainCount } = useOpCount(card2Cfg.config.main_operation);
+  const { data: c2Sec1Count } = useOpCount(card2Cfg.config.secondary_1);
+  const { data: c2Sec2Count } = useOpCount(card2Cfg.config.secondary_2);
 
   const totalEvaluableAttrs = useMemo(() => {
     if (!attributeOrder) return 0;
@@ -114,16 +132,18 @@ export default function DashboardPage() {
   // Server-side completeness for active report tab
   const { data: rawFocusItems, isLoading: loadingFocus } = useReportCompleteness(activeReport?.id);
 
-  // Server-side completeness for PIM General
+  // Card 3: report completeness
+  const card3ReportId = card3Cfg.config.report_id;
   const pimGeneralReport = useMemo(() => reports?.find((r) => r.name === "PIM General"), [reports]);
-  const { data: pimGeneralItems } = useReportCompleteness(pimGeneralReport?.id);
+  const completenessReportId = card3ReportId || pimGeneralReport?.id || null;
+  const { data: completenessItems } = useReportCompleteness(completenessReportId);
 
-  const pimGeneralCompleteness = useMemo(() => {
-    if (!pimGeneralItems || pimGeneralItems.length === 0) return null;
-    const evaluable = pimGeneralItems.filter((a) => !NON_EVALUABLE_FIELDS.includes(a.name));
+  const completenessValue = useMemo(() => {
+    if (!completenessItems || completenessItems.length === 0) return null;
+    const evaluable = completenessItems.filter((a) => !NON_EVALUABLE_FIELDS.includes(a.name));
     if (evaluable.length === 0) return null;
     return Math.round(evaluable.reduce((s, a) => s + a.completeness, 0) / evaluable.length);
-  }, [pimGeneralItems]);
+  }, [completenessItems]);
 
   const focusItems = useMemo(() => {
     if (!rawFocusItems) return [];
@@ -146,11 +166,25 @@ export default function DashboardPage() {
     ? format(new Date(kpis.lastUpdated), "d 'de' MMMM yyyy, HH:mm", { locale: es })
     : "Sin datos cargados";
 
-  // Use operation overrides when available; fallback to standard KPIs
-  const digitalBaseCount = digitalBaseOp ? (digitalBaseOpCount ?? 0) : (kpis?.digitalBase ?? 0);
-  const visibleB2BCount = visibleB2BOp ? (visibleB2BOpCount ?? 0) : (kpis?.visibleB2B ?? 0);
-  const visibleB2CCount = visibleB2COp ? (visibleB2COpCount ?? 0) : (kpis?.visibleB2C ?? 0);
-  const pctDigitalBase = kpis && kpis.total > 0 ? Math.round((digitalBaseCount / kpis.total) * 100) : 0;
+  // ── Card 1 computed values ──
+  const card1MainValue = c1MainIsOp ? (c1MainOpCount ?? 0) : (kpis?.total ?? 0);
+  const card1Sec1Value = card1Cfg.config.secondary_1 ? (c1Sec1Count ?? 0) : (kpis?.active ?? 0);
+  const card1Sec2Value = card1Cfg.config.secondary_2 ? (c1Sec2Count ?? 0) : (kpis?.inactive ?? 0);
+  const card1Sec1Pct = kpis && kpis.total > 0 ? Math.round((card1Sec1Value / kpis.total) * 100) : 0;
+  const card1Sec2Pct = kpis && kpis.total > 0 ? Math.round((card1Sec2Value / kpis.total) * 100) : 0;
+
+  // ── Card 2 computed values ──
+  const card2MainValue = card2Cfg.config.main_operation ? (c2MainCount ?? 0) : (kpis?.digitalBase ?? 0);
+  const card2Sec1Value = card2Cfg.config.secondary_1 ? (c2Sec1Count ?? 0) : (kpis?.visibleB2B ?? 0);
+  const card2Sec2Value = card2Cfg.config.secondary_2 ? (c2Sec2Count ?? 0) : (kpis?.visibleB2C ?? 0);
+  const card2MainPct = kpis && kpis.total > 0 ? Math.round((card2MainValue / kpis.total) * 100) : 0;
+  const card2Sec1Pct = card2MainValue > 0 ? Math.round((card2Sec1Value / card2MainValue) * 100) : 0;
+  const card2Sec2Pct = card2MainValue > 0 ? Math.round((card2Sec2Value / card2MainValue) * 100) : 0;
+
+  // Card 3 label for progress bar subtitle
+  const completenessReportName = card3ReportId
+    ? reports?.find((r) => r.id === card3ReportId)?.name || "Informe seleccionado"
+    : "PIM General";
 
   return (
     <div className="space-y-8 max-w-6xl">
@@ -186,120 +220,124 @@ export default function DashboardPage() {
         <>
           {/* ═══ KPI CARDS ═══ */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* A) Catálogo */}
+            {/* A) Card 1 */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5 flex flex-col">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
-                    Catálogo
+                    {card1Cfg.label}
                   </span>
                   <span className="text-[10px] text-muted-foreground/50">/</span>
-                  <span className="text-[10px] text-muted-foreground">SKUs totales</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {c1MainIsOp ? "Resultado de operación" : "SKUs totales"}
+                  </span>
                 </div>
                 <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
-                  {kpis!.total.toLocaleString()}
+                  {card1MainValue.toLocaleString()}
                 </p>
                 <div className="flex-1 min-h-6" />
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
-                        {kpis!.active.toLocaleString()}
+                        {card1Sec1Value.toLocaleString()}
                       </span>
                       <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {Math.round((kpis!.active / kpis!.total) * 100)}%
+                        {card1Sec1Pct}%
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
-                      <p className="text-[10px] text-muted-foreground">Activos</p>
+                      <p className="text-[10px] text-muted-foreground">{card1Cfg.config.secondary_1_label}</p>
                     </div>
                   </div>
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
-                        {kpis!.inactive.toLocaleString()}
+                        {card1Sec2Value.toLocaleString()}
                       </span>
                       <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {Math.round((kpis!.inactive / kpis!.total) * 100)}%
+                        {card1Sec2Pct}%
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
-                      <p className="text-[10px] text-muted-foreground">Inactivos</p>
+                      <p className="text-[10px] text-muted-foreground">{card1Cfg.config.secondary_2_label}</p>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* B) Base Digital */}
+            {/* B) Card 2 */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5 flex flex-col">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
-                    Base Digital
+                    {card2Cfg.label}
                   </span>
                   <span className="text-[10px] text-muted-foreground/50">/</span>
-                  <span className="text-[10px] text-muted-foreground">SKUs con Código SumaGo</span>
+                  <span className="text-[10px] text-muted-foreground">
+                    {card2Cfg.config.main_operation ? "Resultado de operación" : "SKUs con Código SumaGo"}
+                  </span>
                 </div>
                 <div className="flex items-baseline gap-2 mt-3">
                   <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
-                    {digitalBaseCount.toLocaleString()}
+                    {card2MainValue.toLocaleString()}
                   </p>
-                  <span className="text-xs text-muted-foreground tabular-nums">{pctDigitalBase}% del total</span>
+                  <span className="text-xs text-muted-foreground tabular-nums">{card2MainPct}% del total</span>
                 </div>
                 <div className="flex-1 min-h-6" />
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
-                        {visibleB2BCount.toLocaleString()}
+                        {card2Sec1Value.toLocaleString()}
                       </span>
                       <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {digitalBaseCount > 0 ? Math.round((visibleB2BCount / digitalBaseCount) * 100) : 0}%
+                        {card2Sec1Pct}%
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-info shrink-0" />
-                      <p className="text-[10px] text-muted-foreground">Visibles B2B</p>
+                      <p className="text-[10px] text-muted-foreground">{card2Cfg.config.secondary_1_label}</p>
                     </div>
                   </div>
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
-                        {visibleB2CCount.toLocaleString()}
+                        {card2Sec2Value.toLocaleString()}
                       </span>
                       <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {digitalBaseCount > 0 ? Math.round((visibleB2CCount / digitalBaseCount) * 100) : 0}%
+                        {card2Sec2Pct}%
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-info shrink-0" />
-                      <p className="text-[10px] text-muted-foreground">Visibles B2C</p>
+                      <p className="text-[10px] text-muted-foreground">{card2Cfg.config.secondary_2_label}</p>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* C) Completitud General */}
+            {/* C) Card 3 — Completitud */}
             <Card>
               <CardContent className="pt-5 pb-5 px-5 flex flex-col">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
-                    Completitud General
+                    {card3Cfg.label}
                   </span>
                 </div>
-                {pimGeneralCompleteness !== null ? (
+                {completenessValue !== null ? (
                   <>
                     <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
-                      {pimGeneralCompleteness}%
+                      {completenessValue}%
                     </p>
                     <div className="flex-1 min-h-6" />
                     <div className="pt-4 border-t border-border">
-                      <p className="text-xs text-muted-foreground mb-2">Progreso PIM General</p>
-                      <CompletenessBar value={pimGeneralCompleteness} showLabel={false} size="sm" />
+                      <p className="text-xs text-muted-foreground mb-2">Progreso {completenessReportName}</p>
+                      <CompletenessBar value={completenessValue} showLabel={false} size="sm" />
                     </div>
                   </>
                 ) : (
