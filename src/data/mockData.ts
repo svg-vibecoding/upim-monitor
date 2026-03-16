@@ -45,6 +45,7 @@ export interface PredefinedReport {
   operationId: string | null;
   attributes: string[];
   displayOrder: number;
+  showInFocus: boolean;
 }
 
 export interface Dimension {

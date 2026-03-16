@@ -173,7 +173,7 @@ export default function DashboardPage() {
   const focusItems = useMemo(() => {
     if (!rawFocusItems) return [];
     return rawFocusItems
-      .filter((a) => !NON_EVALUABLE_FIELDS.includes(a.name))
+      .filter((a) => !NON_EVALUABLE_FIELDS.includes(a.name) && a.completeness <= 50)
       .sort((a, b) => a.completeness - b.completeness);
   }, [rawFocusItems]);
 

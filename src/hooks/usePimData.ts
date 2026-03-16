@@ -503,6 +503,7 @@ export function usePredefinedReports() {
         operationId: (r as any).operation_id || null,
         attributes: r.attributes || [],
         displayOrder: (r as any).display_order ?? 99,
+        showInFocus: (r as any).show_in_focus ?? true,
       }));
     },
     staleTime: 5 * 60 * 1000,
