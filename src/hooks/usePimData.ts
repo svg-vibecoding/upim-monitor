@@ -656,17 +656,19 @@ export function useCreatePredefinedReport() {
       operationId,
       attributes,
       showInFocus = true,
+      universe,
     }: {
       name: string;
       description: string;
       operationId: string | null;
       attributes: string[];
       showInFocus?: boolean;
+      universe?: string;
     }) => {
       const { error } = await supabase.from("predefined_reports").insert({
         name,
         description,
-        universe: operationId ? "" : "Base general del PIM",
+        universe: universe || (operationId ? "" : "Base general del PIM"),
         universe_key: operationId ? "all" : "all",
         operation_id: operationId,
         attributes,

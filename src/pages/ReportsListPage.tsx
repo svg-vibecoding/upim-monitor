@@ -3,13 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  usePimKPIs, usePredefinedReports, useReportCompleteness, NON_EVALUABLE_FIELDS,
+  usePimKPIs, usePredefinedReports, useReportCompleteness, useOperations, NON_EVALUABLE_FIELDS,
   sortReportsByDisplayOrder,
 } from "@/hooks/usePimData";
 import { FileText } from "lucide-react";
 
-function ReportCard({ report, onClick }: { report: { id: string; name: string; description: string; universe: string }; onClick: () => void }) {
+function ReportCard({ report, operationName, onClick }: { report: { id: string; name: string; description: string; universe: string; operationId: string | null }; operationName: string | null; onClick: () => void }) {
   const { data: completenessData, isLoading } = useReportCompleteness(report.id);
+  const universeLabel = report.universe || operationName || "Base general del PIM";
 
   const attrResults = (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name));
   const avgCompleteness = attrResults.length > 0
@@ -31,7 +32,7 @@ function ReportCard({ report, onClick }: { report: { id: string; name: string; d
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">{report.description}</p>
         <p className="text-xs text-muted-foreground">
-          {report.universe} · {isLoading ? "…" : `${totalSKUs.toLocaleString()} SKUs`}
+          {universeLabel} · {isLoading ? "…" : `${totalSKUs.toLocaleString()} SKUs`}
         </p>
         <div>
           <div className="flex justify-between text-xs mb-1">
@@ -49,6 +50,7 @@ export default function ReportsListPage() {
   const navigate = useNavigate();
   const { data: kpis, isLoading: loadingKPIs } = usePimKPIs();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
+  const { data: operations = [] } = useOperations();
 
   const isLoading = loadingKPIs || loadingReports;
   const hasData = kpis && kpis.total > 0 && reports && reports.length > 0;
@@ -73,6 +75,7 @@ export default function ReportsListPage() {
             <ReportCard
               key={report.id}
               report={report}
+              operationName={report.operationId ? (operations.find(o => o.id === report.operationId)?.name || null) : null}
               onClick={() => navigate(`/informes/${report.id}`)}
             />
           ))}

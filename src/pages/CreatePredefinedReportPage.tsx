@@ -65,6 +65,7 @@ export default function CreatePredefinedReportPage() {
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [universeDesc, setUniverseDesc] = useState("");
   const [source, setSource] = useState<UniverseSource>("general");
   const [selectedOperationId, setSelectedOperationId] = useState("");
   const [opMode, setOpMode] = useState<OperationMode>("new");
@@ -92,6 +93,7 @@ export default function CreatePredefinedReportPage() {
       if (report) {
         setName(report.name);
         setDescription(report.description || "");
+        setUniverseDesc(report.universe || "");
         setSelectedAttrs(report.attributes);
         if (report.operationId) {
           setSource("operation");
@@ -213,6 +215,7 @@ export default function CreatePredefinedReportPage() {
         const { error } = await supabase.from("predefined_reports").update({
           name: name.trim(),
           description: description.trim(),
+          universe: universeDesc.trim(),
           show_in_focus: showInFocus,
         } as any).eq("id", reportId!);
         if (error) throw error;
@@ -226,6 +229,7 @@ export default function CreatePredefinedReportPage() {
           operationId: opId,
           attributes: selectedAttrs,
           showInFocus,
+          universe: universeDesc.trim(),
         });
         toast.success("Informe creado exitosamente");
       }
@@ -300,6 +304,20 @@ export default function CreatePredefinedReportPage() {
             onFileUpload={handleFileUpload}
             onClearFile={handleClearFile}
           />
+          <div className="pt-2">
+            <Label className="text-sm font-semibold">Descripción del universo</Label>
+            <Input
+              value={universeDesc}
+              onChange={(e) => setUniverseDesc(e.target.value)}
+              placeholder={
+                source === "operation" && selectedOperationId
+                  ? operations.find((o) => o.id === selectedOperationId)?.name || "Ej: Productos activos del canal B2B"
+                  : "Ej: Base general del PIM"
+              }
+              className="mt-1"
+            />
+            <p className="text-xs text-muted-foreground mt-1">Texto que se mostrará en la tarjeta del informe. Si lo dejas vacío, se usará el nombre de la operación asignada.</p>
+          </div>
         </CardContent>
       </Card>
 
