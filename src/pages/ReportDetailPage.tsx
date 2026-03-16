@@ -42,7 +42,7 @@ function severityDot(s: SeverityLevel) {
   switch (s) {
     case "critical": return "bg-destructive";
     case "low": return "bg-warning";
-    case "medium": return "bg-info";
+    case "medium": return "bg-caution";
     case "good": return "bg-good";
     case "excellent": return "bg-success";
   }

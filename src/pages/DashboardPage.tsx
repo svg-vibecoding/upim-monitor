@@ -68,7 +68,7 @@ function severityBarColor(s: SeverityLevel) {
   switch (s) {
     case "critical": return "hsl(var(--destructive))";
     case "low": return "hsl(var(--warning))";
-    case "medium": return "hsl(var(--info))";
+    case "medium": return "hsl(var(--caution))";
     case "good": return "hsl(var(--good))";
     case "excellent": return "hsl(var(--success))";
   }
