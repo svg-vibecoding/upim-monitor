@@ -257,6 +257,7 @@ export type Database = {
           id: string
           name: string
           operation_id: string | null
+          show_in_focus: boolean
           universe: string
           universe_key: string
           updated_at: string
@@ -269,6 +270,7 @@ export type Database = {
           id?: string
           name: string
           operation_id?: string | null
+          show_in_focus?: boolean
           universe?: string
           universe_key?: string
           updated_at?: string
@@ -281,6 +283,7 @@ export type Database = {
           id?: string
           name?: string
           operation_id?: string | null
+          show_in_focus?: boolean
           universe?: string
           universe_key?: string
           updated_at?: string
