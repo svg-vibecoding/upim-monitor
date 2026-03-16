@@ -503,6 +503,7 @@ export function usePredefinedReports() {
         operationId: (r as any).operation_id || null,
         attributes: r.attributes || [],
         displayOrder: (r as any).display_order ?? 99,
+        showInFocus: (r as any).show_in_focus ?? true,
       }));
     },
     staleTime: 5 * 60 * 1000,
@@ -653,11 +654,13 @@ export function useCreatePredefinedReport() {
       description,
       operationId,
       attributes,
+      showInFocus = true,
     }: {
       name: string;
       description: string;
       operationId: string | null;
       attributes: string[];
+      showInFocus?: boolean;
     }) => {
       const { error } = await supabase.from("predefined_reports").insert({
         name,
@@ -666,6 +669,7 @@ export function useCreatePredefinedReport() {
         universe_key: operationId ? "all" : "all",
         operation_id: operationId,
         attributes,
+        show_in_focus: showInFocus,
       } as any);
       if (error) throw error;
     },

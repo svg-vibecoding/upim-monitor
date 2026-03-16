@@ -147,7 +147,7 @@ export default function DashboardPage() {
   const hasData = kpis && kpis.total > 0;
 
   const focusReports = useMemo(
-    () => sortReportsByDisplayOrder(reports || []),
+    () => sortReportsByDisplayOrder((reports || []).filter((r) => r.showInFocus)),
     [reports]
   );
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
@@ -173,7 +173,7 @@ export default function DashboardPage() {
   const focusItems = useMemo(() => {
     if (!rawFocusItems) return [];
     return rawFocusItems
-      .filter((a) => !NON_EVALUABLE_FIELDS.includes(a.name))
+      .filter((a) => !NON_EVALUABLE_FIELDS.includes(a.name) && a.completeness <= 50)
       .sort((a, b) => a.completeness - b.completeness);
   }, [rawFocusItems]);
 
@@ -442,7 +442,7 @@ export default function DashboardPage() {
                 </h2>
                 <div className="flex items-center gap-2">
                   <Filter className="h-3 w-3 text-muted-foreground/50" />
-                  {(["critical", "low", "medium", "acceptable"] as SeverityLevel[]).map((s) => (
+                  {(["critical", "low"] as SeverityLevel[]).map((s) => (
                     <button
                       key={s}
                       onClick={() => setSeverityFilter(severityFilter === s ? null : s)}

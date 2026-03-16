@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, memo } from "react";
+import { Switch } from "@/components/ui/switch";
 import { useNavigate, useParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -76,6 +77,7 @@ export default function CreatePredefinedReportPage() {
   const [searchAttr, setSearchAttr] = useState("");
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [showInFocus, setShowInFocus] = useState(true);
 
   // File upload state
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
@@ -98,6 +100,7 @@ export default function CreatePredefinedReportPage() {
         } else {
           setSource("general");
         }
+        setShowInFocus(report.showInFocus ?? true);
         setInitialized(true);
       }
     }
@@ -210,7 +213,8 @@ export default function CreatePredefinedReportPage() {
         const { error } = await supabase.from("predefined_reports").update({
           name: name.trim(),
           description: description.trim(),
-        }).eq("id", reportId!);
+          show_in_focus: showInFocus,
+        } as any).eq("id", reportId!);
         if (error) throw error;
         queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
 
@@ -221,6 +225,7 @@ export default function CreatePredefinedReportPage() {
           description: description.trim(),
           operationId: opId,
           attributes: selectedAttrs,
+          showInFocus,
         });
         toast.success("Informe creado exitosamente");
       }
@@ -358,6 +363,19 @@ export default function CreatePredefinedReportPage() {
           {selectedAttrs.length > 0 && (
             <p className="text-xs text-muted-foreground">{selectedAttrs.length} atributos seleccionados</p>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Toggle: Incluir en Focos de atención */}
+      <Card>
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="show-in-focus">Incluir en Focos de atención</Label>
+              <p className="text-xs text-muted-foreground">Este informe aparecerá como tab en el bloque Focos de atención del dashboard</p>
+            </div>
+            <Switch id="show-in-focus" checked={showInFocus} onCheckedChange={setShowInFocus} />
+          </div>
         </CardContent>
       </Card>
 

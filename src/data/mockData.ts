@@ -45,6 +45,7 @@ export interface PredefinedReport {
   operationId: string | null;
   attributes: string[];
   displayOrder: number;
+  showInFocus: boolean;
 }
 
 export interface Dimension {
@@ -102,19 +103,19 @@ const comprasAttrs = [
 export const mockPredefinedReports: PredefinedReport[] = [
   {
     id: "r1", name: "PIM General", description: "Completitud general de atributos base del catálogo.",
-    universe: "Todos los SKUs activos del PIM", universeKey: "active", operationId: null, attributes: pimGeneralAttrs, displayOrder: 0,
+    universe: "Todos los SKUs activos del PIM", universeKey: "active", operationId: null, attributes: pimGeneralAttrs, displayOrder: 0, showInFocus: true,
   },
   {
     id: "r2", name: "SumaGO B2B", description: "Completitud de atributos para canal digital B2B.",
-    universe: "SKUs con Visibilidad Adobe B2B = Visible", universeKey: "visible_b2b", operationId: null, attributes: sumaGoB2BAttrs, displayOrder: 1,
+    universe: "SKUs con Visibilidad Adobe B2B = Visible", universeKey: "visible_b2b", operationId: null, attributes: sumaGoB2BAttrs, displayOrder: 1, showInFocus: true,
   },
   {
     id: "r3", name: "SumaGO B2C", description: "Completitud de atributos para canal digital B2C.",
-    universe: "SKUs con Visibilidad Adobe B2C = Visible", universeKey: "visible_b2c", operationId: null, attributes: sumaGoB2CAttrs, displayOrder: 2,
+    universe: "SKUs con Visibilidad Adobe B2C = Visible", universeKey: "visible_b2c", operationId: null, attributes: sumaGoB2CAttrs, displayOrder: 2, showInFocus: true,
   },
   {
     id: "r4", name: "Operaciones", description: "Completitud de atributos de gestión de operaciones.",
-    universe: "Totalidad del PIM", universeKey: "all", operationId: null, attributes: comprasAttrs, displayOrder: 3,
+    universe: "Totalidad del PIM", universeKey: "all", operationId: null, attributes: comprasAttrs, displayOrder: 3, showInFocus: true,
   },
 ];
 

@@ -1,0 +1,1 @@
+ALTER TABLE public.predefined_reports ADD COLUMN IF NOT EXISTS show_in_focus boolean NOT NULL DEFAULT true;
