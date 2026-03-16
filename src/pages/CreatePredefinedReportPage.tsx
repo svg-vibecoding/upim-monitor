@@ -100,6 +100,7 @@ export default function CreatePredefinedReportPage() {
         } else {
           setSource("general");
         }
+        setShowInFocus(report.showInFocus ?? true);
         setInitialized(true);
       }
     }
