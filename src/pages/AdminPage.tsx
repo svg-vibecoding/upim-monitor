@@ -149,7 +149,6 @@ export default function AdminPage() {
       setOpDescription("");
       setOpLogicMode("all");
       setOpConditions([{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }]);
-      setOpLinkedKpi("none");
     }
     setOpDialog(true);
   }, []);
