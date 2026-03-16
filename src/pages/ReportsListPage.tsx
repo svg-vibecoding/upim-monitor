@@ -50,6 +50,7 @@ export default function ReportsListPage() {
   const navigate = useNavigate();
   const { data: kpis, isLoading: loadingKPIs } = usePimKPIs();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
+  const { data: operations = [] } = useOperations();
 
   const isLoading = loadingKPIs || loadingReports;
   const hasData = kpis && kpis.total > 0 && reports && reports.length > 0;
