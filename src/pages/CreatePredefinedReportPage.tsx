@@ -93,6 +93,7 @@ export default function CreatePredefinedReportPage() {
       if (report) {
         setName(report.name);
         setDescription(report.description || "");
+        setUniverseDesc(report.universe || "");
         setSelectedAttrs(report.attributes);
         if (report.operationId) {
           setSource("operation");
