@@ -268,30 +268,28 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
         Configura el contenido de los 3 cards principales que se muestran en el dashboard.
       </p>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="space-y-4">
         {/* ── Card 1: Universo total ── */}
         <Card>
-          <CardContent className="pt-5 space-y-3">
+          <CardContent className="pt-5 space-y-4">
             <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 1 — Universo total</p>
             <div>
               <Label className="text-xs">Label del card</Label>
               <Input value={c1Label} onChange={(e) => setC1Label(e.target.value)} placeholder="Catálogo" className="h-8 text-sm" />
             </div>
-
-            <DataPointConfig
-              title="Dato principal"
-              valueId={c1MainValue}
-              onValueChange={setC1MainValue}
-              label={c1MainLabel}
-              onLabelChange={setC1MainLabel}
-              color={c1MainColor}
-              onColorChange={setC1MainColor}
-              pct={c1MainPct}
-              onPctChange={setC1MainPct}
-              opSelectItems={opSelectItems}
-            />
-
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <DataPointConfig
+                title="Dato principal"
+                valueId={c1MainValue}
+                onValueChange={setC1MainValue}
+                label={c1MainLabel}
+                onLabelChange={setC1MainLabel}
+                color={c1MainColor}
+                onColorChange={setC1MainColor}
+                pct={c1MainPct}
+                onPctChange={setC1MainPct}
+                opSelectItems={opSelectItems}
+              />
               <DataPointConfig
                 title="Secundario 1"
                 valueId={c1Sec1}
@@ -319,91 +317,115 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
                 includeDefault
               />
             </div>
-
-            <Button onClick={saveCard1} size="sm" className="w-full gap-2" disabled={c1Saving}>
-              {c1Saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-              Guardar
-            </Button>
+            <div className="flex justify-end">
+              <Button onClick={saveCard1} size="sm" className="gap-2" disabled={c1Saving}>
+                {c1Saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                Guardar
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
         {/* ── Card 2: Universo configurable ── */}
         <Card>
-          <CardContent className="pt-5 space-y-3">
+          <CardContent className="pt-5 space-y-4">
             <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 2 — Universo configurable</p>
             <div>
               <Label className="text-xs">Label del card</Label>
               <Input value={c2Label} onChange={(e) => setC2Label(e.target.value)} placeholder="Base Digital" className="h-8 text-sm" />
             </div>
-            <div>
-              <Label className="text-xs">Operación principal</Label>
-              <Select value={c2MainOp} onValueChange={setC2MainOp}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                  <SelectItem value="total">Universo total</SelectItem>
-                  {opSelectItems}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs">Secundario 1</Label>
-                <Select value={c2Sec1} onValueChange={setC2Sec1}>
-                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                    <SelectItem value="total">Universo total</SelectItem>
-                    {opSelectItems}
-                  </SelectContent>
-                </Select>
-                <Input value={c2Sec1Label} onChange={(e) => setC2Sec1Label(e.target.value)} placeholder="Label" className="h-7 text-xs mt-1" />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
+                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Dato principal</p>
+                <div>
+                  <Label className="text-xs">Valor</Label>
+                  <Select value={c2MainOp} onValueChange={setC2MainOp}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>(Por defecto)</SelectItem>
+                      <SelectItem value="total">Universo total</SelectItem>
+                      {opSelectItems}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div>
-                <Label className="text-xs">Secundario 2</Label>
-                <Select value={c2Sec2} onValueChange={setC2Sec2}>
-                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                    <SelectItem value="total">Universo total</SelectItem>
-                    {opSelectItems}
-                  </SelectContent>
-                </Select>
-                <Input value={c2Sec2Label} onChange={(e) => setC2Sec2Label(e.target.value)} placeholder="Label" className="h-7 text-xs mt-1" />
+              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
+                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Secundario 1</p>
+                <div>
+                  <Label className="text-xs">Valor</Label>
+                  <Select value={c2Sec1} onValueChange={setC2Sec1}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>(Por defecto)</SelectItem>
+                      <SelectItem value="total">Universo total</SelectItem>
+                      {opSelectItems}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Label</Label>
+                  <Input value={c2Sec1Label} onChange={(e) => setC2Sec1Label(e.target.value)} placeholder="Label" className="h-7 text-xs" />
+                </div>
+              </div>
+              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
+                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Secundario 2</p>
+                <div>
+                  <Label className="text-xs">Valor</Label>
+                  <Select value={c2Sec2} onValueChange={setC2Sec2}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>(Por defecto)</SelectItem>
+                      <SelectItem value="total">Universo total</SelectItem>
+                      {opSelectItems}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs">Label</Label>
+                  <Input value={c2Sec2Label} onChange={(e) => setC2Sec2Label(e.target.value)} placeholder="Label" className="h-7 text-xs" />
+                </div>
               </div>
             </div>
-            <Button onClick={saveCard2} size="sm" className="w-full gap-2" disabled={c2Saving}>
-              {c2Saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-              Guardar
-            </Button>
+            <div className="flex justify-end">
+              <Button onClick={saveCard2} size="sm" className="gap-2" disabled={c2Saving}>
+                {c2Saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                Guardar
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
         {/* ── Card 3: Progreso ── */}
         <Card>
-          <CardContent className="pt-5 space-y-3">
+          <CardContent className="pt-5 space-y-4">
             <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 3 — Progreso</p>
             <div>
               <Label className="text-xs">Label del card</Label>
               <Input value={c3Label} onChange={(e) => setC3Label(e.target.value)} placeholder="Completitud General" className="h-8 text-sm" />
             </div>
-            <div>
-              <Label className="text-xs">Informe para completitud</Label>
-              <Select value={c3ReportId} onValueChange={setC3ReportId}>
-                <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={NONE}>(PIM General por defecto)</SelectItem>
-                  {reports.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
+                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Dato principal</p>
+                <div>
+                  <Label className="text-xs">Informe para completitud</Label>
+                  <Select value={c3ReportId} onValueChange={setC3ReportId}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={NONE}>(PIM General por defecto)</SelectItem>
+                      {reports.map((r) => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </div>
-            <div className="flex-1" />
-            <Button onClick={saveCard3} size="sm" className="w-full gap-2" disabled={c3Saving}>
-              {c3Saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
-              Guardar
-            </Button>
+            <div className="flex justify-end">
+              <Button onClick={saveCard3} size="sm" className="gap-2" disabled={c3Saving}>
+                {c3Saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+                Guardar
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
