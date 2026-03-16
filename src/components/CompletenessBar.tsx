@@ -6,9 +6,10 @@ interface CompletenessBarProps {
 
 export function CompletenessBar({ value, showLabel = true, size = "sm" }: CompletenessBarProps) {
   const fillClass =
-    value > 75 ? "completeness-fill-high"
-    : value > 50 ? "completeness-fill-medium"
-    : value > 25 ? "completeness-fill-low"
+    value >= 90 ? "completeness-fill-high"
+    : value >= 70 ? "completeness-fill-good"
+    : value >= 50 ? "completeness-fill-medium"
+    : value >= 25 ? "completeness-fill-low"
     : "completeness-fill-critical";
   const height = size === "md" ? "h-3" : "h-2";
 

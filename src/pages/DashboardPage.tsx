@@ -34,21 +34,23 @@ import { es } from "date-fns/locale";
 
 /* ── Severity helpers ─────────────────────────────────────────── */
 
-type SeverityLevel = "critical" | "low" | "medium" | "acceptable";
+type SeverityLevel = "critical" | "low" | "medium" | "good" | "excellent";
 
 function getSeverity(pct: number): SeverityLevel {
-  if (pct <= 25) return "critical";
-  if (pct <= 50) return "low";
-  if (pct <= 75) return "medium";
-  return "acceptable";
+  if (pct < 25) return "critical";
+  if (pct < 50) return "low";
+  if (pct < 70) return "medium";
+  if (pct < 90) return "good";
+  return "excellent";
 }
 
 function severityLabel(s: SeverityLevel) {
   switch (s) {
     case "critical": return "0–25 %";
     case "low": return "25–50 %";
-    case "medium": return "50–75 %";
-    case "acceptable": return "75 %+";
+    case "medium": return "50–70 %";
+    case "good": return "70–90 %";
+    case "excellent": return "90–100 %";
   }
 }
 
@@ -56,8 +58,9 @@ function severityDot(s: SeverityLevel) {
   switch (s) {
     case "critical": return "bg-destructive";
     case "low": return "bg-warning";
-    case "medium": return "bg-info";
-    case "acceptable": return "bg-success";
+    case "medium": return "bg-caution";
+    case "good": return "bg-good";
+    case "excellent": return "bg-success";
   }
 }
 
@@ -65,8 +68,9 @@ function severityBarColor(s: SeverityLevel) {
   switch (s) {
     case "critical": return "hsl(var(--destructive))";
     case "low": return "hsl(var(--warning))";
-    case "medium": return "hsl(var(--info))";
-    case "acceptable": return "hsl(var(--success))";
+    case "medium": return "hsl(var(--caution))";
+    case "good": return "hsl(var(--good))";
+    case "excellent": return "hsl(var(--success))";
   }
 }
 
@@ -182,7 +186,7 @@ export default function DashboardPage() {
     : focusItems;
 
   const severityCounts = useMemo(() => {
-    const counts: Record<SeverityLevel, number> = { critical: 0, low: 0, medium: 0, acceptable: 0 };
+    const counts: Record<SeverityLevel, number> = { critical: 0, low: 0, medium: 0, good: 0, excellent: 0 };
     focusItems.forEach((fp) => counts[getSeverity(fp.completeness)]++);
     return counts;
   }, [focusItems]);
@@ -442,7 +446,7 @@ export default function DashboardPage() {
                 </h2>
                 <div className="flex items-center gap-2">
                   <Filter className="h-3 w-3 text-muted-foreground/50" />
-                  {(["critical", "low"] as SeverityLevel[]).map((s) => (
+                  {(["critical", "low", "medium", "good", "excellent"] as SeverityLevel[]).map((s) => (
                     <button
                       key={s}
                       onClick={() => setSeverityFilter(severityFilter === s ? null : s)}

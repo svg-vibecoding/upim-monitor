@@ -31,6 +31,12 @@
     --warning: 45 93% 47%;
     --warning-foreground: 0 0% 100%;
 
+    --caution: 48 96% 53%;
+    --caution-foreground: 0 0% 15%;
+
+    --good: 210 76% 52%;
+    --good-foreground: 0 0% 100%;
+
     --success: 148 65% 40%;
     --success-foreground: 0 0% 100%;
 
@@ -73,9 +79,13 @@
     @apply h-full rounded-full;
     background-color: hsl(var(--success));
   }
+  .completeness-fill-good {
+    @apply h-full rounded-full;
+    background-color: hsl(var(--good));
+  }
   .completeness-fill-medium {
     @apply h-full rounded-full;
-    background-color: hsl(var(--info));
+    background-color: hsl(var(--caution));
   }
   .completeness-fill-low {
     @apply h-full rounded-full;
