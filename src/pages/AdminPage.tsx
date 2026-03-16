@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw, UserPlus, Trash2, ChevronRight, Inbox, Settings2, X } from "lucide-react";
+import { Plus, Pencil, Upload, FileUp, CheckCircle2, AlertCircle, Loader2, RefreshCw, Search, CheckSquare, Square, History, RotateCcw, UserPlus, Trash2, ChevronRight, Inbox, Settings2, X, ArrowUp, ArrowDown } from "lucide-react";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { OperationBuilder } from "@/components/OperationBuilder";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -27,6 +27,7 @@ import {
   useAttributeOrder,
   useUpdateReportAttributes,
   useUpdateReportOperation,
+  useReorderReports,
   useRefreshComputed,
   getEvaluableAttributes,
   getFullAttributeList,
@@ -112,7 +113,20 @@ export default function AdminPage() {
   const { data: operations = [], isLoading: operationsLoading } = useOperations();
   const updateReportAttrs = useUpdateReportAttributes();
   const updateReportOp = useUpdateReportOperation();
-  
+  const reorderReports = useReorderReports();
+
+  const handleMoveReport = useCallback((reportId: string, direction: "up" | "down") => {
+    const sorted = sortReportsByDisplayOrder(dbReports);
+    const idx = sorted.findIndex((r) => r.id === reportId);
+    if (idx < 0) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= sorted.length) return;
+    const updates = [
+      { id: sorted[idx].id, display_order: sorted[swapIdx].displayOrder },
+      { id: sorted[swapIdx].id, display_order: sorted[idx].displayOrder },
+    ];
+    reorderReports.mutate(updates);
+  }, [dbReports, reorderReports]);
 
   // --- Operations state ---
   const [opDialog, setOpDialog] = useState(false);
@@ -1098,31 +1112,48 @@ export default function AdminPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {sortReportsByDisplayOrder(dbReports).map((r) => {
-                          const linkedOp = r.operationId ? operations.find((op) => op.id === r.operationId) : null;
-                          return (
-                            <TableRow key={r.id}>
-                              <TableCell className="font-medium">{r.name}</TableCell>
-                              <TableCell className="text-sm text-muted-foreground">
-                                {linkedOp ? (
-                                  <Badge variant="outline" className="text-xs font-normal">{linkedOp.name}</Badge>
-                                ) : (
-                                  <span className="text-xs italic">Todos los SKUs</span>
-                                )}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
-                                  {getEvaluableAttributes(r.attributes).length}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>
-                                <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/editar-informe/${r.id}`)}>
-                                  <Pencil className="h-3 w-3" />
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
+                        {(() => {
+                          const sorted = sortReportsByDisplayOrder(dbReports);
+                          return sorted.map((r, idx) => {
+                            const linkedOp = r.operationId ? operations.find((op) => op.id === r.operationId) : null;
+                            const isFirst = idx === 0;
+                            const isLast = idx === sorted.length - 1;
+                            return (
+                              <TableRow key={r.id}>
+                                <TableCell className="font-medium">{r.name}</TableCell>
+                                <TableCell className="text-sm text-muted-foreground">
+                                  {linkedOp ? (
+                                    <Badge variant="outline" className="text-xs font-normal">{linkedOp.name}</Badge>
+                                  ) : (
+                                    <span className="text-xs italic">Todos los SKUs</span>
+                                  )}
+                                </TableCell>
+                                <TableCell className="text-right">
+                                  <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
+                                    {getEvaluableAttributes(r.attributes).length}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex items-center gap-0.5">
+                                    <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/editar-informe/${r.id}`)}>
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                    {!isFirst && (
+                                      <Button variant="ghost" size="icon" onClick={() => handleMoveReport(r.id, "up")} disabled={reorderReports.isPending}>
+                                        <ArrowUp className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                    {!isLast && (
+                                      <Button variant="ghost" size="icon" onClick={() => handleMoveReport(r.id, "down")} disabled={reorderReports.isPending}>
+                                        <ArrowDown className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          });
+                        })()}
                         {dbReports.length === 0 && (
                           <TableRow>
                             <TableCell colSpan={4} className="text-center text-muted-foreground">

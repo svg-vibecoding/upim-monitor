@@ -502,6 +502,7 @@ export function usePredefinedReports() {
         universeKey: ((r as any).universe_key || "all") as UniverseKey,
         operationId: (r as any).operation_id || null,
         attributes: r.attributes || [],
+        displayOrder: (r as any).display_order ?? 99,
       }));
     },
     staleTime: 5 * 60 * 1000,
@@ -674,15 +675,32 @@ export function useCreatePredefinedReport() {
   });
 }
 
-/** Canonical display order for predefined reports */
-export const REPORT_DISPLAY_ORDER = ["PIM General", "Portafolio foco", "SumaGO B2B", "SumaGO B2C", "Operaciones"];
-
-/** Sort reports by canonical display order */
-export function sortReportsByDisplayOrder<T extends { name: string }>(reports: T[]): T[] {
+/** Sort reports by display_order column */
+export function sortReportsByDisplayOrder<T extends { displayOrder?: number; name: string }>(reports: T[]): T[] {
   return [...reports].sort((a, b) => {
-    const idxA = REPORT_DISPLAY_ORDER.indexOf(a.name);
-    const idxB = REPORT_DISPLAY_ORDER.indexOf(b.name);
-    return (idxA === -1 ? 999 : idxA) - (idxB === -1 ? 999 : idxB);
+    const oA = a.displayOrder ?? 99;
+    const oB = b.displayOrder ?? 99;
+    if (oA !== oB) return oA - oB;
+    return a.name.localeCompare(b.name);
+  });
+}
+
+/** Mutation to swap display_order of two reports */
+export function useReorderReports() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (updates: { id: string; display_order: number }[]) => {
+      for (const u of updates) {
+        const { error } = await supabase
+          .from("predefined_reports")
+          .update({ display_order: u.display_order } as any)
+          .eq("id", u.id);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
+    },
   });
 }
 
