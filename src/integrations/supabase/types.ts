@@ -35,6 +35,27 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboard_cards_config: {
+        Row: {
+          card_key: string
+          config: Json
+          label: string
+          updated_at: string
+        }
+        Insert: {
+          card_key: string
+          config?: Json
+          label?: string
+          updated_at?: string
+        }
+        Update: {
+          card_key?: string
+          config?: Json
+          label?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       dimensions: {
         Row: {
           created_at: string
