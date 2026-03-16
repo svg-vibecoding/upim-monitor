@@ -44,6 +44,7 @@ export interface PredefinedReport {
   universeKey: UniverseKey;
   operationId: string | null;
   attributes: string[];
+  displayOrder: number;
 }
 
 export interface Dimension {
