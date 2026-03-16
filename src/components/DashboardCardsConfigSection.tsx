@@ -248,10 +248,17 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
         label: c2Label,
         config: {
           main_operation: c2MainOp === NONE ? null : c2MainOp,
+          main_label: c2MainLabel,
+          main_color: c2MainColor,
+          main_pct: c2MainPct,
           secondary_1: c2Sec1 === NONE ? null : c2Sec1,
           secondary_1_label: c2Sec1Label,
+          secondary_1_color: c2Sec1Color,
+          secondary_1_pct: c2Sec1Pct,
           secondary_2: c2Sec2 === NONE ? null : c2Sec2,
           secondary_2_label: c2Sec2Label,
+          secondary_2_color: c2Sec2Color,
+          secondary_2_pct: c2Sec2Pct,
         },
       });
       toast.success("Card 2 guardado");
