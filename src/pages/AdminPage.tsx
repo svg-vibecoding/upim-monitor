@@ -165,7 +165,6 @@ export default function AdminPage() {
         description: opDescription.trim(),
         logic_mode: opLogicMode,
         conditions: validConditions,
-        linked_kpi: linkedKpiValue,
       };
 
       if (editingOpId) {
