@@ -8,8 +8,9 @@ import {
 } from "@/hooks/usePimData";
 import { FileText } from "lucide-react";
 
-function ReportCard({ report, onClick }: { report: { id: string; name: string; description: string; universe: string }; onClick: () => void }) {
+function ReportCard({ report, operationName, onClick }: { report: { id: string; name: string; description: string; universe: string; operationId: string | null }; operationName: string | null; onClick: () => void }) {
   const { data: completenessData, isLoading } = useReportCompleteness(report.id);
+  const universeLabel = report.universe || operationName || "Base general del PIM";
 
   const attrResults = (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name));
   const avgCompleteness = attrResults.length > 0
