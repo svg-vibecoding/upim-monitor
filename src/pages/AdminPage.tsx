@@ -143,7 +143,6 @@ export default function AdminPage() {
       setOpDescription(op.description);
       setOpLogicMode(op.logicMode);
       setOpConditions(op.conditions.length > 0 ? op.conditions : [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }]);
-      setOpLinkedKpi(op.linkedKpi || "none");
     } else {
       setEditingOpId(null);
       setOpName("");
