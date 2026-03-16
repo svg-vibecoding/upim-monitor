@@ -76,6 +76,10 @@
     @apply h-full rounded-full;
     background-color: hsl(var(--success));
   }
+  .completeness-fill-good {
+    @apply h-full rounded-full;
+    background-color: hsl(var(--good));
+  }
   .completeness-fill-medium {
     @apply h-full rounded-full;
     background-color: hsl(var(--info));
