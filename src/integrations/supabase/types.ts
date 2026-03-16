@@ -253,6 +253,7 @@ export type Database = {
           attributes: string[]
           created_at: string
           description: string
+          display_order: number
           id: string
           name: string
           operation_id: string | null
@@ -264,6 +265,7 @@ export type Database = {
           attributes?: string[]
           created_at?: string
           description?: string
+          display_order?: number
           id?: string
           name: string
           operation_id?: string | null
@@ -275,6 +277,7 @@ export type Database = {
           attributes?: string[]
           created_at?: string
           description?: string
+          display_order?: number
           id?: string
           name?: string
           operation_id?: string | null
