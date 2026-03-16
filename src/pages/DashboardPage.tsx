@@ -108,7 +108,11 @@ export default function DashboardPage() {
 
   const card2Cfg = useMemo(() => {
     const raw = cardsConfig?.find((c) => c.card_key === "card_2");
-    const defaults: Card2Config = { main_operation: null, secondary_1: null, secondary_1_label: "Visibles B2B", secondary_2: null, secondary_2_label: "Visibles B2C" };
+    const defaults: Card2Config = {
+      main_operation: null, main_label: "", main_color: "none", main_pct: true,
+      secondary_1: null, secondary_1_label: "Visibles B2B", secondary_1_color: "blue", secondary_1_pct: true,
+      secondary_2: null, secondary_2_label: "Visibles B2C", secondary_2_color: "blue", secondary_2_pct: true,
+    };
     return { label: raw?.label || "Base Digital", config: raw ? { ...defaults, ...(raw.config as Card2Config) } : defaults };
   }, [cardsConfig]);
 
