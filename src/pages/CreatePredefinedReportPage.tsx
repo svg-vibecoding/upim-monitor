@@ -365,6 +365,19 @@ export default function CreatePredefinedReportPage() {
         </CardContent>
       </Card>
 
+      {/* Toggle: Incluir en Focos de atención */}
+      <Card>
+        <CardContent className="pt-4 pb-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="show-in-focus">Incluir en Focos de atención</Label>
+              <p className="text-xs text-muted-foreground">Este informe aparecerá como tab en el bloque Focos de atención del dashboard</p>
+            </div>
+            <Switch id="show-in-focus" checked={showInFocus} onCheckedChange={setShowInFocus} />
+          </div>
+        </CardContent>
+      </Card>
+
       <Button onClick={handleSave} disabled={!canSave || saving} className="gap-2">
         {saving && <Loader2 className="h-4 w-4 animate-spin" />}
         <FileText className="h-4 w-4" />
