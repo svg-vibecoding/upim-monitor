@@ -878,5 +878,65 @@ export function useInvalidatePimData() {
     queryClient.invalidateQueries({ queryKey: ["computed-result"] });
     queryClient.invalidateQueries({ queryKey: ["report-completeness-live"] });
     queryClient.invalidateQueries({ queryKey: ["operation-count-live"] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-cards-config"] });
   };
+}
+
+// --- Dashboard Cards Config ---
+
+export interface Card1Config {
+  main_value: "total" | string; // "total" or operation_id
+  secondary_1: string | null;
+  secondary_1_label: string;
+  secondary_2: string | null;
+  secondary_2_label: string;
+}
+
+export interface Card2Config {
+  main_operation: string | null;
+  secondary_1: string | null;
+  secondary_1_label: string;
+  secondary_2: string | null;
+  secondary_2_label: string;
+}
+
+export interface Card3Config {
+  report_id: string | null;
+}
+
+export interface DashboardCardConfig {
+  card_key: string;
+  label: string;
+  config: Card1Config | Card2Config | Card3Config;
+  updated_at: string;
+}
+
+export function useDashboardCardsConfig() {
+  return useQuery({
+    queryKey: ["dashboard-cards-config"],
+    queryFn: async (): Promise<DashboardCardConfig[]> => {
+      const { data, error } = await supabase
+        .from("dashboard_cards_config" as any)
+        .select("*");
+      if (error) throw error;
+      return (data || []) as unknown as DashboardCardConfig[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useUpdateDashboardCard() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ cardKey, label, config }: { cardKey: string; label: string; config: Record<string, unknown> }) => {
+      const { error } = await supabase
+        .from("dashboard_cards_config" as any)
+        .update({ label, config, updated_at: new Date().toISOString() } as any)
+        .eq("card_key", cardKey);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["dashboard-cards-config"] });
+    },
+  });
 }
