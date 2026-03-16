@@ -65,6 +65,7 @@ export default function CreatePredefinedReportPage() {
   // Form state
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [universeDesc, setUniverseDesc] = useState("");
   const [source, setSource] = useState<UniverseSource>("general");
   const [selectedOperationId, setSelectedOperationId] = useState("");
   const [opMode, setOpMode] = useState<OperationMode>("new");
