@@ -403,6 +403,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      get_dimension_unique_values: {
+        Args: { p_dimension_field: string }
+        Returns: string[]
+      }
       get_operation_count: { Args: { p_operation_id: string }; Returns: number }
       get_pim_kpis: { Args: never; Returns: Json }
       get_record_attr_value: {

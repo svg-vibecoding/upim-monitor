@@ -103,6 +103,26 @@ export function usePimKPIs() {
   });
 }
 
+// --- Dimension unique values (from computed_results cache) ---
+export function useDimensionValues() {
+  return useQuery({
+    queryKey: ["computed-result", "dimension_values"],
+    queryFn: async (): Promise<Record<string, string[]>> => {
+      const { data, error } = await supabase
+        .from("computed_results" as any)
+        .select("entity_id, result")
+        .eq("result_type", "dimension_values");
+      if (error) throw error;
+      const map: Record<string, string[]> = {};
+      for (const row of (data || []) as any[]) {
+        map[row.entity_id] = Array.isArray(row.result) ? row.result : [];
+      }
+      return map;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
 // --- Server-side report completeness (avoids loading all records) ---
 export interface AttributeCompleteness {
   name: string;
