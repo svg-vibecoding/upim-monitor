@@ -1057,8 +1057,8 @@ export default function AdminPage() {
           })()}
         </TabsContent>
 
-        {/* REPORTS - now DB-driven */}
-        <TabsContent value="reports" className="space-y-4">
+        {/* REPORTS - now with two sections */}
+        <TabsContent value="reports" className="space-y-6">
           {attrsLoading || reportsLoading ? (
             <div className="flex items-center gap-2 p-8 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Cargando informes...
@@ -1073,62 +1073,67 @@ export default function AdminPage() {
             </Card>
           ) : (
             <>
-              <div className="flex justify-end">
-                <Button onClick={() => navigate("/admin/nuevo-informe")} className="gap-2">
-                  <Plus className="h-4 w-4" /> Nuevo informe
-                </Button>
-              </div>
+              {/* ═══ SECCIÓN 1: Cards del Dashboard ═══ */}
+              <DashboardCardsConfigSection operations={operations} reports={dbReports} />
 
-              {/* Edit is now handled by /admin/editar-informe/:reportId */}
+              {/* ═══ SECCIÓN 2: Informes predefinidos ═══ */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-foreground">Informes predefinidos</h3>
+                  <Button onClick={() => navigate("/admin/nuevo-informe")} className="gap-2">
+                    <Plus className="h-4 w-4" /> Nuevo informe
+                  </Button>
+                </div>
 
-              <Card>
-                <CardContent className="pt-4">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead>Operación (universo)</TableHead>
-                        <TableHead className="text-right">Atributos</TableHead>
-                        <TableHead className="w-20">Acciones</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortReportsByDisplayOrder(dbReports).map((r) => {
-                        const linkedOp = r.operationId ? operations.find((op) => op.id === r.operationId) : null;
-                        return (
-                          <TableRow key={r.id}>
-                            <TableCell className="font-medium">{r.name}</TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {linkedOp ? (
-                                <Badge variant="outline" className="text-xs font-normal">{linkedOp.name}</Badge>
-                              ) : (
-                                <span className="text-xs italic">Todos los SKUs</span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
-                                {getEvaluableAttributes(r.attributes).length}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/editar-informe/${r.id}`)}>
-                                <Pencil className="h-3 w-3" />
-                              </Button>
+                <Card>
+                  <CardContent className="pt-4">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Nombre</TableHead>
+                          <TableHead>Operación (universo)</TableHead>
+                          <TableHead className="text-right">Atributos</TableHead>
+                          <TableHead className="w-20">Acciones</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sortReportsByDisplayOrder(dbReports).map((r) => {
+                          const linkedOp = r.operationId ? operations.find((op) => op.id === r.operationId) : null;
+                          return (
+                            <TableRow key={r.id}>
+                              <TableCell className="font-medium">{r.name}</TableCell>
+                              <TableCell className="text-sm text-muted-foreground">
+                                {linkedOp ? (
+                                  <Badge variant="outline" className="text-xs font-normal">{linkedOp.name}</Badge>
+                                ) : (
+                                  <span className="text-xs italic">Todos los SKUs</span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Badge variant={getEvaluableAttributes(r.attributes).length > 0 ? "secondary" : "destructive"}>
+                                  {getEvaluableAttributes(r.attributes).length}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="icon" onClick={() => navigate(`/admin/editar-informe/${r.id}`)}>
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                        {dbReports.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center text-muted-foreground">
+                              No hay informes predefinidos
                             </TableCell>
                           </TableRow>
-                        );
-                      })}
-                      {dbReports.length === 0 && (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center text-muted-foreground">
-                            No hay informes predefinidos
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </div>
             </>
           )}
         </TabsContent>
