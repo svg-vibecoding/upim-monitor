@@ -108,7 +108,11 @@ export default function DashboardPage() {
 
   const card2Cfg = useMemo(() => {
     const raw = cardsConfig?.find((c) => c.card_key === "card_2");
-    const defaults: Card2Config = { main_operation: null, secondary_1: null, secondary_1_label: "Visibles B2B", secondary_2: null, secondary_2_label: "Visibles B2C" };
+    const defaults: Card2Config = {
+      main_operation: null, main_label: "", main_color: "none", main_pct: true,
+      secondary_1: null, secondary_1_label: "Visibles B2B", secondary_1_color: "blue", secondary_1_pct: true,
+      secondary_2: null, secondary_2_label: "Visibles B2C", secondary_2_color: "blue", secondary_2_pct: true,
+    };
     return { label: raw?.label || "Base Digital", config: raw ? { ...defaults, ...(raw.config as Card2Config) } : defaults };
   }, [cardsConfig]);
 
@@ -198,9 +202,10 @@ export default function DashboardPage() {
 
   // Card 1 config shortcuts
   const c1Cfg = card1Cfg.config;
-  const card2MainValue = c2MainIsTotal ? total : (card2Cfg.config.main_operation ? (c2MainCount ?? 0) : (kpis?.digitalBase ?? 0));
-  const card2Sec1Value = c2Sec1IsTotal ? total : (card2Cfg.config.secondary_1 ? (c2Sec1Count ?? 0) : (kpis?.visibleB2B ?? 0));
-  const card2Sec2Value = c2Sec2IsTotal ? total : (card2Cfg.config.secondary_2 ? (c2Sec2Count ?? 0) : (kpis?.visibleB2C ?? 0));
+  const c2Cfg = card2Cfg.config;
+  const card2MainValue = c2MainIsTotal ? total : (c2Cfg.main_operation ? (c2MainCount ?? 0) : (kpis?.digitalBase ?? 0));
+  const card2Sec1Value = c2Sec1IsTotal ? total : (c2Cfg.secondary_1 ? (c2Sec1Count ?? 0) : (kpis?.visibleB2B ?? 0));
+  const card2Sec2Value = c2Sec2IsTotal ? total : (c2Cfg.secondary_2 ? (c2Sec2Count ?? 0) : (kpis?.visibleB2C ?? 0));
   const card2MainPct = total > 0 ? Math.round((card2MainValue / total) * 100) : 0;
   const card2Sec1Pct = card2MainValue > 0 ? Math.round((card2Sec1Value / card2MainValue) * 100) : 0;
   const card2Sec2Pct = card2MainValue > 0 ? Math.round((card2Sec2Value / card2MainValue) * 100) : 0;
@@ -326,16 +331,23 @@ export default function DashboardPage() {
                   <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
                     {card2Cfg.label}
                   </span>
-                  <span className="text-[10px] text-muted-foreground/50">/</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {c2MainIsTotal ? "Universo total" : (card2Cfg.config.main_operation ? "Resultado de operación" : "SKUs con Código SumaGo")}
-                  </span>
+                  {c2Cfg.main_label && (
+                    <>
+                      <span className="text-[10px] text-muted-foreground/50">/</span>
+                      <span className="text-[10px] text-muted-foreground">{c2Cfg.main_label}</span>
+                    </>
+                  )}
                 </div>
                 <div className="flex items-baseline gap-2 mt-3">
+                  {c2Cfg.main_color !== "none" && (
+                    <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", COLOR_DOT_MAP[c2Cfg.main_color])} />
+                  )}
                   <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
                     {card2MainValue.toLocaleString()}
                   </p>
-                  <span className="text-xs text-muted-foreground tabular-nums">{card2MainPct}% del total</span>
+                  {c2Cfg.main_pct && (
+                    <span className="text-xs text-muted-foreground tabular-nums">{card2MainPct}%</span>
+                  )}
                 </div>
                 <div className="flex-1 min-h-6" />
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
@@ -344,28 +356,44 @@ export default function DashboardPage() {
                       <span className="text-lg font-bold text-foreground tabular-nums">
                         {card2Sec1Value.toLocaleString()}
                       </span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {card2Sec1Pct}%
-                      </span>
+                      {c2Cfg.secondary_1_pct && (
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {card2Sec1Pct}%
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-info shrink-0" />
-                      <p className="text-[10px] text-muted-foreground">{card2Cfg.config.secondary_1_label}</p>
-                    </div>
+                    {(c2Cfg.secondary_1_label || c2Cfg.secondary_1_color !== "none") && (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {c2Cfg.secondary_1_color !== "none" && (
+                          <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", COLOR_DOT_MAP[c2Cfg.secondary_1_color])} />
+                        )}
+                        {c2Cfg.secondary_1_label && (
+                          <p className="text-[10px] text-muted-foreground">{c2Cfg.secondary_1_label}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
                         {card2Sec2Value.toLocaleString()}
                       </span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {card2Sec2Pct}%
-                      </span>
+                      {c2Cfg.secondary_2_pct && (
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {card2Sec2Pct}%
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-info shrink-0" />
-                      <p className="text-[10px] text-muted-foreground">{card2Cfg.config.secondary_2_label}</p>
-                    </div>
+                    {(c2Cfg.secondary_2_label || c2Cfg.secondary_2_color !== "none") && (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {c2Cfg.secondary_2_color !== "none" && (
+                          <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", COLOR_DOT_MAP[c2Cfg.secondary_2_color])} />
+                        )}
+                        {c2Cfg.secondary_2_label && (
+                          <p className="text-[10px] text-muted-foreground">{c2Cfg.secondary_2_label}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>

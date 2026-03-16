@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, Info } from "lucide-react";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   useDashboardCardsConfig,
   useUpdateDashboardCard,
@@ -63,6 +64,7 @@ function DataPointConfig({
   onPctChange,
   opSelectItems,
   includeDefault,
+  pctTooltip,
 }: {
   title: string;
   valueId: string;
@@ -75,6 +77,7 @@ function DataPointConfig({
   onPctChange: (v: boolean) => void;
   opSelectItems: React.ReactNode;
   includeDefault?: boolean;
+  pctTooltip?: string;
 }) {
   return (
     <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
@@ -101,6 +104,18 @@ function DataPointConfig({
         </div>
         <div className="flex items-center gap-2">
           <Label className="text-xs">Mostrar %</Label>
+          {pctTooltip && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3 w-3 text-muted-foreground/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[200px] text-xs">
+                  {pctTooltip}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Switch checked={pct} onCheckedChange={onPctChange} />
         </div>
       </div>
@@ -133,10 +148,17 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
   // ── Card 2 state ──
   const [c2Label, setC2Label] = useState("");
   const [c2MainOp, setC2MainOp] = useState(NONE);
+  const [c2MainLabel, setC2MainLabel] = useState("");
+  const [c2MainColor, setC2MainColor] = useState<CardColor>("none");
+  const [c2MainPct, setC2MainPct] = useState(true);
   const [c2Sec1, setC2Sec1] = useState(NONE);
   const [c2Sec1Label, setC2Sec1Label] = useState("Visibles B2B");
+  const [c2Sec1Color, setC2Sec1Color] = useState<CardColor>("blue");
+  const [c2Sec1Pct, setC2Sec1Pct] = useState(true);
   const [c2Sec2, setC2Sec2] = useState(NONE);
   const [c2Sec2Label, setC2Sec2Label] = useState("Visibles B2C");
+  const [c2Sec2Color, setC2Sec2Color] = useState<CardColor>("blue");
+  const [c2Sec2Pct, setC2Sec2Pct] = useState(true);
   const [c2Saving, setC2Saving] = useState(false);
 
   // ── Card 3 state ──
@@ -169,10 +191,17 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
       const cfg = c2.config as Card2Config;
       setC2Label(c2.label);
       setC2MainOp(cfg.main_operation || NONE);
+      setC2MainLabel(cfg.main_label || "");
+      setC2MainColor(cfg.main_color || "none");
+      setC2MainPct(cfg.main_pct ?? true);
       setC2Sec1(cfg.secondary_1 || NONE);
       setC2Sec1Label(cfg.secondary_1_label || "Visibles B2B");
+      setC2Sec1Color(cfg.secondary_1_color || "blue");
+      setC2Sec1Pct(cfg.secondary_1_pct ?? true);
       setC2Sec2(cfg.secondary_2 || NONE);
       setC2Sec2Label(cfg.secondary_2_label || "Visibles B2C");
+      setC2Sec2Color(cfg.secondary_2_color || "blue");
+      setC2Sec2Pct(cfg.secondary_2_pct ?? true);
     }
     const c3 = cardsConfig.find((c) => c.card_key === "card_3");
     if (c3) {
@@ -219,10 +248,17 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
         label: c2Label,
         config: {
           main_operation: c2MainOp === NONE ? null : c2MainOp,
+          main_label: c2MainLabel,
+          main_color: c2MainColor,
+          main_pct: c2MainPct,
           secondary_1: c2Sec1 === NONE ? null : c2Sec1,
           secondary_1_label: c2Sec1Label,
+          secondary_1_color: c2Sec1Color,
+          secondary_1_pct: c2Sec1Pct,
           secondary_2: c2Sec2 === NONE ? null : c2Sec2,
           secondary_2_label: c2Sec2Label,
+          secondary_2_color: c2Sec2Color,
+          secondary_2_pct: c2Sec2Pct,
         },
       });
       toast.success("Card 2 guardado");
@@ -335,56 +371,48 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
               <Input value={c2Label} onChange={(e) => setC2Label(e.target.value)} placeholder="Base Digital" className="h-8 text-sm" />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Dato principal</p>
-                <div>
-                  <Label className="text-xs">Valor</Label>
-                  <Select value={c2MainOp} onValueChange={setC2MainOp}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                      <SelectItem value="total">Universo total</SelectItem>
-                      {opSelectItems}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Secundario 1</p>
-                <div>
-                  <Label className="text-xs">Valor</Label>
-                  <Select value={c2Sec1} onValueChange={setC2Sec1}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                      <SelectItem value="total">Universo total</SelectItem>
-                      {opSelectItems}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Label</Label>
-                  <Input value={c2Sec1Label} onChange={(e) => setC2Sec1Label(e.target.value)} placeholder="Label" className="h-7 text-xs" />
-                </div>
-              </div>
-              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Secundario 2</p>
-                <div>
-                  <Label className="text-xs">Valor</Label>
-                  <Select value={c2Sec2} onValueChange={setC2Sec2}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>(Por defecto)</SelectItem>
-                      <SelectItem value="total">Universo total</SelectItem>
-                      {opSelectItems}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label className="text-xs">Label</Label>
-                  <Input value={c2Sec2Label} onChange={(e) => setC2Sec2Label(e.target.value)} placeholder="Label" className="h-7 text-xs" />
-                </div>
-              </div>
+              <DataPointConfig
+                title="Dato principal"
+                valueId={c2MainOp}
+                onValueChange={setC2MainOp}
+                label={c2MainLabel}
+                onLabelChange={setC2MainLabel}
+                color={c2MainColor}
+                onColorChange={setC2MainColor}
+                pct={c2MainPct}
+                onPctChange={setC2MainPct}
+                opSelectItems={opSelectItems}
+                includeDefault
+                pctTooltip="El % se calcula sobre el Universo total de la base"
+              />
+              <DataPointConfig
+                title="Secundario 1"
+                valueId={c2Sec1}
+                onValueChange={setC2Sec1}
+                label={c2Sec1Label}
+                onLabelChange={setC2Sec1Label}
+                color={c2Sec1Color}
+                onColorChange={setC2Sec1Color}
+                pct={c2Sec1Pct}
+                onPctChange={setC2Sec1Pct}
+                opSelectItems={opSelectItems}
+                includeDefault
+                pctTooltip="El % se calcula sobre el universo definido en el Dato principal de este card"
+              />
+              <DataPointConfig
+                title="Secundario 2"
+                valueId={c2Sec2}
+                onValueChange={setC2Sec2}
+                label={c2Sec2Label}
+                onLabelChange={setC2Sec2Label}
+                color={c2Sec2Color}
+                onColorChange={setC2Sec2Color}
+                pct={c2Sec2Pct}
+                onPctChange={setC2Sec2Pct}
+                opSelectItems={opSelectItems}
+                includeDefault
+                pctTooltip="El % se calcula sobre el universo definido en el Dato principal de este card"
+              />
             </div>
             <div className="flex justify-end">
               <Button onClick={saveCard2} size="sm" className="gap-2" disabled={c2Saving}>
