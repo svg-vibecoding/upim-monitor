@@ -64,6 +64,7 @@ function DataPointConfig({
   onPctChange,
   opSelectItems,
   includeDefault,
+  pctTooltip,
 }: {
   title: string;
   valueId: string;
@@ -76,6 +77,7 @@ function DataPointConfig({
   onPctChange: (v: boolean) => void;
   opSelectItems: React.ReactNode;
   includeDefault?: boolean;
+  pctTooltip?: string;
 }) {
   return (
     <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
@@ -102,6 +104,18 @@ function DataPointConfig({
         </div>
         <div className="flex items-center gap-2">
           <Label className="text-xs">Mostrar %</Label>
+          {pctTooltip && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3 w-3 text-muted-foreground/60 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[200px] text-xs">
+                  {pctTooltip}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
           <Switch checked={pct} onCheckedChange={onPctChange} />
         </div>
       </div>
