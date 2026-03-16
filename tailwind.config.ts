@@ -35,6 +35,10 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        caution: {
+          DEFAULT: "hsl(var(--caution))",
+          foreground: "hsl(var(--caution-foreground))",
+        },
         good: {
           DEFAULT: "hsl(var(--good))",
           foreground: "hsl(var(--good-foreground))",

@@ -85,7 +85,7 @@
   }
   .completeness-fill-medium {
     @apply h-full rounded-full;
-    background-color: hsl(var(--info));
+    background-color: hsl(var(--caution));
   }
   .completeness-fill-low {
     @apply h-full rounded-full;
