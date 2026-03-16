@@ -1147,6 +1147,7 @@ export default function AdminPage() {
 
         {/* DIMENSIONS */}
         <TabsContent value="dimensions" className="space-y-4">
+          <p className="text-sm text-muted-foreground">Una dimensión es un atributo del catálogo cuyos valores únicos se usan para distribuir los resultados de un informe. Por ejemplo, si defines 'Categoría' como dimensión, los informes podrán mostrar la completitud por cada categoría: Herramientas, Seguridad Industrial, Tornillería, etc.</p>
           <div className="flex justify-end">
             <Button onClick={() => openDimDialog()} className="gap-2"><Plus className="h-4 w-4" /> Nueva dimensión</Button>
           </div>
