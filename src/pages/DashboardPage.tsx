@@ -251,14 +251,24 @@ export default function DashboardPage() {
                   <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
                     {card1Cfg.label}
                   </span>
-                  <span className="text-[10px] text-muted-foreground/50">/</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {c1MainIsOp ? "Resultado de operación" : "Universo total"}
-                  </span>
+                  {c1Cfg.main_label && (
+                    <>
+                      <span className="text-[10px] text-muted-foreground/50">/</span>
+                      <span className="text-[10px] text-muted-foreground">{c1Cfg.main_label}</span>
+                    </>
+                  )}
                 </div>
-                <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
-                  {card1MainValue.toLocaleString()}
-                </p>
+                <div className="flex items-baseline gap-2 mt-3">
+                  {c1Cfg.main_color !== "none" && (
+                    <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", COLOR_DOT_MAP[c1Cfg.main_color])} />
+                  )}
+                  <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
+                    {card1MainValue.toLocaleString()}
+                  </p>
+                  {c1Cfg.main_pct && (
+                    <span className="text-xs text-muted-foreground tabular-nums">{card1MainPct}%</span>
+                  )}
+                </div>
                 <div className="flex-1 min-h-6" />
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
                   <div>
@@ -266,28 +276,44 @@ export default function DashboardPage() {
                       <span className="text-lg font-bold text-foreground tabular-nums">
                         {card1Sec1Value.toLocaleString()}
                       </span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {card1Sec1Pct}%
-                      </span>
+                      {c1Cfg.secondary_1_pct && (
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {card1Sec1Pct}%
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
-                      <p className="text-[10px] text-muted-foreground">{card1Cfg.config.secondary_1_label}</p>
-                    </div>
+                    {(c1Cfg.secondary_1_label || c1Cfg.secondary_1_color !== "none") && (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {c1Cfg.secondary_1_color !== "none" && (
+                          <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", COLOR_DOT_MAP[c1Cfg.secondary_1_color])} />
+                        )}
+                        {c1Cfg.secondary_1_label && (
+                          <p className="text-[10px] text-muted-foreground">{c1Cfg.secondary_1_label}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
                         {card1Sec2Value.toLocaleString()}
                       </span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {card1Sec2Pct}%
-                      </span>
+                      {c1Cfg.secondary_2_pct && (
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {card1Sec2Pct}%
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
-                      <p className="text-[10px] text-muted-foreground">{card1Cfg.config.secondary_2_label}</p>
-                    </div>
+                    {(c1Cfg.secondary_2_label || c1Cfg.secondary_2_color !== "none") && (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {c1Cfg.secondary_2_color !== "none" && (
+                          <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", COLOR_DOT_MAP[c1Cfg.secondary_2_color])} />
+                        )}
+                        {c1Cfg.secondary_2_label && (
+                          <p className="text-[10px] text-muted-foreground">{c1Cfg.secondary_2_label}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
