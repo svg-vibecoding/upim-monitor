@@ -148,6 +148,7 @@ export function useRefreshComputed() {
     await supabase.rpc("refresh_all_computed_results" as any);
     queryClient.invalidateQueries({ queryKey: ["computed-result"] });
     queryClient.invalidateQueries({ queryKey: ["pim-kpis"] });
+    queryClient.refetchQueries({ queryKey: ["pim-kpis"] });
     queryClient.invalidateQueries({ queryKey: ["report-completeness"] });
   };
 
