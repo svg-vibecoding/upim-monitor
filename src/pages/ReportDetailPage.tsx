@@ -254,11 +254,12 @@ export default function ReportDetailPage() {
       {/* Dimension distribution */}
       <Card>
         <CardContent className="pt-4">
-          <div className="flex items-center justify-between mb-3">
+          <div className="space-y-3 mb-3">
             <h2 className="text-sm font-semibold text-foreground">Distribución por dimensión</h2>
+            <p className="text-sm text-muted-foreground">Distribuye los resultados por una dimensión. Por ejemplo, seleccionar 'Categoría del Producto' mostrará la completitud de los atributos del informe separada para cada categoría: Herramientas, Seguridad Industrial, Tornillería, etc.</p>
             <Select value={selectedDimension} onValueChange={setSelectedDimension}>
               <SelectTrigger className="w-64">
-                <SelectValue placeholder="Seleccionar dimensión" />
+                <SelectValue placeholder="Sin dimensión" />
               </SelectTrigger>
               <SelectContent>
                 {(dimensions || []).map((d) => (
