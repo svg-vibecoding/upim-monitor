@@ -102,16 +102,21 @@ export default function DashboardPage() {
     return { label: raw?.label || "Completitud General", config: raw ? { ...defaults, ...(raw.config as Card3Config) } : defaults };
   }, [cardsConfig]);
 
-  // Card 1 operation counts
+  // Card 1 operation counts (skip fetch when value is "total")
   const c1MainIsOp = card1Cfg.config.main_value !== "total";
   const { data: c1MainOpCount } = useOpCount(c1MainIsOp ? card1Cfg.config.main_value : undefined);
-  const { data: c1Sec1Count } = useOpCount(card1Cfg.config.secondary_1);
-  const { data: c1Sec2Count } = useOpCount(card1Cfg.config.secondary_2);
+  const c1Sec1IsTotal = card1Cfg.config.secondary_1 === "total";
+  const { data: c1Sec1Count } = useOpCount(!c1Sec1IsTotal ? card1Cfg.config.secondary_1 : undefined);
+  const c1Sec2IsTotal = card1Cfg.config.secondary_2 === "total";
+  const { data: c1Sec2Count } = useOpCount(!c1Sec2IsTotal ? card1Cfg.config.secondary_2 : undefined);
 
-  // Card 2 operation counts
-  const { data: c2MainCount } = useOpCount(card2Cfg.config.main_operation);
-  const { data: c2Sec1Count } = useOpCount(card2Cfg.config.secondary_1);
-  const { data: c2Sec2Count } = useOpCount(card2Cfg.config.secondary_2);
+  // Card 2 operation counts (skip fetch when value is "total")
+  const c2MainIsTotal = card2Cfg.config.main_operation === "total";
+  const { data: c2MainCount } = useOpCount(!c2MainIsTotal ? card2Cfg.config.main_operation : undefined);
+  const c2Sec1IsTotal = card2Cfg.config.secondary_1 === "total";
+  const { data: c2Sec1Count } = useOpCount(!c2Sec1IsTotal ? card2Cfg.config.secondary_1 : undefined);
+  const c2Sec2IsTotal = card2Cfg.config.secondary_2 === "total";
+  const { data: c2Sec2Count } = useOpCount(!c2Sec2IsTotal ? card2Cfg.config.secondary_2 : undefined);
 
   const totalEvaluableAttrs = useMemo(() => {
     if (!attributeOrder) return 0;
@@ -167,17 +172,18 @@ export default function DashboardPage() {
     : "Sin datos cargados";
 
   // ── Card 1 computed values ──
-  const card1MainValue = c1MainIsOp ? (c1MainOpCount ?? 0) : (kpis?.total ?? 0);
-  const card1Sec1Value = card1Cfg.config.secondary_1 ? (c1Sec1Count ?? 0) : (kpis?.active ?? 0);
-  const card1Sec2Value = card1Cfg.config.secondary_2 ? (c1Sec2Count ?? 0) : (kpis?.inactive ?? 0);
-  const card1Sec1Pct = kpis && kpis.total > 0 ? Math.round((card1Sec1Value / kpis.total) * 100) : 0;
-  const card1Sec2Pct = kpis && kpis.total > 0 ? Math.round((card1Sec2Value / kpis.total) * 100) : 0;
+  const total = kpis?.total ?? 0;
+  const card1MainValue = c1MainIsOp ? (c1MainOpCount ?? 0) : total;
+  const card1Sec1Value = c1Sec1IsTotal ? total : (card1Cfg.config.secondary_1 ? (c1Sec1Count ?? 0) : (kpis?.active ?? 0));
+  const card1Sec2Value = c1Sec2IsTotal ? total : (card1Cfg.config.secondary_2 ? (c1Sec2Count ?? 0) : (kpis?.inactive ?? 0));
+  const card1Sec1Pct = total > 0 ? Math.round((card1Sec1Value / total) * 100) : 0;
+  const card1Sec2Pct = total > 0 ? Math.round((card1Sec2Value / total) * 100) : 0;
 
   // ── Card 2 computed values ──
-  const card2MainValue = card2Cfg.config.main_operation ? (c2MainCount ?? 0) : (kpis?.digitalBase ?? 0);
-  const card2Sec1Value = card2Cfg.config.secondary_1 ? (c2Sec1Count ?? 0) : (kpis?.visibleB2B ?? 0);
-  const card2Sec2Value = card2Cfg.config.secondary_2 ? (c2Sec2Count ?? 0) : (kpis?.visibleB2C ?? 0);
-  const card2MainPct = kpis && kpis.total > 0 ? Math.round((card2MainValue / kpis.total) * 100) : 0;
+  const card2MainValue = c2MainIsTotal ? total : (card2Cfg.config.main_operation ? (c2MainCount ?? 0) : (kpis?.digitalBase ?? 0));
+  const card2Sec1Value = c2Sec1IsTotal ? total : (card2Cfg.config.secondary_1 ? (c2Sec1Count ?? 0) : (kpis?.visibleB2B ?? 0));
+  const card2Sec2Value = c2Sec2IsTotal ? total : (card2Cfg.config.secondary_2 ? (c2Sec2Count ?? 0) : (kpis?.visibleB2C ?? 0));
+  const card2MainPct = total > 0 ? Math.round((card2MainValue / total) * 100) : 0;
   const card2Sec1Pct = card2MainValue > 0 ? Math.round((card2Sec1Value / card2MainValue) * 100) : 0;
   const card2Sec2Pct = card2MainValue > 0 ? Math.round((card2Sec2Value / card2MainValue) * 100) : 0;
 
@@ -229,7 +235,7 @@ export default function DashboardPage() {
                   </span>
                   <span className="text-[10px] text-muted-foreground/50">/</span>
                   <span className="text-[10px] text-muted-foreground">
-                    {c1MainIsOp ? "Resultado de operación" : "SKUs totales"}
+                    {c1MainIsOp ? "Resultado de operación" : "Universo total"}
                   </span>
                 </div>
                 <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
@@ -278,7 +284,7 @@ export default function DashboardPage() {
                   </span>
                   <span className="text-[10px] text-muted-foreground/50">/</span>
                   <span className="text-[10px] text-muted-foreground">
-                    {card2Cfg.config.main_operation ? "Resultado de operación" : "SKUs con Código SumaGo"}
+                    {c2MainIsTotal ? "Universo total" : (card2Cfg.config.main_operation ? "Resultado de operación" : "SKUs con Código SumaGo")}
                   </span>
                 </div>
                 <div className="flex items-baseline gap-2 mt-3">
