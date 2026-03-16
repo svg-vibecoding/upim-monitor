@@ -235,7 +235,7 @@ export default function DashboardPage() {
                   </span>
                   <span className="text-[10px] text-muted-foreground/50">/</span>
                   <span className="text-[10px] text-muted-foreground">
-                    {c1MainIsOp ? "Resultado de operación" : "SKUs totales"}
+                    {c1MainIsOp ? "Resultado de operación" : "Universo total"}
                   </span>
                 </div>
                 <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
