@@ -147,7 +147,7 @@ export default function DashboardPage() {
   const hasData = kpis && kpis.total > 0;
 
   const focusReports = useMemo(
-    () => sortReportsByDisplayOrder(reports || []),
+    () => sortReportsByDisplayOrder((reports || []).filter((r) => r.showInFocus)),
     [reports]
   );
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
