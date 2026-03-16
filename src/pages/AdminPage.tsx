@@ -413,8 +413,8 @@ export default function AdminPage() {
     return full.filter((a) => a !== "Código Jaivaná");
   }, [attributeOrder]);
 
-  // Dimension unique values — fetched via lightweight server query instead of loading all records
-  const dimensionUniqueValues: Record<string, string[]> = {};
+  // Dimension unique values — fetched from computed_results cache
+  const { data: dimensionUniqueValues = {} } = useDimensionValues();
 
   const saveDimension = async () => {
     if (!dimName || !dimField) {
