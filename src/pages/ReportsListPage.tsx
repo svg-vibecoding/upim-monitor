@@ -32,7 +32,7 @@ function ReportCard({ report, operationName, onClick }: { report: { id: string; 
       <CardContent className="space-y-3">
         <p className="text-sm text-muted-foreground">{report.description}</p>
         <p className="text-xs text-muted-foreground">
-          {report.universe} · {isLoading ? "…" : `${totalSKUs.toLocaleString()} SKUs`}
+          {universeLabel} · {isLoading ? "…" : `${totalSKUs.toLocaleString()} SKUs`}
         </p>
         <div>
           <div className="flex justify-between text-xs mb-1">
