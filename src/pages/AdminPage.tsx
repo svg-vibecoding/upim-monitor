@@ -55,6 +55,7 @@ import {
 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { DashboardCardsConfigSection } from "@/components/DashboardCardsConfigSection";
 import type { AppRole } from "@/contexts/AuthContext";
 
 interface DBUser {
