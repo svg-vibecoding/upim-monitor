@@ -884,12 +884,21 @@ export function useInvalidatePimData() {
 
 // --- Dashboard Cards Config ---
 
+export type CardColor = "green" | "red" | "yellow" | "blue" | "gray" | "none";
+
 export interface Card1Config {
   main_value: "total" | string; // "total" or operation_id
+  main_label: string;
+  main_color: CardColor;
+  main_pct: boolean;
   secondary_1: string | null;
   secondary_1_label: string;
+  secondary_1_color: CardColor;
+  secondary_1_pct: boolean;
   secondary_2: string | null;
   secondary_2_label: string;
+  secondary_2_color: CardColor;
+  secondary_2_pct: boolean;
 }
 
 export interface Card2Config {
