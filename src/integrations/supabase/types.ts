@@ -84,7 +84,6 @@ export type Database = {
           created_at: string
           description: string
           id: string
-          linked_kpi: string | null
           logic_mode: string
           name: string
           updated_at: string
@@ -95,7 +94,6 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
-          linked_kpi?: string | null
           logic_mode?: string
           name: string
           updated_at?: string
@@ -106,7 +104,6 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
-          linked_kpi?: string | null
           logic_mode?: string
           name?: string
           updated_at?: string

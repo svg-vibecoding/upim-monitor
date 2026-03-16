@@ -725,14 +725,6 @@ export function computeFocusPoints(records: PIMRecord[], reports: PredefinedRepo
 export type OperatorType = "has_value" | "no_value" | "equals" | "not_equals" | "contains" | "not_contains" | "meets_operation" | "not_meets_operation";
 export type ConditionSourceType = "attribute" | "operation";
 export type LogicMode = "all" | "any";
-export type LinkedKpi = "digital_base" | "visible_b2b" | "visible_b2c";
-
-export const LINKED_KPI_LABELS: Record<LinkedKpi, string> = {
-  digital_base: "Base Digital",
-  visible_b2b: "Visibles B2B",
-  visible_b2c: "Visibles B2C",
-};
-
 export interface Condition {
   sourceType?: ConditionSourceType; // defaults to "attribute" for backward compat
   attribute: string; // attribute name OR operation id depending on sourceType
@@ -747,7 +739,6 @@ export interface Operation {
   active: boolean;
   logicMode: LogicMode;
   conditions: Condition[];
-  linkedKpi: LinkedKpi | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -760,7 +751,6 @@ function dbRowToOperation(row: any): Operation {
     active: row.active,
     logicMode: row.logic_mode || "all",
     conditions: (Array.isArray(row.conditions) ? row.conditions : []) as Condition[],
-    linkedKpi: row.linked_kpi || null,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };

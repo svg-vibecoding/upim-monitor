@@ -40,7 +40,6 @@ import {
   useOperations,
   useDashboardCardsConfig,
   useUpdateDashboardCard,
-  LINKED_KPI_LABELS,
   getValidOperationRefs,
   type AttributeType,
   type Operation,
@@ -48,7 +47,6 @@ import {
   type ConditionSourceType,
   type OperatorType,
   type LogicMode,
-  type LinkedKpi,
   type Card1Config,
   type Card2Config,
   type Card3Config,
@@ -135,7 +133,6 @@ export default function AdminPage() {
   const [opDescription, setOpDescription] = useState("");
   const [opLogicMode, setOpLogicMode] = useState<LogicMode>("all");
   const [opConditions, setOpConditions] = useState<Condition[]>([{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }]);
-  const [opLinkedKpi, setOpLinkedKpi] = useState<LinkedKpi | "none">("none");
   const [opSaving, setOpSaving] = useState(false);
   const [deleteOpId, setDeleteOpId] = useState<string | null>(null);
 
@@ -146,14 +143,12 @@ export default function AdminPage() {
       setOpDescription(op.description);
       setOpLogicMode(op.logicMode);
       setOpConditions(op.conditions.length > 0 ? op.conditions : [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }]);
-      setOpLinkedKpi(op.linkedKpi || "none");
     } else {
       setEditingOpId(null);
       setOpName("");
       setOpDescription("");
       setOpLogicMode("all");
       setOpConditions([{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }]);
-      setOpLinkedKpi("none");
     }
     setOpDialog(true);
   }, []);
@@ -163,17 +158,6 @@ export default function AdminPage() {
     const validConditions = opConditions.filter((c) => c.attribute.trim() !== "");
     if (validConditions.length === 0) { toast.error("Agrega al menos una condición válida"); return; }
 
-    const linkedKpiValue = opLinkedKpi === "none" ? null : opLinkedKpi;
-
-    // Validate uniqueness of linked_kpi (only one active op per KPI)
-    if (linkedKpiValue) {
-      const conflict = operations.find((o) => o.linkedKpi === linkedKpiValue && o.active && o.id !== editingOpId);
-      if (conflict) {
-        // Unlink the conflicting operation
-        await supabase.from("operations" as any).update({ linked_kpi: null }).eq("id", conflict.id);
-      }
-    }
-
     setOpSaving(true);
     try {
       const payload = {
@@ -181,7 +165,6 @@ export default function AdminPage() {
         description: opDescription.trim(),
         logic_mode: opLogicMode,
         conditions: validConditions,
-        linked_kpi: linkedKpiValue,
       };
 
       if (editingOpId) {
@@ -257,16 +240,8 @@ export default function AdminPage() {
   const addCondition = () => setOpConditions((prev) => [...prev, { sourceType: "attribute", attribute: "", operator: "has_value", value: null }]);
   const removeCondition = (idx: number) => setOpConditions((prev) => prev.length <= 1 ? prev : prev.filter((_, i) => i !== idx));
 
-  // KPI assignment info for the select
-  const kpiAssignments = useMemo(() => {
-    const map: Partial<Record<LinkedKpi, string>> = {};
-    for (const op of operations) {
-      if (op.linkedKpi && op.active && op.id !== editingOpId) {
-        map[op.linkedKpi] = op.name;
-      }
-    }
-    return map;
-  }, [operations, editingOpId]);
+
+
 
   // User form
   const [userDialog, setUserDialog] = useState(false);
@@ -1315,9 +1290,6 @@ export default function AdminPage() {
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-foreground">{op.name}</span>
                             <Badge variant="outline" className="text-[10px]">{op.conditions.length} cond.</Badge>
-                            {op.linkedKpi && (
-                              <Badge variant="secondary" className="text-[10px]">{LINKED_KPI_LABELS[op.linkedKpi]}</Badge>
-                            )}
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{op.description || "—"}</TableCell>
@@ -1369,25 +1341,8 @@ export default function AdminPage() {
                   editingOperationId={editingOpId}
                 />
 
-                {/* Link to KPI */}
-                <div>
-                  <Label className="mb-2 block">Vincular a indicador del dashboard</Label>
-                  <Select value={opLinkedKpi} onValueChange={(v) => setOpLinkedKpi(v as LinkedKpi | "none")}>
-                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">(Ninguno)</SelectItem>
-                      {(Object.entries(LINKED_KPI_LABELS) as [LinkedKpi, string][]).map(([key, label]) => (
-                        <SelectItem key={key} value={key}>
-                          {label}
-                          {kpiAssignments[key] ? ` (actual: ${kpiAssignments[key]})` : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Si se vincula, el conteo del dashboard usará esta operación en lugar de la lógica predeterminada.
-                  </p>
-                </div>
+
+
 
                 <Button onClick={saveOperation} className="w-full" disabled={opSaving}>
                   {opSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Guardando...</> : editingOpId ? "Guardar cambios" : "Crear operación"}

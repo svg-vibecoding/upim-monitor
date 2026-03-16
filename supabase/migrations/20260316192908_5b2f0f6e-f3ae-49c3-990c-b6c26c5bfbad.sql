@@ -1,0 +1,1 @@
+ALTER TABLE public.operations DROP COLUMN linked_kpi;
