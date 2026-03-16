@@ -739,7 +739,6 @@ export interface Operation {
   active: boolean;
   logicMode: LogicMode;
   conditions: Condition[];
-  linkedKpi: LinkedKpi | null;
   createdAt: string;
   updatedAt: string;
 }
