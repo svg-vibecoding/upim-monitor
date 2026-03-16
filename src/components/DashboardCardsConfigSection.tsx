@@ -148,10 +148,17 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
   // ── Card 2 state ──
   const [c2Label, setC2Label] = useState("");
   const [c2MainOp, setC2MainOp] = useState(NONE);
+  const [c2MainLabel, setC2MainLabel] = useState("");
+  const [c2MainColor, setC2MainColor] = useState<CardColor>("none");
+  const [c2MainPct, setC2MainPct] = useState(true);
   const [c2Sec1, setC2Sec1] = useState(NONE);
   const [c2Sec1Label, setC2Sec1Label] = useState("Visibles B2B");
+  const [c2Sec1Color, setC2Sec1Color] = useState<CardColor>("blue");
+  const [c2Sec1Pct, setC2Sec1Pct] = useState(true);
   const [c2Sec2, setC2Sec2] = useState(NONE);
   const [c2Sec2Label, setC2Sec2Label] = useState("Visibles B2C");
+  const [c2Sec2Color, setC2Sec2Color] = useState<CardColor>("blue");
+  const [c2Sec2Pct, setC2Sec2Pct] = useState(true);
   const [c2Saving, setC2Saving] = useState(false);
 
   // ── Card 3 state ──
