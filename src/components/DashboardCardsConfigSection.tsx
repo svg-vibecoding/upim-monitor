@@ -191,10 +191,17 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
       const cfg = c2.config as Card2Config;
       setC2Label(c2.label);
       setC2MainOp(cfg.main_operation || NONE);
+      setC2MainLabel(cfg.main_label || "");
+      setC2MainColor(cfg.main_color || "none");
+      setC2MainPct(cfg.main_pct ?? true);
       setC2Sec1(cfg.secondary_1 || NONE);
       setC2Sec1Label(cfg.secondary_1_label || "Visibles B2B");
+      setC2Sec1Color(cfg.secondary_1_color || "blue");
+      setC2Sec1Pct(cfg.secondary_1_pct ?? true);
       setC2Sec2(cfg.secondary_2 || NONE);
       setC2Sec2Label(cfg.secondary_2_label || "Visibles B2C");
+      setC2Sec2Color(cfg.secondary_2_color || "blue");
+      setC2Sec2Pct(cfg.secondary_2_pct ?? true);
     }
     const c3 = cardsConfig.find((c) => c.card_key === "card_3");
     if (c3) {
