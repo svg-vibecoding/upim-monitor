@@ -256,6 +256,7 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
                   <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value={NONE}>(Por defecto)</SelectItem>
+                    <SelectItem value="total">Universo total</SelectItem>
                     {opSelectItems}
                   </SelectContent>
                 </Select>

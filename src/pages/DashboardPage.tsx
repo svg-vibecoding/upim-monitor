@@ -284,7 +284,7 @@ export default function DashboardPage() {
                   </span>
                   <span className="text-[10px] text-muted-foreground/50">/</span>
                   <span className="text-[10px] text-muted-foreground">
-                    {card2Cfg.config.main_operation ? "Resultado de operación" : "SKUs con Código SumaGo"}
+                    {c2MainIsTotal ? "Universo total" : (card2Cfg.config.main_operation ? "Resultado de operación" : "SKUs con Código SumaGo")}
                   </span>
                 </div>
                 <div className="flex items-baseline gap-2 mt-3">
