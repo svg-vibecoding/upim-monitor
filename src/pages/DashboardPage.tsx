@@ -21,6 +21,7 @@ import {
   type Card1Config,
   type Card2Config,
   type Card3Config,
+  type CardColor,
 } from "@/hooks/usePimData";
 import {
   PlusCircle,
