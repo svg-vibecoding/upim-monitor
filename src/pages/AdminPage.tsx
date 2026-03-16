@@ -158,17 +158,6 @@ export default function AdminPage() {
     const validConditions = opConditions.filter((c) => c.attribute.trim() !== "");
     if (validConditions.length === 0) { toast.error("Agrega al menos una condición válida"); return; }
 
-    const linkedKpiValue = opLinkedKpi === "none" ? null : opLinkedKpi;
-
-    // Validate uniqueness of linked_kpi (only one active op per KPI)
-    if (linkedKpiValue) {
-      const conflict = operations.find((o) => o.linkedKpi === linkedKpiValue && o.active && o.id !== editingOpId);
-      if (conflict) {
-        // Unlink the conflicting operation
-        await supabase.from("operations" as any).update({ linked_kpi: null }).eq("id", conflict.id);
-      }
-    }
-
     setOpSaving(true);
     try {
       const payload = {
