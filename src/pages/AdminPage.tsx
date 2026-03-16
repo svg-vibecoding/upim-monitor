@@ -35,6 +35,7 @@ import {
   isNonEvaluable,
   usePimUploadHistory,
   useDimensions,
+  useDimensionValues,
   sortReportsByDisplayOrder,
   useProtectedAttributes,
   useOperations,
