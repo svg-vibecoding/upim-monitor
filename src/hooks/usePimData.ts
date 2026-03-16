@@ -654,11 +654,13 @@ export function useCreatePredefinedReport() {
       description,
       operationId,
       attributes,
+      showInFocus = true,
     }: {
       name: string;
       description: string;
       operationId: string | null;
       attributes: string[];
+      showInFocus?: boolean;
     }) => {
       const { error } = await supabase.from("predefined_reports").insert({
         name,
@@ -667,6 +669,7 @@ export function useCreatePredefinedReport() {
         universe_key: operationId ? "all" : "all",
         operation_id: operationId,
         attributes,
+        show_in_focus: showInFocus,
       } as any);
       if (error) throw error;
     },
