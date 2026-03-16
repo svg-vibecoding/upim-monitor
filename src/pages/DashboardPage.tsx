@@ -446,7 +446,7 @@ export default function DashboardPage() {
                 </h2>
                 <div className="flex items-center gap-2">
                   <Filter className="h-3 w-3 text-muted-foreground/50" />
-                  {(["critical", "low", "medium", "good", "excellent"] as SeverityLevel[]).map((s) => (
+                  {(["critical", "low"] as SeverityLevel[]).map((s) => (
                     <button
                       key={s}
                       onClick={() => setSeverityFilter(severityFilter === s ? null : s)}
