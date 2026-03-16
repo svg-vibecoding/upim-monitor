@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import {
   usePimKPIs,
   usePredefinedReports,
@@ -20,6 +21,7 @@ import {
   type Card1Config,
   type Card2Config,
   type Card3Config,
+  type CardColor,
 } from "@/hooks/usePimData";
 import {
   PlusCircle,
@@ -68,6 +70,16 @@ function severityBarColor(s: SeverityLevel) {
   }
 }
 
+/* ── Color helper ── */
+const COLOR_DOT_MAP: Record<CardColor, string> = {
+  green: "bg-success",
+  red: "bg-destructive",
+  yellow: "bg-warning",
+  blue: "bg-info",
+  gray: "bg-muted-foreground/50",
+  none: "",
+};
+
 /* ── Small helper: use operation count or null ── */
 function useOpCount(opId: string | null | undefined) {
   return useOperationCount(opId || undefined);
@@ -86,7 +98,11 @@ export default function DashboardPage() {
   // Parse card configs with defaults
   const card1Cfg = useMemo(() => {
     const raw = cardsConfig?.find((c) => c.card_key === "card_1");
-    const defaults: Card1Config = { main_value: "total", secondary_1: null, secondary_1_label: "Activos", secondary_2: null, secondary_2_label: "Inactivos" };
+    const defaults: Card1Config = {
+      main_value: "total", main_label: "", main_color: "none", main_pct: false,
+      secondary_1: null, secondary_1_label: "Activos", secondary_1_color: "green", secondary_1_pct: true,
+      secondary_2: null, secondary_2_label: "Inactivos", secondary_2_color: "red", secondary_2_pct: true,
+    };
     return { label: raw?.label || "Catálogo", config: raw ? { ...defaults, ...(raw.config as Card1Config) } : defaults };
   }, [cardsConfig]);
 
@@ -176,10 +192,12 @@ export default function DashboardPage() {
   const card1MainValue = c1MainIsOp ? (c1MainOpCount ?? 0) : total;
   const card1Sec1Value = c1Sec1IsTotal ? total : (card1Cfg.config.secondary_1 ? (c1Sec1Count ?? 0) : (kpis?.active ?? 0));
   const card1Sec2Value = c1Sec2IsTotal ? total : (card1Cfg.config.secondary_2 ? (c1Sec2Count ?? 0) : (kpis?.inactive ?? 0));
+  const card1MainPct = total > 0 ? Math.round((card1MainValue / total) * 100) : 0;
   const card1Sec1Pct = total > 0 ? Math.round((card1Sec1Value / total) * 100) : 0;
   const card1Sec2Pct = total > 0 ? Math.round((card1Sec2Value / total) * 100) : 0;
 
-  // ── Card 2 computed values ──
+  // Card 1 config shortcuts
+  const c1Cfg = card1Cfg.config;
   const card2MainValue = c2MainIsTotal ? total : (card2Cfg.config.main_operation ? (c2MainCount ?? 0) : (kpis?.digitalBase ?? 0));
   const card2Sec1Value = c2Sec1IsTotal ? total : (card2Cfg.config.secondary_1 ? (c2Sec1Count ?? 0) : (kpis?.visibleB2B ?? 0));
   const card2Sec2Value = c2Sec2IsTotal ? total : (card2Cfg.config.secondary_2 ? (c2Sec2Count ?? 0) : (kpis?.visibleB2C ?? 0));
@@ -233,14 +251,24 @@ export default function DashboardPage() {
                   <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
                     {card1Cfg.label}
                   </span>
-                  <span className="text-[10px] text-muted-foreground/50">/</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    {c1MainIsOp ? "Resultado de operación" : "Universo total"}
-                  </span>
+                  {c1Cfg.main_label && (
+                    <>
+                      <span className="text-[10px] text-muted-foreground/50">/</span>
+                      <span className="text-[10px] text-muted-foreground">{c1Cfg.main_label}</span>
+                    </>
+                  )}
                 </div>
-                <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
-                  {card1MainValue.toLocaleString()}
-                </p>
+                <div className="flex items-baseline gap-2 mt-3">
+                  {c1Cfg.main_color !== "none" && (
+                    <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", COLOR_DOT_MAP[c1Cfg.main_color])} />
+                  )}
+                  <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
+                    {card1MainValue.toLocaleString()}
+                  </p>
+                  {c1Cfg.main_pct && (
+                    <span className="text-xs text-muted-foreground tabular-nums">{card1MainPct}%</span>
+                  )}
+                </div>
                 <div className="flex-1 min-h-6" />
                 <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
                   <div>
@@ -248,28 +276,44 @@ export default function DashboardPage() {
                       <span className="text-lg font-bold text-foreground tabular-nums">
                         {card1Sec1Value.toLocaleString()}
                       </span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {card1Sec1Pct}%
-                      </span>
+                      {c1Cfg.secondary_1_pct && (
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {card1Sec1Pct}%
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-success shrink-0" />
-                      <p className="text-[10px] text-muted-foreground">{card1Cfg.config.secondary_1_label}</p>
-                    </div>
+                    {(c1Cfg.secondary_1_label || c1Cfg.secondary_1_color !== "none") && (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {c1Cfg.secondary_1_color !== "none" && (
+                          <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", COLOR_DOT_MAP[c1Cfg.secondary_1_color])} />
+                        )}
+                        {c1Cfg.secondary_1_label && (
+                          <p className="text-[10px] text-muted-foreground">{c1Cfg.secondary_1_label}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="text-lg font-bold text-foreground tabular-nums">
                         {card1Sec2Value.toLocaleString()}
                       </span>
-                      <span className="text-[11px] text-muted-foreground tabular-nums">
-                        {card1Sec2Pct}%
-                      </span>
+                      {c1Cfg.secondary_2_pct && (
+                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                          {card1Sec2Pct}%
+                        </span>
+                      )}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-destructive shrink-0" />
-                      <p className="text-[10px] text-muted-foreground">{card1Cfg.config.secondary_2_label}</p>
-                    </div>
+                    {(c1Cfg.secondary_2_label || c1Cfg.secondary_2_color !== "none") && (
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {c1Cfg.secondary_2_color !== "none" && (
+                          <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", COLOR_DOT_MAP[c1Cfg.secondary_2_color])} />
+                        )}
+                        {c1Cfg.secondary_2_label && (
+                          <p className="text-[10px] text-muted-foreground">{c1Cfg.secondary_2_label}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
