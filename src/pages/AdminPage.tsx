@@ -27,6 +27,7 @@ import {
   useAttributeOrder,
   useUpdateReportAttributes,
   useUpdateReportOperation,
+  useReorderReports,
   useRefreshComputed,
   getEvaluableAttributes,
   getFullAttributeList,
