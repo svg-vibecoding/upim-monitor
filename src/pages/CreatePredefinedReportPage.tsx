@@ -77,6 +77,7 @@ export default function CreatePredefinedReportPage() {
   const [searchAttr, setSearchAttr] = useState("");
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [showInFocus, setShowInFocus] = useState(true);
 
   // File upload state
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
