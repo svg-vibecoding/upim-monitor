@@ -493,7 +493,7 @@ export default function AdminPage() {
 
   const canActivate = csvResult?.success && missingProtected.length === 0 && (csvResult.uniqueRows || 0) > 0 && !!pendingUploadId;
 
-  const CHUNK_SIZE = 2000;
+  const CHUNK_SIZE = 500;
 
   const handleCsvUpload = async () => {
     const file = fileInputRef.current?.files?.[0];
