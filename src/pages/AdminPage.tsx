@@ -101,7 +101,7 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const invalidatePimData = useInvalidatePimData();
   const queryClient = useQueryClient();
-  const { refreshAll, refreshForOperation, refreshForReport } = useRefreshComputed();
+  const { refreshAll, refreshOne, refreshForOperation, refreshForReport } = useRefreshComputed();
 
   // DB-driven data
   const { data: dbReports = [], isLoading: reportsLoading } = usePredefinedReports();
