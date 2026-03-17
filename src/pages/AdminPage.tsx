@@ -531,13 +531,19 @@ export default function AdminPage() {
 
       const totalChunks = Math.ceil(allRows.length / CHUNK_SIZE);
 
+      const { data: { session } } = await supabase.auth.getSession();
+
       for (let i = 0; i < totalChunks; i++) {
         const chunk = allRows.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
         setCsvProgress(`Enviando lote ${i + 1} de ${totalChunks} (${chunk.length} filas)...`);
 
         const res = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${session?.access_token}`,
+            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
           body: JSON.stringify({ rows: chunk, isFirstChunk: i === 0, fileName: file.name }),
         });
 
