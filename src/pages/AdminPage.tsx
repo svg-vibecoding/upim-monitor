@@ -173,13 +173,15 @@ export default function AdminPage() {
         if (error) throw error;
         toast.success("Operación actualizada");
       } else {
-        const { error } = await supabase.from("operations" as any).insert(payload);
+        const { data: newOp, error } = await supabase.from("operations" as any).insert(payload).select("id").single();
         if (error) throw error;
         toast.success("Operación creada");
+        // Refresh computed results for the new operation
+        refreshForOperation((newOp as any).id, dbReports).catch(() => {});
       }
       setOpDialog(false);
       queryClient.invalidateQueries({ queryKey: ["operations"] });
-      // Refresh computed results for this operation and affected reports
+      // Refresh computed results for edited operation and affected reports
       if (editingOpId) {
         refreshForOperation(editingOpId, dbReports).catch(() => {});
       }
