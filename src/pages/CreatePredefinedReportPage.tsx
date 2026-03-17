@@ -54,6 +54,7 @@ export default function CreatePredefinedReportPage() {
   const createReport = useCreatePredefinedReport();
   const updateReportAttrs = useUpdateReportAttributes();
   const updateReportOp = useUpdateReportOperation();
+  const { refreshForReport, refreshForOperation } = useRefreshComputed();
 
   const { data: attributeOrder = [] } = useAttributeOrder();
   const { data: predefinedReports = [] } = usePredefinedReports();
