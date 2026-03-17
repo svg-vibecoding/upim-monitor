@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useAttributeOrder, usePredefinedReports, useDimensions, useOperations,
   useCreatePredefinedReport, useUpdateReportAttributes, useUpdateReportOperation,
+  useRefreshComputed,
   getFullAttributeList, getEvaluableAttributes,
   getAttributeClassification, sortReportsByDisplayOrder,
   type Condition, type LogicMode,
