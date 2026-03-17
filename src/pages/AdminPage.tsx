@@ -433,12 +433,16 @@ export default function AdminPage() {
           .eq("id", editingDimId);
         if (error) throw error;
         toast.success("Dimensión actualizada");
+        refreshOne("dimension_values", editingDimId).catch(() => {});
       } else {
-        const { error } = await supabase
+        const { data: newDim, error } = await supabase
           .from("dimensions")
-          .insert({ name: dimName, field: dimField });
+          .insert({ name: dimName, field: dimField })
+          .select("id")
+          .single();
         if (error) throw error;
         toast.success("Dimensión creada");
+        if (newDim) refreshOne("dimension_values", (newDim as any).id).catch(() => {});
       }
       setDimDialog(false);
       queryClient.invalidateQueries({ queryKey: ["dimensions"] });

@@ -685,7 +685,7 @@ export function useCreatePredefinedReport() {
       showInFocus?: boolean;
       universe?: string;
     }) => {
-      const { error } = await supabase.from("predefined_reports").insert({
+      const { data, error } = await supabase.from("predefined_reports").insert({
         name,
         description,
         universe: universe || (operationId ? "" : "Base general del PIM"),
@@ -693,8 +693,9 @@ export function useCreatePredefinedReport() {
         operation_id: operationId,
         attributes,
         show_in_focus: showInFocus,
-      } as any);
+      } as any).select("id").single();
       if (error) throw error;
+      return (data as any).id as string;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
