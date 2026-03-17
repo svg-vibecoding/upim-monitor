@@ -209,6 +209,7 @@ export default function AdminPage() {
       if (error) throw error;
       toast.success("Operación eliminada");
       queryClient.invalidateQueries({ queryKey: ["operations"] });
+      refreshOne("dashboard_kpis").catch(() => {});
     } catch (err: any) {
       toast.error(err.message || "Error eliminando operación");
     }
