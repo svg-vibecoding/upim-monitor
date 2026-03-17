@@ -16,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   useAttributeOrder, usePredefinedReports, useDimensions, useOperations,
   useCreatePredefinedReport, useUpdateReportAttributes, useUpdateReportOperation,
+  useRefreshComputed,
   getFullAttributeList, getEvaluableAttributes,
   getAttributeClassification, sortReportsByDisplayOrder,
   type Condition, type LogicMode,
@@ -53,6 +54,7 @@ export default function CreatePredefinedReportPage() {
   const createReport = useCreatePredefinedReport();
   const updateReportAttrs = useUpdateReportAttributes();
   const updateReportOp = useUpdateReportOperation();
+  const { refreshForReport, refreshForOperation } = useRefreshComputed();
 
   const { data: attributeOrder = [] } = useAttributeOrder();
   const { data: predefinedReports = [] } = usePredefinedReports();
@@ -221,9 +223,13 @@ export default function CreatePredefinedReportPage() {
         if (error) throw error;
         queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
 
+        // Refresh computed results for this report
+        refreshForReport(reportId!).catch(() => {});
+        if (opId) refreshForOperation(opId, predefinedReports).catch(() => {});
+
         toast.success("Informe actualizado exitosamente");
       } else {
-        await createReport.mutateAsync({
+        const newReportId = await createReport.mutateAsync({
           name: name.trim(),
           description: description.trim(),
           operationId: opId,
@@ -231,6 +237,11 @@ export default function CreatePredefinedReportPage() {
           showInFocus,
           universe: universeDesc.trim(),
         });
+
+        // Refresh computed results for the new report
+        refreshForReport(newReportId).catch(() => {});
+        if (opId) refreshForOperation(opId, predefinedReports).catch(() => {});
+
         toast.success("Informe creado exitosamente");
       }
       navigate("/admin");

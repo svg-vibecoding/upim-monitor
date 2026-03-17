@@ -101,7 +101,7 @@ export default function AdminPage() {
   const navigate = useNavigate();
   const invalidatePimData = useInvalidatePimData();
   const queryClient = useQueryClient();
-  const { refreshAll, refreshForOperation, refreshForReport } = useRefreshComputed();
+  const { refreshAll, refreshOne, refreshForOperation, refreshForReport } = useRefreshComputed();
 
   // DB-driven data
   const { data: dbReports = [], isLoading: reportsLoading } = usePredefinedReports();
@@ -173,13 +173,15 @@ export default function AdminPage() {
         if (error) throw error;
         toast.success("Operación actualizada");
       } else {
-        const { error } = await supabase.from("operations" as any).insert(payload);
+        const { data: newOp, error } = await supabase.from("operations" as any).insert(payload).select("id").single();
         if (error) throw error;
         toast.success("Operación creada");
+        // Refresh computed results for the new operation
+        refreshForOperation((newOp as any).id, dbReports).catch(() => {});
       }
       setOpDialog(false);
       queryClient.invalidateQueries({ queryKey: ["operations"] });
-      // Refresh computed results for this operation and affected reports
+      // Refresh computed results for edited operation and affected reports
       if (editingOpId) {
         refreshForOperation(editingOpId, dbReports).catch(() => {});
       }
@@ -207,6 +209,7 @@ export default function AdminPage() {
       if (error) throw error;
       toast.success("Operación eliminada");
       queryClient.invalidateQueries({ queryKey: ["operations"] });
+      refreshOne("dashboard_kpis").catch(() => {});
     } catch (err: any) {
       toast.error(err.message || "Error eliminando operación");
     }
@@ -430,12 +433,16 @@ export default function AdminPage() {
           .eq("id", editingDimId);
         if (error) throw error;
         toast.success("Dimensión actualizada");
+        refreshOne("dimension_values", editingDimId).catch(() => {});
       } else {
-        const { error } = await supabase
+        const { data: newDim, error } = await supabase
           .from("dimensions")
-          .insert({ name: dimName, field: dimField });
+          .insert({ name: dimName, field: dimField })
+          .select("id")
+          .single();
         if (error) throw error;
         toast.success("Dimensión creada");
+        if (newDim) refreshOne("dimension_values", (newDim as any).id).catch(() => {});
       }
       setDimDialog(false);
       queryClient.invalidateQueries({ queryKey: ["dimensions"] });
