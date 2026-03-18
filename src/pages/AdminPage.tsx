@@ -1364,7 +1364,6 @@ export default function AdminPage() {
             <h2 className="text-2xl font-bold text-foreground">Operaciones</h2>
             <p className="text-sm text-muted-foreground mt-1">Una operación es una regla o conjunto de reglas que filtra productos del catálogo según condiciones definidas. Las operaciones se usan para definir el universo de productos de un informe y para alimentar los indicadores del dashboard.</p>
           </div>
-          </p>
           <div className="flex justify-end">
             <Button onClick={() => openOpDialog()} className="gap-2">
               <Plus className="h-4 w-4" /> Nueva operación
