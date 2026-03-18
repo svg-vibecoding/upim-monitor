@@ -1007,7 +1007,11 @@ export default function AdminPage() {
         </TabsContent>
 
         {/* ATTRIBUTES */}
-        <TabsContent value="attributes" className="space-y-4">
+        <TabsContent value="attributes" className="space-y-4 pt-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Atributos</h2>
+            <p className="text-sm text-muted-foreground mt-1">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud. La app los clasifica según el uso que se hace de ellos: base, funcional, dimensión o general.</p>
+          </div>
           {attrsLoading ? (
             <div className="flex items-center gap-2 p-8 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Cargando atributos...
