@@ -539,6 +539,7 @@ export default function AdminPage() {
       const allErrorDetails: string[] = [];
       let columnsDetected: { fixed: string[]; attributes: string[] } | undefined;
       let totalUnique = 0;
+      let currentUploadId: string | null = null;
 
       const totalChunks = Math.ceil(allRows.length / CHUNK_SIZE);
 
