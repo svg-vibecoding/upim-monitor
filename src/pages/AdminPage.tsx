@@ -1147,7 +1147,19 @@ export default function AdminPage() {
           ) : (
             <>
               {/* ═══ SECCIÓN 1: Cards del Dashboard ═══ */}
-              <DashboardCardsConfigSection operations={operations} reports={dbReports} />
+              <Accordion type="single" collapsible className="space-y-2">
+                <AccordionItem value="dashboard-cards" className="border rounded-lg px-4">
+                  <AccordionTrigger className="hover:no-underline">
+                    <div className="flex items-center gap-3 text-left">
+                      <span className="font-medium text-foreground">Cards del Dashboard</span>
+                      <Badge variant="secondary" className="text-xs">3 cards</Badge>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <DashboardCardsConfigSection operations={operations} reports={dbReports} />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
 
               {/* ═══ SECCIÓN 2: Informes predefinidos ═══ */}
               <div className="pt-2">

@@ -299,7 +299,6 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
 
   return (
     <div>
-      <h3 className="text-lg font-semibold text-foreground mb-3">Cards del Dashboard</h3>
       <p className="text-sm text-muted-foreground mb-4">
         Configura el contenido de los 3 cards principales que se muestran en el dashboard.
       </p>
