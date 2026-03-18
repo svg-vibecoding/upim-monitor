@@ -443,7 +443,10 @@ export default function AdminPage() {
           .single();
         if (error) throw error;
         toast.success("Dimensión creada");
-        if (newDim) refreshOne("dimension_values", (newDim as any).id).catch(() => {});
+        if (newDim) {
+          refreshOne("dimension_values", (newDim as any).id).catch(() => {});
+          queryClient.invalidateQueries({ queryKey: ["computed-result", "dimension_values"] });
+        }
       }
       setDimDialog(false);
       queryClient.invalidateQueries({ queryKey: ["dimensions"] });
