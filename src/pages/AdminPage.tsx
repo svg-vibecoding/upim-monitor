@@ -1215,7 +1215,7 @@ export default function AdminPage() {
                       <div className="flex items-center gap-3 text-left">
                         <span className="font-medium text-foreground">{dim.name}</span>
                         <Badge variant="outline" className="text-xs">{dim.field}</Badge>
-                        <Badge variant="secondary" className="text-xs">{uniqueVals.length + 1} grupos</Badge>
+                        <Badge variant="secondary" className="text-xs">{uniqueVals.length} grupos</Badge>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -1246,12 +1246,12 @@ export default function AdminPage() {
                         </div>
 
                         <div>
-                          <p className="text-sm font-medium text-foreground mb-2">Valores únicos encontrados en la base ({uniqueVals.length + 1})</p>
+                          <p className="text-sm font-medium text-foreground mb-2">Valores únicos encontrados en la base ({uniqueVals.length})</p>
                           <div className="flex flex-wrap gap-1.5">
                             {uniqueVals.map((val) => (
                               <Badge key={val} variant="outline" className="text-xs font-normal">{val}</Badge>
                             ))}
-                            <Badge variant="secondary" className="text-xs font-normal italic">Sin valor asignado</Badge>
+                            <Badge className="text-xs font-normal italic bg-muted text-muted-foreground border-0 hover:bg-muted">Sin valor asignado</Badge>
                           </div>
                           {uniqueVals.length === 0 && (
                             <p className="text-xs text-muted-foreground mt-1">No se encontraron valores poblados para este atributo en la base actual.</p>
