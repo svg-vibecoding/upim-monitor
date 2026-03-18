@@ -286,14 +286,74 @@ export default function ReportDetailPage() {
                 const realGroups = dimensionResults.filter(d => d.value !== "Sin valor asignado");
                 const sinValor = dimensionResults.find(d => d.value === "Sin valor asignado");
                 const sinValorSKUs = sinValor?.totalSKUs ?? 0;
+                const totalSKUsInDim = dimensionResults.reduce((s, d) => s + d.totalSKUs, 0);
+                const sinValorPct = totalSKUsInDim > 0 ? (sinValorSKUs / totalSKUsInDim) * 100 : 0;
                 const best = realGroups.length > 0 ? realGroups.reduce((a, b) => a.completeness >= b.completeness ? a : b) : null;
                 const worst = realGroups.length > 0 ? realGroups.reduce((a, b) => a.completeness <= b.completeness ? a : b) : null;
+
+                // Sin valor severity
+                const svBg = sinValorSKUs === 0 ? "bg-success/10" : sinValorPct > 25 ? "bg-destructive/10" : "bg-warning/10";
+                const svText = sinValorSKUs === 0 ? "text-success" : sinValorPct > 25 ? "text-destructive" : "text-warning";
+                const SvIcon = sinValorSKUs === 0 ? CheckCircle2 : AlertTriangle;
+
                 return (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                    <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Grupos evaluados</p><p className="text-xl font-bold">{realGroups.length}</p></CardContent></Card>
-                    <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Sin valor asignado</p>{sinValorSKUs > 0 ? (<p className="text-sm font-semibold text-warning">{sinValorSKUs.toLocaleString()} SKUs sin valor asignado</p>) : (<p className="text-sm font-semibold text-success">Todos los SKUs tienen valor asignado</p>)}</CardContent></Card>
-                    <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Mejor completitud</p>{best ? (<><p className="text-sm font-bold">{best.completeness}%</p><p className="text-xs text-muted-foreground truncate">{best.value}</p></>) : (<p className="text-sm text-muted-foreground">—</p>)}</CardContent></Card>
-                    <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Grupo a mejorar</p>{worst ? (<><p className="text-sm font-bold text-destructive">{worst.completeness}%</p><p className="text-xs text-muted-foreground truncate">{worst.value}</p></>) : (<p className="text-sm text-muted-foreground">—</p>)}</CardContent></Card>
+                    {/* Grupos evaluados */}
+                    <Card className="relative overflow-hidden">
+                      <CardContent className="pt-4 pb-4 px-4 relative z-10">
+                        <p className="text-xs text-muted-foreground mb-1">Grupos evaluados</p>
+                        <p className="text-3xl font-bold">{realGroups.length}</p>
+                      </CardContent>
+                      <Layers className="absolute bottom-2 right-2 h-12 w-12 text-primary/[0.06]" />
+                    </Card>
+
+                    {/* Mejor completitud */}
+                    <Card className="relative overflow-hidden">
+                      <CardContent className="pt-4 pb-4 px-4 relative z-10">
+                        <p className="text-xs text-muted-foreground mb-1">Mejor completitud</p>
+                        {best ? (
+                          <>
+                            <p className="text-3xl font-bold text-success">{best.completeness}%</p>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{best.value}</p>
+                          </>
+                        ) : (
+                          <p className="text-xl text-muted-foreground">—</p>
+                        )}
+                      </CardContent>
+                      <TrendingUp className="absolute bottom-2 right-2 h-12 w-12 text-success/[0.08]" />
+                    </Card>
+
+                    {/* Grupo a mejorar */}
+                    <Card className="relative overflow-hidden">
+                      <CardContent className="pt-4 pb-4 px-4 relative z-10">
+                        <p className="text-xs text-muted-foreground mb-1">Grupo a mejorar</p>
+                        {worst ? (
+                          <>
+                            <p className="text-3xl font-bold text-destructive">{worst.completeness}%</p>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{worst.value}</p>
+                          </>
+                        ) : (
+                          <p className="text-xl text-muted-foreground">—</p>
+                        )}
+                      </CardContent>
+                      <TrendingDown className="absolute bottom-2 right-2 h-12 w-12 text-destructive/[0.08]" />
+                    </Card>
+
+                    {/* Sin valor asignado */}
+                    <Card className={`relative overflow-hidden ${svBg}`}>
+                      <CardContent className="pt-4 pb-4 px-4 relative z-10">
+                        <p className={`text-xs font-medium mb-1 ${svText}`}>Sin valor asignado</p>
+                        {sinValorSKUs === 0 ? (
+                          <p className={`text-sm font-semibold ${svText}`}>Todos los SKUs tienen valor asignado</p>
+                        ) : (
+                          <>
+                            <p className={`text-3xl font-bold ${svText}`}>{sinValorSKUs.toLocaleString()}</p>
+                            <p className={`text-xs ${svText} opacity-80`}>SKUs sin valor</p>
+                          </>
+                        )}
+                      </CardContent>
+                      <SvIcon className={`absolute bottom-2 right-2 h-12 w-12 ${svText} opacity-[0.12]`} />
+                    </Card>
                   </div>
                 );
               })()}
