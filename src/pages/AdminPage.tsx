@@ -548,34 +548,55 @@ export default function AdminPage() {
         const chunk = allRows.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
         setCsvProgress(`Enviando lote ${i + 1} de ${totalChunks} (${chunk.length} filas)...`);
 
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${session?.access_token}`,
-            "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-          },
-          body: JSON.stringify({ rows: chunk, isFirstChunk: i === 0, fileName: file.name }),
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 55000);
 
-        const data = await res.json();
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${session?.access_token}`,
+              "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            },
+            body: JSON.stringify({ rows: chunk, isFirstChunk: i === 0, fileName: file.name }),
+            signal: controller.signal,
+          });
+          clearTimeout(timeoutId);
 
-        if (!data.success) {
+          if (!res.ok) {
+            const errorText = await res.text();
+            totalErrors += chunk.length;
+            allErrorDetails.push(`Lote ${i + 1}: HTTP ${res.status} — ${errorText.slice(0, 200)}`);
+            continue;
+          }
+
+          const data = await res.json();
+
+          if (!data.success) {
+            totalErrors += chunk.length;
+            allErrorDetails.push(`Lote ${i + 1}: ${data.error || "Error desconocido"}`);
+            continue;
+          }
+
+          totalInserted += data.inserted || 0;
+          totalUpdated += data.updated || 0;
+          totalErrors += data.errors || 0;
+          totalUnique += data.uniqueRows || 0;
+          if (data.errorDetails) allErrorDetails.push(...data.errorDetails);
+          if (!columnsDetected && data.columnsDetected) columnsDetected = data.columnsDetected;
+          if (i === 0 && data.uploadId) {
+            setPendingUploadId(data.uploadId);
+            setPendingAttributeOrder(data.attributeOrder || []);
+          }
+        } catch (fetchErr) {
+          clearTimeout(timeoutId);
+          const isTimeout = (fetchErr as Error).name === "AbortError";
           totalErrors += chunk.length;
-          allErrorDetails.push(`Lote ${i + 1}: ${data.error || "Error desconocido"}`);
+          allErrorDetails.push(
+            `Lote ${i + 1}: ${isTimeout ? "Timeout (>55s)" : (fetchErr as Error).message}`
+          );
           continue;
-        }
-
-        totalInserted += data.inserted || 0;
-        totalUpdated += data.updated || 0;
-        totalErrors += data.errors || 0;
-        totalUnique += data.uniqueRows || 0;
-        if (data.errorDetails) allErrorDetails.push(...data.errorDetails);
-        if (!columnsDetected && data.columnsDetected) columnsDetected = data.columnsDetected;
-        // Capture uploadId and attributeOrder from first chunk response
-        if (i === 0 && data.uploadId) {
-          setPendingUploadId(data.uploadId);
-          setPendingAttributeOrder(data.attributeOrder || []);
         }
       }
 

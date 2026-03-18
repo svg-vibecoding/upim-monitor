@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
 
     if (isFirstChunk) {
       // Clear staging table
-      await supabase.from("pim_records_staging").delete().neq("codigo_jaivana", "");
+      await supabase.rpc("truncate_pim_staging");
 
       // Discard any existing pending uploads
       await supabase

@@ -429,6 +429,7 @@ export type Database = {
         Args: { p_entity_id?: string; p_type: string }
         Returns: undefined
       }
+      truncate_pim_staging: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "pim_manager" | "usuario_pro"
