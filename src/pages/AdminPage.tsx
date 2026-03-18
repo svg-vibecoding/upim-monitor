@@ -1007,7 +1007,11 @@ export default function AdminPage() {
         </TabsContent>
 
         {/* ATTRIBUTES */}
-        <TabsContent value="attributes" className="space-y-4">
+        <TabsContent value="attributes" className="space-y-4 pt-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Atributos</h2>
+            <p className="text-sm text-muted-foreground mt-1">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud. La app los clasifica según el uso que se hace de ellos: base, funcional, dimensión o general.</p>
+          </div>
           {attrsLoading ? (
             <div className="flex items-center gap-2 p-8 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Cargando atributos...
@@ -1131,7 +1135,11 @@ export default function AdminPage() {
         </TabsContent>
 
         {/* REPORTS - now with two sections */}
-        <TabsContent value="reports" className="space-y-6">
+        <TabsContent value="reports" className="space-y-6 pt-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Informes</h2>
+            <p className="text-sm text-muted-foreground mt-1">Configura los informes predefinidos disponibles para todos los usuarios y los indicadores del dashboard. Los informes predefinidos definen un universo de productos y los atributos a evaluar. Los cards del dashboard muestran los indicadores principales de la base.</p>
+          </div>
           {attrsLoading || reportsLoading ? (
             <div className="flex items-center gap-2 p-8 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Cargando informes...
@@ -1241,8 +1249,11 @@ export default function AdminPage() {
         </TabsContent>
 
         {/* DIMENSIONS */}
-        <TabsContent value="dimensions" className="space-y-4">
-          <p className="text-sm text-muted-foreground">Una dimensión es un atributo del catálogo cuyos valores únicos se usan para distribuir los resultados de un informe. Por ejemplo, si defines 'Categoría' como dimensión, los informes podrán mostrar la completitud por cada categoría: Herramientas, Seguridad Industrial, Tornillería, etc.</p>
+        <TabsContent value="dimensions" className="space-y-4 pt-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Dimensiones</h2>
+            <p className="text-sm text-muted-foreground mt-1">Una dimensión es un atributo del catálogo cuyos valores únicos se usan para distribuir los resultados de un informe. Por ejemplo, si defines 'Categoría' como dimensión, los informes podrán mostrar la completitud por cada categoría: Herramientas, Seguridad Industrial, Tornillería, etc.</p>
+          </div>
           <div className="flex justify-end">
             <Button onClick={() => openDimDialog()} className="gap-2"><Plus className="h-4 w-4" /> Nueva dimensión</Button>
           </div>
@@ -1348,10 +1359,11 @@ export default function AdminPage() {
         </TabsContent>
 
         {/* OPERATIONS */}
-        <TabsContent value="operations" className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Una operación es una regla o conjunto de reglas que filtra productos del catálogo según condiciones definidas. Las operaciones se usan para definir el universo de productos de un informe y para alimentar los indicadores del dashboard.
-          </p>
+        <TabsContent value="operations" className="space-y-4 pt-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Operaciones</h2>
+            <p className="text-sm text-muted-foreground mt-1">Una operación es una regla o conjunto de reglas que filtra productos del catálogo según condiciones definidas. Las operaciones se usan para definir el universo de productos de un informe y para alimentar los indicadores del dashboard.</p>
+          </div>
           <div className="flex justify-end">
             <Button onClick={() => openOpDialog()} className="gap-2">
               <Plus className="h-4 w-4" /> Nueva operación
