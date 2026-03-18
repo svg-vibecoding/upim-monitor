@@ -434,6 +434,7 @@ export default function AdminPage() {
         if (error) throw error;
         toast.success("Dimensión actualizada");
         refreshOne("dimension_values", editingDimId).catch(() => {});
+        queryClient.invalidateQueries({ queryKey: ["computed-result", "dimension_values"] });
       } else {
         const { data: newDim, error } = await supabase
           .from("dimensions")
@@ -442,7 +443,10 @@ export default function AdminPage() {
           .single();
         if (error) throw error;
         toast.success("Dimensión creada");
-        if (newDim) refreshOne("dimension_values", (newDim as any).id).catch(() => {});
+        if (newDim) {
+          refreshOne("dimension_values", (newDim as any).id).catch(() => {});
+          queryClient.invalidateQueries({ queryKey: ["computed-result", "dimension_values"] });
+        }
       }
       setDimDialog(false);
       queryClient.invalidateQueries({ queryKey: ["dimensions"] });
