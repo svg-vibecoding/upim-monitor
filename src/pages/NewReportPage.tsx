@@ -18,6 +18,7 @@ import {
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Filter, ArrowLeft, Download } from "lucide-react";
+import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
