@@ -544,59 +544,87 @@ export default function AdminPage() {
 
       const { data: { session } } = await supabase.auth.getSession();
 
+      const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+      const MAX_RETRIES = 2;
+
       for (let i = 0; i < totalChunks; i++) {
         const chunk = allRows.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-        setCsvProgress(`Enviando lote ${i + 1} de ${totalChunks} (${chunk.length} filas)...`);
+        let chunkSuccess = false;
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 55000);
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+          const retryLabel = attempt > 0 ? ` (reintento ${attempt} de ${MAX_RETRIES})` : "";
+          setCsvProgress(`Enviando lote ${i + 1} de ${totalChunks} (${chunk.length} filas)${retryLabel}...`);
 
-        try {
-          const res = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${session?.access_token}`,
-              "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-            },
-            body: JSON.stringify({ rows: chunk, isFirstChunk: i === 0, fileName: file.name }),
-            signal: controller.signal,
-          });
-          clearTimeout(timeoutId);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 55000);
 
-          if (!res.ok) {
-            const errorText = await res.text();
+          try {
+            const res = await fetch(url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${session?.access_token}`,
+                "apikey": import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              },
+              body: JSON.stringify({ rows: chunk, isFirstChunk: i === 0 && attempt === 0, fileName: file.name }),
+              signal: controller.signal,
+            });
+            clearTimeout(timeoutId);
+
+            if (!res.ok) {
+              const errorText = await res.text();
+              // 4xx → no reintentar
+              if (res.status >= 400 && res.status < 500) {
+                totalErrors += chunk.length;
+                allErrorDetails.push(`Lote ${i + 1}: HTTP ${res.status} — ${errorText.slice(0, 200)}`);
+                break;
+              }
+              // 5xx → reintentar si quedan intentos
+              if (attempt < MAX_RETRIES) {
+                await wait(2000 * Math.pow(2, attempt));
+                continue;
+              }
+              totalErrors += chunk.length;
+              allErrorDetails.push(`Lote ${i + 1}: HTTP ${res.status} — ${errorText.slice(0, 200)} (tras ${MAX_RETRIES} reintentos)`);
+              break;
+            }
+
+            const data = await res.json();
+
+            if (!data.success) {
+              totalErrors += chunk.length;
+              allErrorDetails.push(`Lote ${i + 1}: ${data.error || "Error desconocido"}`);
+              break;
+            }
+
+            totalInserted += data.inserted || 0;
+            totalUpdated += data.updated || 0;
+            totalErrors += data.errors || 0;
+            totalUnique += data.uniqueRows || 0;
+            if (data.errorDetails) allErrorDetails.push(...data.errorDetails);
+            if (!columnsDetected && data.columnsDetected) columnsDetected = data.columnsDetected;
+            if (i === 0 && data.uploadId) {
+              setPendingUploadId(data.uploadId);
+              setPendingAttributeOrder(data.attributeOrder || []);
+            }
+            chunkSuccess = true;
+            break;
+          } catch (fetchErr) {
+            clearTimeout(timeoutId);
+            const isTimeout = (fetchErr as Error).name === "AbortError";
+            const isNetworkError = (fetchErr as Error).message?.includes("Failed to fetch");
+            // Solo reintentar timeout y errores de red
+            if ((isTimeout || isNetworkError) && attempt < MAX_RETRIES) {
+              await wait(2000 * Math.pow(2, attempt));
+              continue;
+            }
             totalErrors += chunk.length;
-            allErrorDetails.push(`Lote ${i + 1}: HTTP ${res.status} — ${errorText.slice(0, 200)}`);
-            continue;
+            const suffix = attempt > 0 ? ` (tras ${attempt} reintentos)` : "";
+            allErrorDetails.push(
+              `Lote ${i + 1}: ${isTimeout ? "Timeout (>55s)" : (fetchErr as Error).message}${suffix}`
+            );
+            break;
           }
-
-          const data = await res.json();
-
-          if (!data.success) {
-            totalErrors += chunk.length;
-            allErrorDetails.push(`Lote ${i + 1}: ${data.error || "Error desconocido"}`);
-            continue;
-          }
-
-          totalInserted += data.inserted || 0;
-          totalUpdated += data.updated || 0;
-          totalErrors += data.errors || 0;
-          totalUnique += data.uniqueRows || 0;
-          if (data.errorDetails) allErrorDetails.push(...data.errorDetails);
-          if (!columnsDetected && data.columnsDetected) columnsDetected = data.columnsDetected;
-          if (i === 0 && data.uploadId) {
-            setPendingUploadId(data.uploadId);
-            setPendingAttributeOrder(data.attributeOrder || []);
-          }
-        } catch (fetchErr) {
-          clearTimeout(timeoutId);
-          const isTimeout = (fetchErr as Error).name === "AbortError";
-          totalErrors += chunk.length;
-          allErrorDetails.push(
-            `Lote ${i + 1}: ${isTimeout ? "Timeout (>55s)" : (fetchErr as Error).message}`
-          );
-          continue;
         }
       }
 
