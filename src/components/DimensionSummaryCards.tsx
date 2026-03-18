@@ -60,14 +60,11 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
 
       <Card className={`relative overflow-hidden border-0 ${svBg}`}>
         <CardContent className="pt-4 pb-4 px-4 relative z-10">
-          <p className={`text-xs mb-1 ${svLabel}`}>Sin valor asignado</p>
+          <p className={`text-xs mb-1 ${svLabel}`}>SKUs sin valor asignado</p>
           {sinValorSKUs === 0 ? (
             <p className={`text-sm font-semibold ${svText}`}>¡Excelente! Todos los SKUs tienen valor asignado</p>
           ) : (
-            <>
-              <p className={`text-3xl font-bold ${svText}`}>{sinValorSKUs.toLocaleString()}</p>
-              <p className={`text-xs ${svText} opacity-80`}>SKUs sin valor asignado</p>
-            </>
+            <p className={`text-3xl font-bold ${svText}`}>{sinValorSKUs.toLocaleString()}</p>
           )}
         </CardContent>
         <SvIcon className={`absolute bottom-2 right-2 h-12 w-12 ${svText} opacity-[0.12]`} />
