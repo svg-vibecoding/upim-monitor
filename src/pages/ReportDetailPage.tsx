@@ -340,7 +340,7 @@ export default function ReportDetailPage() {
                     {/* Sin valor asignado */}
                     <Card className={`relative overflow-hidden ${svBg}`}>
                       <CardContent className="pt-4 pb-4 px-4 relative z-10">
-                        <p className={`text-xs font-medium mb-1 ${svText}`}>Sin valor asignado</p>
+                        <p className="text-xs text-muted-foreground mb-1">Sin valor asignado</p>
                         {sinValorSKUs === 0 ? (
                           <p className={`text-sm font-semibold ${svText}`}>Todos los SKUs tienen valor asignado</p>
                         ) : (
