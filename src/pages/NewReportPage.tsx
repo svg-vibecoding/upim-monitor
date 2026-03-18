@@ -507,7 +507,6 @@ export default function NewReportPage() {
                 </div>
               </CardContent>
             </Card>
-            </Card>
             </>
           )}
         </div>
