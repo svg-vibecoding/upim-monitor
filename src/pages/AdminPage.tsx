@@ -630,6 +630,20 @@ export default function AdminPage() {
         }
       }
 
+      // Persistir estadísticas finales en pim_upload_history
+      if (currentUploadId) {
+        await supabase
+          .from("pim_upload_history")
+          .update({
+            total_rows: allRows.length,
+            unique_rows: totalUnique,
+            inserted: totalInserted,
+            updated: totalUpdated,
+            errors: totalErrors,
+          })
+          .eq("id", currentUploadId);
+      }
+
       const attrOrder = pendingAttributeOrder.length > 0 ? pendingAttributeOrder : undefined;
 
       setCsvResult({
