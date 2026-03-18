@@ -478,6 +478,8 @@ export default function NewReportPage() {
           </Card>
 
           {dimensionResults.length > 0 && dimension && (
+            <>
+              <DimensionSummaryCards dimensionResults={dimensionResults} />
             <Card>
               <CardContent className="pt-4">
                 <h2 className="text-sm font-semibold mb-3 text-foreground">Distribución por {dimension.name}</h2>
