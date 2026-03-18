@@ -240,12 +240,13 @@ export default function DashboardPage() {
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
           </div>
           <Skeleton className="h-64 w-full" />
+          <p className="text-sm text-muted-foreground text-center">Cargando indicadores...</p>
         </div>
       ) : !hasData ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
             <p className="text-sm">
-              No hay datos PIM cargados. Ve a <strong>Administración → Base PIM</strong> para cargar tu archivo Excel.
+              No hay datos cargados para generar informes. (UsuarioPRO → Administración → Base PIM)
             </p>
           </CardContent>
         </Card>
