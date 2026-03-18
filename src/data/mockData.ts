@@ -182,7 +182,11 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
       populated: populatedChecks,
       completeness: totalChecks > 0 ? Math.round((populatedChecks / totalChecks) * 100) : 0,
     };
-  }).sort((a, b) => a.completeness - b.completeness);
+  }).sort((a, b) => {
+    if (a.value === "Sin valor") return 1;
+    if (b.value === "Sin valor") return -1;
+    return a.completeness - b.completeness;
+  });
 }
 
 // Helper: filter records per report universe
