@@ -192,6 +192,7 @@ export default function InsightsPage() {
             {Array.from({ length: 7 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
           </div>
           <Skeleton className="h-64" />
+          <p className="text-sm text-muted-foreground text-center">Cargando actividad...</p>
         </div>
       ) : (
         <>

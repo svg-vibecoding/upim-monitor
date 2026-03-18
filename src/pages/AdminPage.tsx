@@ -1146,7 +1146,7 @@ export default function AdminPage() {
                         {dbReports.length === 0 && (
                           <TableRow>
                             <TableCell colSpan={4} className="text-center text-muted-foreground">
-                              No hay informes predefinidos
+                              Aún no hay informes creados.
                             </TableCell>
                           </TableRow>
                         )}
@@ -1201,7 +1201,7 @@ export default function AdminPage() {
           ) : dbDimensions.length === 0 ? (
             <Card>
               <CardContent className="pt-6 text-center text-muted-foreground">
-                <p>No hay dimensiones definidas.</p>
+                <p>Aún no hay dimensiones definidas.</p>
                 <p className="text-sm mt-1">Crea una dimensión para agrupar los informes por un atributo del PIM.</p>
               </CardContent>
             </Card>
@@ -1285,7 +1285,7 @@ export default function AdminPage() {
             <Card>
               <CardContent className="pt-6 text-center text-muted-foreground">
                 <Settings2 className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-                <p>No hay operaciones definidas.</p>
+                <p>Aún no hay operaciones definidas.</p>
                 <p className="text-sm mt-1">Crea una operación para definir reglas reutilizables sobre atributos del PIM.</p>
               </CardContent>
             </Card>

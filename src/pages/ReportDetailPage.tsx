@@ -134,11 +134,12 @@ export default function ReportDetailPage() {
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
         </div>
         <Skeleton className="h-64 w-full" />
+        <p className="text-sm text-muted-foreground text-center">Cargando informe...</p>
       </div>
     );
   }
 
-  if (!report) return <div className="p-6">Informe no encontrado.</div>;
+  if (!report) return <div className="p-6">Este informe no tiene atributos para mostrar.</div>;
 
   // Track report viewed once data loads
   if (!tracked && completenessData && report) {

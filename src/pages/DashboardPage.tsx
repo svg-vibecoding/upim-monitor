@@ -193,7 +193,7 @@ export default function DashboardPage() {
 
   const lastUpdateFormatted = kpis?.lastUpdated
     ? format(new Date(kpis.lastUpdated), "d 'de' MMMM yyyy, HH:mm", { locale: es })
-    : "Sin datos cargados";
+    : "Cargando indicadores...";
 
   // ── Card 1 computed values ──
   const total = kpis?.total ?? 0;
@@ -240,12 +240,13 @@ export default function DashboardPage() {
             {Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
           </div>
           <Skeleton className="h-64 w-full" />
+          <p className="text-sm text-muted-foreground text-center">Cargando indicadores...</p>
         </div>
       ) : !hasData ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
             <p className="text-sm">
-              No hay datos PIM cargados. Ve a <strong>Administración → Base PIM</strong> para cargar tu archivo Excel.
+              No hay datos cargados para generar informes. (UsuarioPRO → Administración → Base PIM)
             </p>
           </CardContent>
         </Card>
@@ -540,8 +541,8 @@ export default function DashboardPage() {
                   ) : (
                     <p className="text-xs text-muted-foreground py-6 text-center">
                       {focusItems.length > 0
-                        ? "No hay atributos en este rango de severidad."
-                        : "Sin datos de completitud para este informe."}
+                        ? "No hay atributos en el rango seleccionado."
+                        : "Este informe no tiene datos de completitud disponibles."}
                     </p>
                   )}
                 </CardContent>

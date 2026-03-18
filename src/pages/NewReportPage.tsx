@@ -398,7 +398,7 @@ export default function NewReportPage() {
         <Card>
           <CardContent className="pt-6 pb-8 flex flex-col items-center justify-center gap-3">
             <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm text-muted-foreground">Informe en proceso…</p>
+            <p className="text-sm text-muted-foreground">Generando informe...</p>
           </CardContent>
         </Card>
       )}
