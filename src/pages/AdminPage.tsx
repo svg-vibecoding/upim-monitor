@@ -1135,7 +1135,11 @@ export default function AdminPage() {
         </TabsContent>
 
         {/* REPORTS - now with two sections */}
-        <TabsContent value="reports" className="space-y-6">
+        <TabsContent value="reports" className="space-y-6 pt-4">
+          <div>
+            <h2 className="text-2xl font-bold text-foreground">Informes</h2>
+            <p className="text-sm text-muted-foreground mt-1">Configura los informes predefinidos disponibles para todos los usuarios y los indicadores del dashboard. Los informes predefinidos definen un universo de productos y los atributos a evaluar. Los cards del dashboard muestran los indicadores principales de la base.</p>
+          </div>
           {attrsLoading || reportsLoading ? (
             <div className="flex items-center gap-2 p-8 text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Cargando informes...
