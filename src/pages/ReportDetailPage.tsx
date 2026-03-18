@@ -319,6 +319,7 @@ export default function ReportDetailPage() {
                 </TableBody>
               </Table>
             </div>
+            </>
           ) : (
             <p className="text-sm text-muted-foreground py-4 text-center">Selecciona una dimensión para ver la distribución.</p>
           )}
