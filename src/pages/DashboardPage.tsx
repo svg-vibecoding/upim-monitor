@@ -541,8 +541,8 @@ export default function DashboardPage() {
                   ) : (
                     <p className="text-xs text-muted-foreground py-6 text-center">
                       {focusItems.length > 0
-                        ? "No hay atributos en este rango de severidad."
-                        : "Sin datos de completitud para este informe."}
+                        ? "No hay atributos en el rango seleccionado."
+                        : "Este informe no tiene datos de completitud disponibles."}
                     </p>
                   )}
                 </CardContent>

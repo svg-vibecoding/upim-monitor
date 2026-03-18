@@ -60,13 +60,16 @@ export default function ReportsListPage() {
       <h1 className="text-2xl font-bold text-foreground">Informes predefinidos</h1>
 
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-40" />)}
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-40" />)}
+          </div>
+          <p className="text-sm text-muted-foreground text-center">Cargando informes...</p>
         </div>
       ) : !hasData ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
-            <p className="text-sm">No hay datos PIM cargados. Ve a <strong>Administración → Base PIM</strong> para cargar tu archivo Excel.</p>
+            <p className="text-sm">No hay datos cargados para generar informes. (UsuarioPRO → Administración → Base PIM)</p>
           </CardContent>
         </Card>
       ) : (

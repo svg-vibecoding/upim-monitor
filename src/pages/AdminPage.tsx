@@ -1285,7 +1285,7 @@ export default function AdminPage() {
             <Card>
               <CardContent className="pt-6 text-center text-muted-foreground">
                 <Settings2 className="h-8 w-8 mx-auto mb-2 text-muted-foreground/40" />
-                <p>No hay operaciones definidas.</p>
+                <p>Aún no hay operaciones definidas.</p>
                 <p className="text-sm mt-1">Crea una operación para definir reglas reutilizables sobre atributos del PIM.</p>
               </CardContent>
             </Card>
