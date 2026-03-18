@@ -1201,7 +1201,7 @@ export default function AdminPage() {
           ) : dbDimensions.length === 0 ? (
             <Card>
               <CardContent className="pt-6 text-center text-muted-foreground">
-                <p>No hay dimensiones definidas.</p>
+                <p>Aún no hay dimensiones definidas.</p>
                 <p className="text-sm mt-1">Crea una dimensión para agrupar los informes por un atributo del PIM.</p>
               </CardContent>
             </Card>
