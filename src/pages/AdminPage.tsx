@@ -605,6 +605,7 @@ export default function AdminPage() {
             if (data.errorDetails) allErrorDetails.push(...data.errorDetails);
             if (!columnsDetected && data.columnsDetected) columnsDetected = data.columnsDetected;
             if (i === 0 && data.uploadId) {
+              currentUploadId = data.uploadId;
               setPendingUploadId(data.uploadId);
               setPendingAttributeOrder(data.attributeOrder || []);
             }
