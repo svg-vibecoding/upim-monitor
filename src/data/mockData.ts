@@ -163,7 +163,7 @@ export function computeAttributeResults(records: PIMRecord[], attributes: string
 export function computeDimensionResults(records: PIMRecord[], attributes: string[], dimensionField: string): DimensionResult[] {
   const groups: Record<string, PIMRecord[]> = {};
   for (const r of records) {
-    const val = (r[dimensionField] as string) || "Sin valor";
+    const val = (r[dimensionField] as string) || "Sin valor asignado";
     if (!groups[val]) groups[val] = [];
     groups[val].push(r);
   }
@@ -183,8 +183,8 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
       completeness: totalChecks > 0 ? Math.round((populatedChecks / totalChecks) * 100) : 0,
     };
   }).sort((a, b) => {
-    if (a.value === "Sin valor") return 1;
-    if (b.value === "Sin valor") return -1;
+    if (a.value === "Sin valor asignado") return 1;
+    if (b.value === "Sin valor asignado") return -1;
     return a.completeness - b.completeness;
   });
 }
