@@ -539,6 +539,7 @@ export default function AdminPage() {
       const allErrorDetails: string[] = [];
       let columnsDetected: { fixed: string[]; attributes: string[] } | undefined;
       let totalUnique = 0;
+      let currentUploadId: string | null = null;
 
       const totalChunks = Math.ceil(allRows.length / CHUNK_SIZE);
 
@@ -604,6 +605,7 @@ export default function AdminPage() {
             if (data.errorDetails) allErrorDetails.push(...data.errorDetails);
             if (!columnsDetected && data.columnsDetected) columnsDetected = data.columnsDetected;
             if (i === 0 && data.uploadId) {
+              currentUploadId = data.uploadId;
               setPendingUploadId(data.uploadId);
               setPendingAttributeOrder(data.attributeOrder || []);
             }
@@ -626,6 +628,20 @@ export default function AdminPage() {
             break;
           }
         }
+      }
+
+      // Persistir estadísticas finales en pim_upload_history
+      if (currentUploadId) {
+        await supabase
+          .from("pim_upload_history")
+          .update({
+            total_rows: allRows.length,
+            unique_rows: totalUnique,
+            inserted: totalInserted,
+            updated: totalUpdated,
+            errors: totalErrors,
+          })
+          .eq("id", currentUploadId);
       }
 
       const attrOrder = pendingAttributeOrder.length > 0 ? pendingAttributeOrder : undefined;
