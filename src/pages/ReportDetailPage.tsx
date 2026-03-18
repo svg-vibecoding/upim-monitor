@@ -13,7 +13,8 @@ import {
   filterRealAttributes, getEvaluableAttributes, useOperations,
 } from "@/hooks/usePimData";
 import { downloadCSV } from "@/data/mockData";
-import { ArrowLeft, Download, Filter, ArrowUpDown, ArrowUp, ArrowDown, Layers, TrendingUp, TrendingDown, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Download, Filter, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 
