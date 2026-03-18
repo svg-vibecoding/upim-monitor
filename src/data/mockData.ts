@@ -183,8 +183,8 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
       completeness: totalChecks > 0 ? Math.round((populatedChecks / totalChecks) * 100) : 0,
     };
   }).sort((a, b) => {
-    if (a.value === "Sin valor") return 1;
-    if (b.value === "Sin valor") return -1;
+    if (a.value === "Sin valor asignado") return 1;
+    if (b.value === "Sin valor asignado") return -1;
     return a.completeness - b.completeness;
   });
 }
