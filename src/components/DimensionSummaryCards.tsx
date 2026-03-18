@@ -66,7 +66,7 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
           ) : (
             <>
               <p className={`text-3xl font-bold ${svText}`}>{sinValorSKUs.toLocaleString()}</p>
-              <p className={`text-xs ${svText} opacity-80`}>SKUs sin valor</p>
+              <p className={`text-xs ${svText} opacity-80`}>SKUs sin valor asignado</p>
             </>
           )}
         </CardContent>
