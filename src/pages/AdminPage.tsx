@@ -434,6 +434,7 @@ export default function AdminPage() {
         if (error) throw error;
         toast.success("Dimensión actualizada");
         refreshOne("dimension_values", editingDimId).catch(() => {});
+        queryClient.invalidateQueries({ queryKey: ["computed-result", "dimension_values"] });
       } else {
         const { data: newDim, error } = await supabase
           .from("dimensions")
