@@ -308,35 +308,33 @@ export default function ReportDetailPage() {
                     </Card>
 
                     {/* Mejor completitud */}
-                    <Card className="relative overflow-hidden">
-                      <CardContent className="pt-4 pb-4 px-4 relative z-10">
+                    <Card>
+                      <CardContent className="pt-4 pb-4 px-4">
                         <p className="text-xs text-muted-foreground mb-1">Mejor completitud</p>
                         {best ? (
                           <>
                             <p className="text-3xl font-bold text-success">{best.completeness}%</p>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">{best.value}</p>
+                            <p className="text-xs font-semibold truncate mt-0.5">{best.value}</p>
                           </>
                         ) : (
                           <p className="text-xl text-muted-foreground">—</p>
                         )}
                       </CardContent>
-                      <TrendingUp className="absolute bottom-2 right-2 h-12 w-12 text-success/[0.08]" />
                     </Card>
 
                     {/* Grupo a mejorar */}
-                    <Card className="relative overflow-hidden">
-                      <CardContent className="pt-4 pb-4 px-4 relative z-10">
+                    <Card>
+                      <CardContent className="pt-4 pb-4 px-4">
                         <p className="text-xs text-muted-foreground mb-1">Grupo a mejorar</p>
                         {worst ? (
                           <>
                             <p className="text-3xl font-bold text-destructive">{worst.completeness}%</p>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">{worst.value}</p>
+                            <p className="text-xs font-semibold truncate mt-0.5">{worst.value}</p>
                           </>
                         ) : (
                           <p className="text-xl text-muted-foreground">—</p>
                         )}
                       </CardContent>
-                      <TrendingDown className="absolute bottom-2 right-2 h-12 w-12 text-destructive/[0.08]" />
                     </Card>
 
                     {/* Sin valor asignado */}
