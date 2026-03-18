@@ -193,7 +193,7 @@ export default function DashboardPage() {
 
   const lastUpdateFormatted = kpis?.lastUpdated
     ? format(new Date(kpis.lastUpdated), "d 'de' MMMM yyyy, HH:mm", { locale: es })
-    : "Sin datos cargados";
+    : "Cargando indicadores...";
 
   // ── Card 1 computed values ──
   const total = kpis?.total ?? 0;
