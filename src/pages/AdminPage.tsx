@@ -1215,7 +1215,7 @@ export default function AdminPage() {
                       <div className="flex items-center gap-3 text-left">
                         <span className="font-medium text-foreground">{dim.name}</span>
                         <Badge variant="outline" className="text-xs">{dim.field}</Badge>
-                        <Badge variant="secondary" className="text-xs">{uniqueVals.length + 1} grupos</Badge>
+                        <Badge variant="secondary" className="text-xs">{uniqueVals.length} grupos</Badge>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
