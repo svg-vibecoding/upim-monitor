@@ -1146,7 +1146,7 @@ export default function AdminPage() {
                         {dbReports.length === 0 && (
                           <TableRow>
                             <TableCell colSpan={4} className="text-center text-muted-foreground">
-                              No hay informes predefinidos
+                              Aún no hay informes creados.
                             </TableCell>
                           </TableRow>
                         )}
