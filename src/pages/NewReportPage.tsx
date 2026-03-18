@@ -18,6 +18,7 @@ import {
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Filter, ArrowLeft, Download } from "lucide-react";
+import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
@@ -477,6 +478,8 @@ export default function NewReportPage() {
           </Card>
 
           {dimensionResults.length > 0 && dimension && (
+            <>
+              <DimensionSummaryCards dimensionResults={dimensionResults} />
             <Card>
               <CardContent className="pt-4">
                 <h2 className="text-sm font-semibold mb-3 text-foreground">Distribución por {dimension.name}</h2>
@@ -504,6 +507,7 @@ export default function NewReportPage() {
                 </div>
               </CardContent>
             </Card>
+            </>
           )}
         </div>
       )}
