@@ -280,6 +280,23 @@ export default function ReportDetailPage() {
               </p>
             </div>
           ) : dimensionResults.length > 0 ? (
+            <>
+              {/* Dimension summary cards */}
+              {(() => {
+                const realGroups = dimensionResults.filter(d => d.value !== "Sin valor asignado");
+                const sinValor = dimensionResults.find(d => d.value === "Sin valor asignado");
+                const sinValorSKUs = sinValor?.totalSKUs ?? 0;
+                const best = realGroups.length > 0 ? realGroups.reduce((a, b) => a.completeness >= b.completeness ? a : b) : null;
+                const worst = realGroups.length > 0 ? realGroups.reduce((a, b) => a.completeness <= b.completeness ? a : b) : null;
+                return (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                    <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Grupos evaluados</p><p className="text-xl font-bold">{realGroups.length}</p></CardContent></Card>
+                    <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Sin valor asignado</p>{sinValorSKUs > 0 ? (<p className="text-sm font-semibold text-warning">{sinValorSKUs.toLocaleString()} SKUs sin valor asignado</p>) : (<p className="text-sm font-semibold text-success">Todos los SKUs tienen valor asignado</p>)}</CardContent></Card>
+                    <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Mejor completitud</p>{best ? (<><p className="text-sm font-bold">{best.completeness}%</p><p className="text-xs text-muted-foreground truncate">{best.value}</p></>) : (<p className="text-sm text-muted-foreground">—</p>)}</CardContent></Card>
+                    <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Grupo a mejorar</p>{worst ? (<><p className="text-sm font-bold text-destructive">{worst.completeness}%</p><p className="text-xs text-muted-foreground truncate">{worst.value}</p></>) : (<p className="text-sm text-muted-foreground">—</p>)}</CardContent></Card>
+                  </div>
+                );
+              })()}
             <div className="overflow-auto">
               <Table>
                 <TableHeader>
