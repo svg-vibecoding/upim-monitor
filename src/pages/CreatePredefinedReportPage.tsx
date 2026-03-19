@@ -373,6 +373,7 @@ export default function CreatePredefinedReportPage() {
               <Square className="h-3 w-3" /> Ninguno
             </Button>
           </div>
+          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
             <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
