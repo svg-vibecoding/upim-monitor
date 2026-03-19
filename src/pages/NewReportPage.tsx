@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, memo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -17,7 +18,7 @@ import {
   type Condition, type LogicMode,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Filter, ArrowLeft, Download } from "lucide-react";
+import { FileText, Filter, ArrowLeft, Download, Search, CheckSquare, Square } from "lucide-react";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
@@ -347,13 +348,23 @@ export default function NewReportPage() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">Los atributos son las características del producto que quieres evaluar. El informe calculará qué porcentaje de los productos del universo tienen valor registrado en cada una.</p>
-              <input
-                type="text"
-                placeholder="Buscar atributo..."
-                value={searchAttr}
-                onChange={(e) => setSearchAttr(e.target.value)}
-                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
-              />
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar atributo..."
+                    value={searchAttr}
+                    onChange={(e) => setSearchAttr(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
+                  <CheckSquare className="h-3 w-3" /> Todos
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs([])}>
+                  <Square className="h-3 w-3" /> Ninguno
+                </Button>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
                 <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
                   <Checkbox checked={true} disabled />
@@ -371,7 +382,7 @@ export default function NewReportPage() {
                 ))}
               </div>
               {selectedAttrs.length > 0 && (
-                <p className="text-xs text-muted-foreground">{selectedAttrs.length} atributos seleccionados</p>
+                <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">{selectedAttrs.length} seleccionados</Badge>
               )}
             </CardContent>
           </Card>
