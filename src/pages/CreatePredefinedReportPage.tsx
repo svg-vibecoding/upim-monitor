@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, FileText, Loader2, Search, CheckSquare, Square, ChevronDown, CheckCircle2, Circle } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Search, CheckSquare, Square, ChevronDown, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
