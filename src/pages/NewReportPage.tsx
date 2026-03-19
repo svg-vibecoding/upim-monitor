@@ -327,6 +327,7 @@ export default function NewReportPage() {
             <CardContent className="pt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
+                <p className="text-sm text-muted-foreground">Los atributos son las características del producto que quieres evaluar. El informe calculará qué porcentaje de los productos del universo tienen valor registrado en cada una.</p>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
                   <Select onValueChange={handleApplyTemplate}>
