@@ -687,7 +687,8 @@ export default function AdminPage() {
           .eq("id", currentUploadId);
       }
 
-      const attrOrder = pendingAttributeOrder.length > 0 ? pendingAttributeOrder : undefined;
+      const localAttrOrder = firstResult?.attributeOrder || [];
+      const attrOrder = localAttrOrder.length > 0 ? localAttrOrder : undefined;
 
       setCsvResult({
         success: true,

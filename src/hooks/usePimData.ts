@@ -311,14 +311,25 @@ const NON_EVALUABLE_SET = new Set(["Código Jaivaná", "Estado (Global)"]);
 /** Collect all attribute names used by active operations (including transitive refs) */
 function getOperationAttributes(operations: Operation[]): Set<string> {
   const attrs = new Set<string>();
-  for (const op of operations) {
-    if (!op.active) continue;
+  const visited = new Set<string>();
+  const opMap = new Map(operations.map(op => [op.id, op]));
+
+  function collect(opId: string) {
+    if (visited.has(opId)) return;
+    visited.add(opId);
+    const op = opMap.get(opId);
+    if (!op || !op.active) return;
     for (const c of op.conditions) {
-      const source = c.sourceType || "attribute";
-      if (source === "attribute" && c.attribute) {
+      if (c.sourceType === "operation" && c.attribute) {
+        collect(c.attribute);
+      } else if (c.attribute) {
         attrs.add(c.attribute);
       }
     }
+  }
+
+  for (const op of operations) {
+    if (op.active) collect(op.id);
   }
   return attrs;
 }
@@ -336,13 +347,7 @@ export function getAttributeClassification(
 
   const evaluable = !NON_EVALUABLE_SET.has(attr);
 
-  // Check if any report depends on this attribute via universe_key
-  if (reports) {
-    for (const r of reports) {
-      const depAttr = UNIVERSE_KEY_ATTRIBUTE_MAP[r.universeKey];
-      if (depAttr === attr) return { type: "funcional", evaluable };
-    }
-  }
+  // Note: universe_key → attribute mapping removed (redundant — captured via operations)
 
   // Check if any active operation uses this attribute in its conditions
   if (operations) {
@@ -381,16 +386,30 @@ export function getProtectedAttributes(
   // Note: universe_key attributes from reports are NOT added here because
   // they are already captured via active operation conditions.
 
-  // Functional from operations
+  // Functional from operations (recursive resolution for operation refs)
   if (operations) {
-    for (const op of operations) {
-      if (!op.active) continue;
+    const visited = new Set<string>();
+    const opMap = new Map(operations.map(op => [op.id, op]));
+
+    function collectForOp(opId: string, rootOpName: string) {
+      if (visited.has(opId)) return;
+      visited.add(opId);
+      const op = opMap.get(opId);
+      if (!op || !op.active) return;
       for (const c of op.conditions) {
-        const source = c.sourceType || "attribute";
-        if (source === "attribute" && c.attribute && !seen.has(c.attribute)) {
+        if (c.sourceType === "operation" && c.attribute) {
+          collectForOp(c.attribute, rootOpName);
+        } else if (c.attribute && !seen.has(c.attribute)) {
           seen.add(c.attribute);
-          result.push({ attr: c.attribute, type: "funcional", reason: `Operación "${op.name}"` });
+          result.push({ attr: c.attribute, type: "funcional", reason: `Operación "${rootOpName}"` });
         }
+      }
+    }
+
+    for (const op of operations) {
+      if (op.active) {
+        visited.clear();
+        collectForOp(op.id, op.name);
       }
     }
   }
