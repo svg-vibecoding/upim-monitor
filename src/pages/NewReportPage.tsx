@@ -17,7 +17,7 @@ import {
   type Condition, type LogicMode,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Filter, ArrowLeft, Download } from "lucide-react";
+import { FileText, Filter, ArrowLeft, Download, Search, CheckSquare, Square } from "lucide-react";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
@@ -327,33 +327,51 @@ export default function NewReportPage() {
           </Card>
 
           {/* Step 2: Attributes */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
+                <Select onValueChange={handleApplyTemplate}>
+                  <SelectTrigger className="w-56 h-8 text-xs">
+                    <SelectValue placeholder="Ninguna" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Ninguna</SelectItem>
+                    {sortedReports.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">Los atributos son las características del producto que quieres evaluar. El informe calculará qué porcentaje de los productos del universo tienen valor registrado en cada una.</p>
+          </div>
           <Card>
             <CardContent className="pt-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
-                  <Select onValueChange={handleApplyTemplate}>
-                    <SelectTrigger className="w-56 h-8 text-xs">
-                      <SelectValue placeholder="Ninguna" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Ninguna</SelectItem>
-                      {sortedReports.map((r) => (
-                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Buscar atributo..."
+                    value={searchAttr}
+                    onChange={(e) => setSearchAttr(e.target.value)}
+                    className="w-full border border-input rounded-md pl-9 px-3 py-2 text-sm bg-background"
+                  />
                 </div>
+                <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
+                  <CheckSquare className="h-3 w-3" /> Todos
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs([])}>
+                  <Square className="h-3 w-3" /> Ninguno
+                </Button>
               </div>
-              <p className="text-sm text-muted-foreground">Los atributos son las características del producto que quieres evaluar. El informe calculará qué porcentaje de los productos del universo tienen valor registrado en cada una.</p>
-              <input
-                type="text"
-                placeholder="Buscar atributo..."
-                value={searchAttr}
-                onChange={(e) => setSearchAttr(e.target.value)}
-                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
-              />
+
+              {selectedAttrs.length > 0 && (
+                <Badge variant="secondary">{selectedAttrs.length} seleccionados</Badge>
+              )}
+
               <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
                 <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
                   <Checkbox checked={true} disabled />
@@ -370,17 +388,16 @@ export default function NewReportPage() {
                   />
                 ))}
               </div>
-              {selectedAttrs.length > 0 && (
-                <p className="text-xs text-muted-foreground">{selectedAttrs.length} atributos seleccionados</p>
-              )}
             </CardContent>
           </Card>
 
           {/* Step 3: Dimension */}
+          <div className="space-y-1">
+            <Label className="text-sm font-semibold">3. Dimensión (opcional)</Label>
+            <p className="text-sm text-muted-foreground">Una dimensión distribuye los resultados en los valores únicos de un atributo. Por ejemplo, si seleccionas Categoría Comercial, verás la completitud calculada de forma independiente para cada categoría existente.</p>
+          </div>
           <Card>
             <CardContent className="pt-4 space-y-3">
-              <Label className="text-sm font-semibold">3. Dimensión (opcional)</Label>
-              <p className="text-sm text-muted-foreground">Una dimensión distribuye los resultados en los valores únicos de un atributo. Por ejemplo, si seleccionas Categoría Comercial, verás la completitud calculada de forma independiente para cada categoría existente.</p>
               <Select value={dimensionId} onValueChange={setDimensionId}>
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder="Sin dimensión" />
