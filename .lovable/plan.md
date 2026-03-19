@@ -1,89 +1,50 @@
 
 
-## Diagnóstico de los 3 bugs en el reporte de control de carga PIM
+## Plan: Fix floating step indicators
 
----
+### Problem
+The floating circle indicators are positioned with `absolute -top-2.5 -right-2.5` inside the card `div`, but the `overflow-auto` on the `<main>` scroll container in `AppLayout.tsx` clips them. Adding `overflow-visible` to the card doesn't help because ancestor elements still clip.
 
-### Bug 1 — "Atributos protegidos: 0 de 18" siempre muestra 0
+### Solution
+Simplify the approach: remove the "X de 2" text labels and restructure so each step is wrapped in a container with `relative` and top padding, placing the indicator circle **outside and above** the card.
 
-**Causa raíz: closure de React state.**
+### Structure (both pages, both steps)
 
-En `handleCsvUpload`, línea 633 llama `setPendingAttributeOrder(firstResult.attributeOrder)` pero línea 690 lee `pendingAttributeOrder` del mismo ciclo de render — que sigue siendo `[]` porque `setState` es asíncrono. Resultado: `csvResult.attributeOrder` siempre es `undefined`.
+```text
+Before:
+<Collapsible>
+  <div class="relative overflow-visible rounded-lg border ...">  ← card
+    <div class="absolute -top-2.5 -right-2.5 ...">              ← indicator (clipped)
+    <CollapsibleTrigger>
+    <CollapsibleContent>
 
-Sin `attributeOrder`, el `uploadedSet` (línea 811-814) solo contiene `columnsDetected.fixed`, que son nombres de columna DB (`estado_global`, `visibilidad_b2b`...). Los atributos protegidos usan nombres display (`Estado (Global)`, `Visibilidad Adobe B2B`...). Nunca coinciden → 0 matches.
-
-**Corrección**: En línea 690, usar directamente `firstResult.attributeOrder` guardado en una variable local (no el state), o guardar el attributeOrder en una `ref`/variable local al scope de la función:
-
-```typescript
-// Guardar en variable local cuando se recibe del primer chunk:
-let localAttributeOrder: string[] = [];
-// ... en el bloque del primer chunk:
-localAttributeOrder = firstResult.attributeOrder || [];
-// ... al construir csvResult:
-const attrOrder = localAttributeOrder.length > 0 ? localAttributeOrder : undefined;
+After:
+<Collapsible>
+  <div class="relative pt-3">                                    ← wrapper with space
+    <div class="absolute top-0 right-3 z-10 ...">               ← indicator (free)
+      <span class="h-6 w-6 rounded-full ...">1 or ✓</span>
+    </div>
+    <div class="rounded-lg border bg-card ...">                  ← card (no relative/overflow)
+      <CollapsibleTrigger>
+      <CollapsibleContent>
+    </div>
+  </div>
+</Collapsible>
 ```
 
----
+### Changes
 
-### Bug 2 — UUID aparece como atributo protegido faltante
+**`src/pages/NewReportPage.tsx`** and **`src/pages/CreatePredefinedReportPage.tsx`**:
 
-**Causa raíz**: `getOperationAttributes` (línea 312-324 de `usePimData.ts`) itera las condiciones de operaciones activas, pero solo filtra por `source === "attribute"`. Cuando una condición tiene `sourceType === "operation"`, el campo `c.attribute` contiene el UUID de la operación referenciada — y ese UUID se ignora correctamente por el filtro `source === "attribute"`.
+1. Wrap each step's card in a new `div` with `relative pt-3`
+2. Move the indicator `div` to be a sibling of the card, positioned `absolute top-0 right-3`
+3. Remove the "1 de 2" / "2 de 2" text labels — keep only the circles
+4. Remove `relative overflow-visible` from the card div (no longer needed)
+5. Keep `hover:shadow-md` on the card div
 
-Sin embargo, el problema es que **no resuelve recursivamente** los atributos de la operación referenciada. Cuando una operación A referencia otra operación B como condición, los atributos de B no se agregan al conjunto. Esto significa que `getProtectedAttributes` no ve esos atributos como protegidos.
+### Files modified
+- `src/pages/NewReportPage.tsx`
+- `src/pages/CreatePredefinedReportPage.tsx`
 
-Pero espera — el UUID sí aparece en la lista de faltantes, lo que indica que SÍ se está agregando como atributo. Revisando `getProtectedAttributes` (líneas 385-396): itera directamente `op.conditions` y agrega `c.attribute` cuando `source === "attribute"`. Pero si hay una condición con `sourceType === "operation"`, el `sourceType` podría ser undefined (fallback a `"attribute"` en línea 389), y `c.attribute` contiene el UUID de la operación.
-
-**El bug está en la línea 389**: `const source = c.sourceType || "attribute"` — si `sourceType` no se guardó correctamente en la DB (es undefined/null), el fallback hace que se trate como `"attribute"` y se agrega el UUID como si fuera un nombre de atributo.
-
-**Corrección en `getOperationAttributes`**: 
-1. Filtrar condiciones donde `sourceType === "operation"` para no agregar sus UUIDs
-2. Resolver recursivamente: cuando `sourceType === "operation"`, buscar la operación por ID y recoger sus atributos reales
-3. Usar un Set `visited` para evitar ciclos
-
-```typescript
-function getOperationAttributes(operations: Operation[]): Set<string> {
-  const attrs = new Set<string>();
-  const visited = new Set<string>();
-  const opMap = new Map(operations.map(op => [op.id, op]));
-  
-  function collect(opId: string) {
-    if (visited.has(opId)) return;
-    visited.add(opId);
-    const op = opMap.get(opId);
-    if (!op || !op.active) return;
-    for (const c of op.conditions) {
-      if ((c.sourceType || "attribute") === "attribute" && c.attribute) {
-        attrs.add(c.attribute);
-      } else if (c.sourceType === "operation" && c.attribute) {
-        collect(c.attribute); // c.attribute es el ID de la operación referenciada
-      }
-    }
-  }
-  
-  for (const op of operations) {
-    if (op.active) collect(op.id);
-  }
-  return attrs;
-}
-```
-
-Aplicar la misma lógica recursiva en `getProtectedAttributes` para que el `reason` refleje la cadena de operaciones.
-
----
-
-### Bug 3 — Lógica universe_key → atributo redundante
-
-**Estado actual**: En `getProtectedAttributes` ya fue eliminada (comentario en línea 381-382). Sin embargo, **`getAttributeClassification`** (líneas 339-344) todavía contiene la lógica que clasifica atributos como "funcional" si un informe los usa vía `universe_key`. Esta lógica es redundante porque los universos de informes ahora se definen por operaciones, cuyos atributos ya se capturan.
-
-**Corrección**: Eliminar el bloque de líneas 339-345 en `getAttributeClassification` que verifica `UNIVERSE_KEY_ATTRIBUTE_MAP`.
-
----
-
-### Resumen de archivos a modificar
-
-| Archivo | Cambio |
-|---|---|
-| `src/pages/AdminPage.tsx` | Bug 1: usar variable local en vez de state para `attributeOrder` |
-| `src/hooks/usePimData.ts` | Bug 2: resolver operaciones recursivamente en `getOperationAttributes` y `getProtectedAttributes` con protección anti-ciclos |
-| `src/hooks/usePimData.ts` | Bug 3: eliminar bloque universe_key en `getAttributeClassification` (líneas 339-345) |
+No logic or functionality changes.
 
