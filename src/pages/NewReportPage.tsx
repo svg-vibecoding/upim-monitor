@@ -289,8 +289,10 @@ export default function NewReportPage() {
     <div className="space-y-6 max-w-6xl">
       {step === "config" && (
         <>
-        <h1 className="text-2xl font-bold text-foreground">Crear nuevo informe</h1>
-        <p className="text-sm text-muted-foreground">Un informe mide qué tan completa está la información de un conjunto de productos en los atributos que elijas. El resultado muestra qué porcentaje de productos tiene un valor asignado para esos atributos.</p>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-foreground">Crear nuevo informe</h1>
+          <p className="text-sm text-muted-foreground">Un informe mide qué tan completa está la información de un conjunto de productos en los atributos que elijas. El resultado muestra qué porcentaje de productos tiene un valor asignado para esos atributos.</p>
+        </div>
         <div className="space-y-4">
           {/* Step 1: Universe */}
           <Card>
