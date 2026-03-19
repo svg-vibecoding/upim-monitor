@@ -48,7 +48,7 @@ export interface UniverseSelectorProps {
 }
 
 const SOURCE_LABELS: Record<UniverseSource, string> = {
-  general: "Base general del PIM",
+  general: "Todos los productos",
   report: "Informe predefinido",
   operation: "Operación",
   file: "Cargar archivo Excel",
