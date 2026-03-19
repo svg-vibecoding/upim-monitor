@@ -105,6 +105,17 @@ export default function NewReportPage() {
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
+  const [step1Open, setStep1Open] = useState(true);
+  const [step2Open, setStep2Open] = useState(false);
+  const [step1Touched, setStep1Touched] = useState(false);
+
+  const handleSourceChange = useCallback((s: UniverseSource) => {
+    setSource(s);
+    setStep1Touched(true);
+  }, []);
+
+  const step1Complete = step1Touched;
+  const step2Complete = selectedAttrs.length > 0;
 
   const shouldFetchRecords = step === "results";
   const { data: allRecords = [], isLoading: isLoadingRecords } = usePimRecords({ enabled: shouldFetchRecords });
