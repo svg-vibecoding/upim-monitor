@@ -57,7 +57,12 @@ export default function ReportsListPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <h1 className="text-2xl font-bold text-foreground">Informes predefinidos</h1>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold text-foreground">Informes predefinidos</h1>
+        <p className="text-sm text-muted-foreground">
+          Cada informe mide qué tan completa está la información de un conjunto de productos (universo) en un grupo de atributos (características del producto) definidos. Cada uno representa la selección de un universo y los atributos relevantes para analizarlo.
+        </p>
+      </div>
 
       {isLoading ? (
         <div className="space-y-4">
