@@ -1,26 +1,39 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  usePimKPIs, usePredefinedReports, useReportCompleteness, useOperations, NON_EVALUABLE_FIELDS,
-  sortReportsByDisplayOrder,
+  usePimKPIs, usePredefinedReports, useReportCompleteness, useOperations,
+  useAttributeOrder, getFullAttributeList, getEvaluableAttributes,
+  NON_EVALUABLE_FIELDS, sortReportsByDisplayOrder,
 } from "@/hooks/usePimData";
 import { FileText } from "lucide-react";
 
-function ReportCard({ report, operationName, onClick }: { report: { id: string; name: string; description: string; universe: string; operationId: string | null }; operationName: string | null; onClick: () => void }) {
+function ReportCard({
+  report,
+  operationName,
+  totalEvaluableAttrs,
+  onClick,
+}: {
+  report: { id: string; name: string; description: string; universe: string; operationId: string | null; attributes: string[] };
+  operationName: string | null;
+  totalEvaluableAttrs: number;
+  onClick: () => void;
+}) {
   const { data: completenessData, isLoading } = useReportCompleteness(report.id);
-  const universeLabel = report.universe || operationName || "Base general del PIM";
+  const universeLabel = report.universe || operationName || "Todos los productos";
 
   const attrResults = (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name));
   const avgCompleteness = attrResults.length > 0
     ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
     : 0;
   const totalSKUs = attrResults.length > 0 ? attrResults[0].totalSKUs : 0;
+  const evaluatedAttrs = report.attributes.filter(a => !NON_EVALUABLE_FIELDS.includes(a)).length;
 
   return (
     <Card
-      className="cursor-pointer hover:border-primary/30 transition-colors"
+      className="cursor-pointer transition-all hover:shadow-md hover:border-primary/40"
       onClick={onClick}
     >
       <CardHeader className="pb-2">
@@ -29,15 +42,20 @@ function ReportCard({ report, operationName, onClick }: { report: { id: string; 
           {report.name}
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-2 pt-0">
         <p className="text-sm text-muted-foreground">{report.description}</p>
-        <p className="text-xs text-muted-foreground">
-          {universeLabel} · {isLoading ? "…" : `${totalSKUs.toLocaleString()} SKUs`}
+        <p className="text-sm">
+          <span className="font-semibold">{isLoading ? "…" : totalSKUs.toLocaleString()}</span>
+          <span className="text-muted-foreground"> · {universeLabel}</span>
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Atributos evaluados: <span className="font-semibold text-foreground">{evaluatedAttrs}</span>
+          {totalEvaluableAttrs > 0 && <span> de {totalEvaluableAttrs}</span>}
         </p>
         <div>
           <div className="flex justify-between text-xs mb-1">
             <span className="text-muted-foreground">Completitud promedio</span>
-            <span className="font-medium">{isLoading ? "…" : `${avgCompleteness}%`}</span>
+            <span className="font-semibold">{isLoading ? "…" : `${avgCompleteness}%`}</span>
           </div>
           <CompletenessBar value={avgCompleteness} showLabel={false} />
         </div>
@@ -51,6 +69,12 @@ export default function ReportsListPage() {
   const { data: kpis, isLoading: loadingKPIs } = usePimKPIs();
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: operations = [] } = useOperations();
+  const { data: attributeOrder } = useAttributeOrder();
+
+  const totalEvaluableAttrs = useMemo(() => {
+    if (!attributeOrder) return 0;
+    return getEvaluableAttributes(getFullAttributeList(attributeOrder)).length;
+  }, [attributeOrder]);
 
   const isLoading = loadingKPIs || loadingReports;
   const hasData = kpis && kpis.total > 0 && reports && reports.length > 0;
@@ -84,6 +108,7 @@ export default function ReportsListPage() {
               key={report.id}
               report={report}
               operationName={report.operationId ? (operations.find(o => o.id === report.operationId)?.name || null) : null}
+              totalEvaluableAttrs={totalEvaluableAttrs}
               onClick={() => navigate(`/informes/${report.id}`)}
             />
           ))}
