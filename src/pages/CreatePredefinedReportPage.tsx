@@ -336,25 +336,26 @@ export default function CreatePredefinedReportPage() {
       </Card>
 
       {/* Step 2: Attributes */}
+      <div className="space-y-1">
+        <Label className="text-sm font-semibold">Definición de atributos</Label>
+        <p className="text-sm text-muted-foreground">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud.</p>
+      </div>
       <Card>
         <CardContent className="pt-4 space-y-3">
           <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
-
+          <p className="text-xs text-muted-foreground">Cargar plantilla de:</p>
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 shrink-0">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
-              <Select onValueChange={handleApplyTemplate}>
-                <SelectTrigger className="w-56 h-8 text-xs">
-                  <SelectValue placeholder="Ninguna" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Ninguna</SelectItem>
-                  {sortedReports.map((r) => (
-                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select onValueChange={handleApplyTemplate}>
+              <SelectTrigger className="w-56 h-8 text-xs shrink-0">
+                <SelectValue placeholder="Ninguna" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Ninguna</SelectItem>
+                {sortedReports.map((r) => (
+                  <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
