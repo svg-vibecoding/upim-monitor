@@ -376,7 +376,7 @@ export default function NewReportPage() {
           <Card>
             <CardContent className="pt-4 space-y-3">
               <Label className="text-sm font-semibold">3. Dimensión (opcional)</Label>
-              <p className="text-sm text-muted-foreground">Distribuye los resultados por una dimensión. Por ejemplo, seleccionar 'Categoría del Producto' mostrará la completitud de los atributos del informe separada para cada categoría: Herramientas, Seguridad Industrial, Tornillería, etc.</p>
+              <p className="text-sm text-muted-foreground">Una dimensión distribuye los resultados en los valores únicos de un atributo. Por ejemplo, si seleccionas Categoría Comercial, verás la completitud calculada de forma independiente para cada categoría existente.</p>
               <Select value={dimensionId} onValueChange={setDimensionId}>
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder="Sin dimensión" />
