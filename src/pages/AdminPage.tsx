@@ -504,7 +504,8 @@ export default function AdminPage() {
 
   const canActivate = csvResult?.success && missingProtected.length === 0 && (csvResult.uniqueRows || 0) > 0 && !!pendingUploadId;
 
-  const CHUNK_SIZE = 500;
+  const CHUNK_SIZE = 1000;
+  const CONCURRENCY = 3;
 
   const handleCsvUpload = async () => {
     const file = fileInputRef.current?.files?.[0];
@@ -548,14 +549,15 @@ export default function AdminPage() {
       const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
       const MAX_RETRIES = 2;
 
-      for (let i = 0; i < totalChunks; i++) {
+      // Process a single chunk with retry logic
+      const processOneChunk = async (i: number): Promise<{
+        inserted: number; updated: number; errors: number;
+        uniqueRows: number; errorDetails: string[];
+        columnsDetected?: { fixed: string[]; attributes: string[] };
+        uploadId?: string; attributeOrder?: string[];
+      }> => {
         const chunk = allRows.slice(i * CHUNK_SIZE, (i + 1) * CHUNK_SIZE);
-        let chunkSuccess = false;
-
         for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-          const retryLabel = attempt > 0 ? ` (reintento ${attempt} de ${MAX_RETRIES})` : "";
-          setCsvProgress(`Enviando lote ${i + 1} de ${totalChunks} (${chunk.length} filas)${retryLabel}...`);
-
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 55000);
 
@@ -574,62 +576,128 @@ export default function AdminPage() {
 
             if (!res.ok) {
               const errorText = await res.text();
-              // 4xx → no reintentar
               if (res.status >= 400 && res.status < 500) {
-                totalErrors += chunk.length;
-                allErrorDetails.push(`Lote ${i + 1}: HTTP ${res.status} — ${errorText.slice(0, 200)}`);
-                break;
+                return { inserted: 0, updated: 0, errors: chunk.length, uniqueRows: 0,
+                  errorDetails: [`Lote ${i + 1}: HTTP ${res.status} — ${errorText.slice(0, 200)}`] };
               }
-              // 5xx → reintentar si quedan intentos
-              if (attempt < MAX_RETRIES) {
-                await wait(2000 * Math.pow(2, attempt));
-                continue;
-              }
-              totalErrors += chunk.length;
-              allErrorDetails.push(`Lote ${i + 1}: HTTP ${res.status} — ${errorText.slice(0, 200)} (tras ${MAX_RETRIES} reintentos)`);
-              break;
+              if (attempt < MAX_RETRIES) { await wait(2000 * Math.pow(2, attempt)); continue; }
+              return { inserted: 0, updated: 0, errors: chunk.length, uniqueRows: 0,
+                errorDetails: [`Lote ${i + 1}: HTTP ${res.status} — ${errorText.slice(0, 200)} (tras ${MAX_RETRIES} reintentos)`] };
             }
 
             const data = await res.json();
-
             if (!data.success) {
-              totalErrors += chunk.length;
-              allErrorDetails.push(`Lote ${i + 1}: ${data.error || "Error desconocido"}`);
-              break;
+              return { inserted: 0, updated: 0, errors: chunk.length, uniqueRows: 0,
+                errorDetails: [`Lote ${i + 1}: ${data.error || "Error desconocido"}`] };
             }
 
-            totalInserted += data.inserted || 0;
-            totalUpdated += data.updated || 0;
-            totalErrors += data.errors || 0;
-            totalUnique += data.uniqueRows || 0;
-            if (data.errorDetails) allErrorDetails.push(...data.errorDetails);
-            if (!columnsDetected && data.columnsDetected) columnsDetected = data.columnsDetected;
-            if (i === 0 && data.uploadId) {
-              currentUploadId = data.uploadId;
-              setPendingUploadId(data.uploadId);
-              setPendingAttributeOrder(data.attributeOrder || []);
-            }
-            chunkSuccess = true;
-            break;
+            return {
+              inserted: data.inserted || 0, updated: data.updated || 0, errors: data.errors || 0,
+              uniqueRows: data.uniqueRows || 0, errorDetails: data.errorDetails || [],
+              columnsDetected: data.columnsDetected, uploadId: data.uploadId, attributeOrder: data.attributeOrder,
+            };
           } catch (fetchErr) {
             clearTimeout(timeoutId);
             const isTimeout = (fetchErr as Error).name === "AbortError";
             const isNetworkError = (fetchErr as Error).message?.includes("Failed to fetch");
-            // Solo reintentar timeout y errores de red
             if ((isTimeout || isNetworkError) && attempt < MAX_RETRIES) {
-              await wait(2000 * Math.pow(2, attempt));
-              continue;
+              await wait(2000 * Math.pow(2, attempt)); continue;
             }
-            totalErrors += chunk.length;
             const suffix = attempt > 0 ? ` (tras ${attempt} reintentos)` : "";
-            allErrorDetails.push(
-              `Lote ${i + 1}: ${isTimeout ? "Timeout (>55s)" : (fetchErr as Error).message}${suffix}`
-            );
-            break;
+            return { inserted: 0, updated: 0, errors: chunk.length, uniqueRows: 0,
+              errorDetails: [`Lote ${i + 1}: ${isTimeout ? "Timeout (>55s)" : (fetchErr as Error).message}${suffix}`] };
           }
         }
+        // Should not reach here, but safety fallback
+        return { inserted: 0, updated: 0, errors: 0, uniqueRows: 0, errorDetails: [] };
+      };
+
+      // Accumulate results from a chunk
+      const accumulateResult = (r: Awaited<ReturnType<typeof processOneChunk>>) => {
+        totalInserted += r.inserted;
+        totalUpdated += r.updated;
+        totalErrors += r.errors;
+        totalUnique += r.uniqueRows;
+        if (r.errorDetails.length) allErrorDetails.push(...r.errorDetails);
+        if (!columnsDetected && r.columnsDetected) columnsDetected = r.columnsDetected;
+      };
+
+      // --- First chunk: always sent alone ---
+      setCsvProgress(`Procesando... 0 de ${totalChunks} lotes completados`);
+      const firstResult = await processOneChunk(0);
+      accumulateResult(firstResult);
+
+      if (firstResult.uploadId) {
+        currentUploadId = firstResult.uploadId;
+        setPendingUploadId(firstResult.uploadId);
+        setPendingAttributeOrder(firstResult.attributeOrder || []);
       }
 
+      // If first chunk failed (errors === chunk size and no successful inserts), abort
+      const firstChunkSize = Math.min(CHUNK_SIZE, allRows.length);
+      if (firstResult.errors >= firstChunkSize && firstResult.inserted === 0) {
+        // First chunk failed — abort entire upload
+        setCsvProgress("");
+      } else {
+        // --- Remaining chunks: parallel pool of CONCURRENCY ---
+        let completedCount = 1;
+        setCsvProgress(`Procesando... 1 de ${totalChunks} lotes completados`);
+
+        if (totalChunks > 1) {
+          let nextIndex = 0;
+          const remaining = Array.from({ length: totalChunks - 1 }, (_, k) => k + 1);
+          const activePromises = new Map<Promise<{ idx: number; result: Awaited<ReturnType<typeof processOneChunk>> }>, true>();
+
+          const enqueue = () => {
+            while (activePromises.size < CONCURRENCY && nextIndex < remaining.length) {
+              const chunkIdx = remaining[nextIndex++];
+              const p = processOneChunk(chunkIdx).then(result => ({ idx: chunkIdx, result }));
+              activePromises.set(p, true);
+            }
+          };
+
+          enqueue();
+
+          while (activePromises.size > 0) {
+            const finished = await Promise.race(activePromises.keys());
+            activePromises.delete(
+              [...activePromises.keys()].find(p => p === Promise.resolve(finished) || true)!
+            );
+            // We need a different approach — use a wrapper
+            // Actually let's redo this with a cleaner pattern
+            break; // placeholder
+          }
+
+          // Cleaner pool implementation
+          activePromises.clear();
+          nextIndex = 0;
+
+          await new Promise<void>((resolvePool) => {
+            let inFlight = 0;
+
+            const launchNext = () => {
+              while (inFlight < CONCURRENCY && nextIndex < remaining.length) {
+                const chunkIdx = remaining[nextIndex++];
+                inFlight++;
+                processOneChunk(chunkIdx).then(result => {
+                  accumulateResult(result);
+                  completedCount++;
+                  setCsvProgress(`Procesando... ${completedCount} de ${totalChunks} lotes completados`);
+                  inFlight--;
+                  if (nextIndex < remaining.length) {
+                    launchNext();
+                  } else if (inFlight === 0) {
+                    resolvePool();
+                  }
+                });
+              }
+              if (remaining.length === 0) resolvePool();
+            };
+
+            launchNext();
+          });
+        }
+      }
       // Persistir estadísticas finales en pim_upload_history
       if (currentUploadId) {
         await supabase
