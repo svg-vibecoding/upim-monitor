@@ -317,11 +317,11 @@ export default function NewReportPage() {
           {/* Step 1: Universe */}
           <Collapsible open={step1Open} onOpenChange={setStep1Open}>
             <div className="relative rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
-              {/* Floating circle indicator */}
-              <div className="absolute -top-3 -right-3 flex items-center gap-1.5 z-10">
+              {/* Floating circle indicator — outside card */}
+              <div className="absolute -top-2.5 -right-2.5 flex items-center gap-1.5 z-10">
                 <span className="text-xs text-muted-foreground">1 de 2</span>
-                <span className={`inline-flex items-center justify-center h-8 w-8 rounded-full border-2 text-xs font-semibold transition-colors ${step1Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
-                  {step1Complete ? <Check className="h-4 w-4" /> : "1"}
+                <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-[11px] font-bold transition-colors ${step1Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
+                  {step1Complete ? <Check className="h-3.5 w-3.5" /> : "1"}
                 </span>
               </div>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
