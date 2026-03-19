@@ -338,9 +338,10 @@ export default function CreatePredefinedReportPage() {
       {/* Step 2: Attributes */}
       <Card>
         <CardContent className="pt-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
-            <div className="flex items-center gap-2">
+          <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
+
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
               <Select onValueChange={handleApplyTemplate}>
                 <SelectTrigger className="w-56 h-8 text-xs">
@@ -354,9 +355,6 @@ export default function CreatePredefinedReportPage() {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="flex items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
