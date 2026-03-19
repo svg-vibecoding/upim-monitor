@@ -805,15 +805,16 @@ export default function AdminPage() {
 
                       {csvResult.columnsDetected && (() => {
                         const totalDetected = csvResult.columnsDetected.fixed.length + csvResult.columnsDetected.attributes.length;
-                        const functionalAttrs = protectedAttributes.filter(p => p.attr !== "Código Jaivaná");
-                        const totalFunctional = functionalAttrs.length;
+                        const protAttrs = protectedAttributes.filter(p => p.attr !== "Código Jaivaná");
+                        const totalProtected = protAttrs.length;
+                        const normalize = (s: string) => s.trim().toLowerCase();
                         const uploadedSet = new Set([
                           ...(csvResult.attributeOrder || []),
                           ...(csvResult.columnsDetected.fixed || []),
-                        ]);
-                        const presentFunctional = functionalAttrs.filter(p => uploadedSet.has(p.attr)).length;
-                        const missingFunctional = functionalAttrs.filter(p => !uploadedSet.has(p.attr));
-                        const allPresent = presentFunctional === totalFunctional;
+                        ].map(normalize));
+                        const presentProtected = protAttrs.filter(p => uploadedSet.has(normalize(p.attr))).length;
+                        const missingProtected = protAttrs.filter(p => !uploadedSet.has(normalize(p.attr)));
+                        const allPresent = presentProtected === totalProtected;
 
                         return (
                           <div className="text-xs mt-2 space-y-1">
@@ -821,11 +822,11 @@ export default function AdminPage() {
                               <strong>Atributos detectados:</strong> {totalDetected}
                             </p>
                             <p className={allPresent ? "text-green-600" : "text-orange-600"}>
-                              <strong>Atributos funcionales:</strong> {presentFunctional} de {totalFunctional} identificados correctamente
+                              <strong>Atributos protegidos:</strong> {presentProtected} de {totalProtected} identificados correctamente
                             </p>
-                            {!allPresent && missingFunctional.length > 0 && (
+                            {!allPresent && missingProtected.length > 0 && (
                               <ul className="list-disc list-inside text-orange-600 ml-2">
-                                {missingFunctional.map((p, i) => (
+                                {missingProtected.map((p, i) => (
                                   <li key={i}>{p.attr} <span className="text-muted-foreground">({p.reason})</span></li>
                                 ))}
                               </ul>

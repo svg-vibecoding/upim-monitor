@@ -378,14 +378,8 @@ export function getProtectedAttributes(
   ];
   const seen = new Set<string>(["Código Jaivaná"]);
 
-  // Functional from reports
-  for (const r of reports) {
-    const depAttr = UNIVERSE_KEY_ATTRIBUTE_MAP[r.universeKey];
-    if (depAttr && !seen.has(depAttr)) {
-      seen.add(depAttr);
-      result.push({ attr: depAttr, type: "funcional", reason: `Informe "${r.name}"` });
-    }
-  }
+  // Note: universe_key attributes from reports are NOT added here because
+  // they are already captured via active operation conditions.
 
   // Functional from operations
   if (operations) {
