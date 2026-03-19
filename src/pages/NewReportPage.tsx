@@ -347,13 +347,23 @@ export default function NewReportPage() {
                 </div>
               </div>
               <p className="text-sm text-muted-foreground">Los atributos son las características del producto que quieres evaluar. El informe calculará qué porcentaje de los productos del universo tienen valor registrado en cada una.</p>
-              <input
-                type="text"
-                placeholder="Buscar atributo..."
-                value={searchAttr}
-                onChange={(e) => setSearchAttr(e.target.value)}
-                className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background"
-              />
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar atributo..."
+                    value={searchAttr}
+                    onChange={(e) => setSearchAttr(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
+                  <CheckSquare className="h-3 w-3" /> Todos
+                </Button>
+                <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs([])}>
+                  <Square className="h-3 w-3" /> Ninguno
+                </Button>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
                 <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
                   <Checkbox checked={true} disabled />
