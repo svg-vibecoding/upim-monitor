@@ -336,144 +336,144 @@ export default function CreatePredefinedReportPage() {
 
       {/* Step 1: Universe */}
       <Collapsible open={step1Open} onOpenChange={setStep1Open}>
-        <div className="relative overflow-visible rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
-          {/* Floating circle indicator — outside card */}
-          <div className="absolute -top-2.5 -right-2.5 flex items-center gap-1.5 z-10">
-            <span className="text-xs text-muted-foreground">1 de 2</span>
+        <div className="relative pt-3">
+          <div className="absolute top-0 right-3 z-10">
             <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-[11px] font-bold transition-colors ${step1Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
               {step1Complete ? <Check className="h-3.5 w-3.5" /> : "1"}
             </span>
           </div>
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
-            <div className="text-left space-y-0.5 pr-20">
-              <p className="text-sm font-semibold">
-                Definición del universo de productos
-                {!step1Open && universeSummary && (
-                  <span className="font-normal text-muted-foreground"> · {universeSummary}</span>
-                )}
-              </p>
-              <p className="text-sm text-muted-foreground">El universo define qué productos se evalúan: todos los productos del catálogo, un informe predefinido, un subconjunto filtrado mediante una operación, o una lista de productos cargada desde un archivo.</p>
-            </div>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${step1Open ? "rotate-180" : ""}`} />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="px-4 pb-4 space-y-3">
-              <UniverseSelector
-                source={source}
-                onSourceChange={handleSourceChange}
-                selectedOperationId={selectedOperationId}
-                onOperationChange={setSelectedOperationId}
-                operations={operations}
-                operationMode={opMode}
-                onOperationModeChange={setOpMode}
-                inlineOperation={inlineOp}
-                onInlineOperationChange={setInlineOp}
-                attributeList={fullAttributes}
-                selectedReportId={selectedReportId}
-                onReportChange={setSelectedReportId}
-                sortedReports={sortedReports}
-                uploadedFileName={uploadedFileName}
-                uploadedFileReady={uploadedFileReady}
-                uploadedTotalRows={uploadedTotalRows}
-                csvCodesCount={csvCodes.length}
-                onFileUpload={handleFileUpload}
-                onClearFile={handleClearFile}
-              />
-              <div className="pt-2">
-                <Label className="text-sm font-semibold">Descripción del universo</Label>
-                <Input
-                  value={universeDesc}
-                  onChange={(e) => setUniverseDesc(e.target.value)}
-                  placeholder={
-                    source === "operation" && selectedOperationId
-                      ? operations.find((o) => o.id === selectedOperationId)?.name || "Ej: Productos activos del canal B2B"
-                      : "Ej: Base general del PIM"
-                  }
-                  className="mt-1"
-                />
-                <p className="text-xs text-muted-foreground mt-1">Texto que se mostrará en la tarjeta del informe. Si lo dejas vacío, se usará el nombre de la operación asignada.</p>
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
+              <div className="text-left space-y-0.5 pr-20">
+                <p className="text-sm font-semibold">
+                  Definición del universo de productos
+                  {!step1Open && universeSummary && (
+                    <span className="font-normal text-muted-foreground"> · {universeSummary}</span>
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">El universo define qué productos se evalúan: todos los productos del catálogo, un informe predefinido, un subconjunto filtrado mediante una operación, o una lista de productos cargada desde un archivo.</p>
               </div>
-            </div>
-          </CollapsibleContent>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${step1Open ? "rotate-180" : ""}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-4 pb-4 space-y-3">
+                <UniverseSelector
+                  source={source}
+                  onSourceChange={handleSourceChange}
+                  selectedOperationId={selectedOperationId}
+                  onOperationChange={setSelectedOperationId}
+                  operations={operations}
+                  operationMode={opMode}
+                  onOperationModeChange={setOpMode}
+                  inlineOperation={inlineOp}
+                  onInlineOperationChange={setInlineOp}
+                  attributeList={fullAttributes}
+                  selectedReportId={selectedReportId}
+                  onReportChange={setSelectedReportId}
+                  sortedReports={sortedReports}
+                  uploadedFileName={uploadedFileName}
+                  uploadedFileReady={uploadedFileReady}
+                  uploadedTotalRows={uploadedTotalRows}
+                  csvCodesCount={csvCodes.length}
+                  onFileUpload={handleFileUpload}
+                  onClearFile={handleClearFile}
+                />
+                <div className="pt-2">
+                  <Label className="text-sm font-semibold">Descripción del universo</Label>
+                  <Input
+                    value={universeDesc}
+                    onChange={(e) => setUniverseDesc(e.target.value)}
+                    placeholder={
+                      source === "operation" && selectedOperationId
+                        ? operations.find((o) => o.id === selectedOperationId)?.name || "Ej: Productos activos del canal B2B"
+                        : "Ej: Base general del PIM"
+                    }
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">Texto que se mostrará en la tarjeta del informe. Si lo dejas vacío, se usará el nombre de la operación asignada.</p>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </div>
         </div>
       </Collapsible>
 
       {/* Step 2: Attributes */}
       <Collapsible open={step2Open} onOpenChange={setStep2Open}>
-        <div className="relative overflow-visible rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
-          {/* Floating circle indicator — outside card */}
-          <div className="absolute -top-2.5 -right-2.5 flex items-center gap-1.5 z-10">
-            <span className="text-xs text-muted-foreground">2 de 2</span>
+        <div className="relative pt-3">
+          <div className="absolute top-0 right-3 z-10">
             <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-[11px] font-bold transition-colors ${step2Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
               {step2Complete ? <Check className="h-3.5 w-3.5" /> : "2"}
             </span>
           </div>
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
-            <div className="text-left space-y-0.5 pr-20">
-              <p className="text-sm font-semibold">
-                Definición de atributos
-                {!step2Open && selectedAttrs.length > 0 && (
-                  <span className="font-normal text-muted-foreground"> · {selectedAttrs.length} atributos seleccionados</span>
-                )}
-              </p>
-              <p className="text-sm text-muted-foreground">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud.</p>
-            </div>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${step2Open ? "rotate-180" : ""}`} />
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <div className="px-4 pb-4 space-y-3">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Desde un informe:</p>
-                <div className="flex items-center gap-2">
-                  <Select onValueChange={handleApplyTemplate}>
-                    <SelectTrigger className="w-56 text-xs shrink-0">
-                      <SelectValue placeholder="Seleccionar" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Ninguna</SelectItem>
-                      {sortedReports.map((r) => (
-                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar atributo..."
-                      value={searchAttr}
-                      onChange={(e) => setSearchAttr(e.target.value)}
-                      className="pl-9"
-                    />
+          <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
+            <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
+              <div className="text-left space-y-0.5 pr-20">
+                <p className="text-sm font-semibold">
+                  Definición de atributos
+                  {!step2Open && selectedAttrs.length > 0 && (
+                    <span className="font-normal text-muted-foreground"> · {selectedAttrs.length} atributos seleccionados</span>
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud.</p>
+              </div>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${step2Open ? "rotate-180" : ""}`} />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <div className="px-4 pb-4 space-y-3">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">Desde un informe:</p>
+                  <div className="flex items-center gap-2">
+                    <Select onValueChange={handleApplyTemplate}>
+                      <SelectTrigger className="w-56 text-xs shrink-0">
+                        <SelectValue placeholder="Seleccionar" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Ninguna</SelectItem>
+                        {sortedReports.map((r) => (
+                          <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="relative flex-1">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar atributo..."
+                        value={searchAttr}
+                        onChange={(e) => setSearchAttr(e.target.value)}
+                        className="pl-9"
+                      />
+                    </div>
+                    <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
+                      <CheckSquare className="h-3 w-3" /> Todos
+                    </Button>
+                    <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs([])}>
+                      <Square className="h-3 w-3" /> Ninguno
+                    </Button>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
-                    <CheckSquare className="h-3 w-3" /> Todos
-                  </Button>
-                  <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs([])}>
-                    <Square className="h-3 w-3" /> Ninguno
-                  </Button>
                 </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
+                  <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
+                    <Checkbox checked={true} disabled />
+                    <span className="truncate">Código Jaivaná</span>
+                    <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
+                  </label>
+                  {filteredAttrsWithClassification.map(({ attr, classification }) => (
+                    <AttributeCheckboxItem
+                      key={attr}
+                      attr={attr}
+                      classification={classification}
+                      checked={selectedSet.has(attr)}
+                      onToggle={toggleAttr}
+                    />
+                  ))}
+                </div>
+                {selectedAttrs.length > 0 && (
+                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">{selectedAttrs.length} seleccionados</Badge>
+                )}
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
-                <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
-                  <Checkbox checked={true} disabled />
-                  <span className="truncate">Código Jaivaná</span>
-                  <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
-                </label>
-                {filteredAttrsWithClassification.map(({ attr, classification }) => (
-                  <AttributeCheckboxItem
-                    key={attr}
-                    attr={attr}
-                    classification={classification}
-                    checked={selectedSet.has(attr)}
-                    onToggle={toggleAttr}
-                  />
-                ))}
-              </div>
-              {selectedAttrs.length > 0 && (
-                <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">{selectedAttrs.length} seleccionados</Badge>
-              )}
-            </div>
-          </CollapsibleContent>
+            </CollapsibleContent>
+          </div>
         </div>
       </Collapsible>
 
