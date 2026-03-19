@@ -88,7 +88,7 @@ export const UniverseSelector = memo(function UniverseSelector({
 
   return (
     <div className="space-y-3">
-      <div>
+      
       <RadioGroup
         value={source}
         onValueChange={(v) => onSourceChange(v as UniverseSource)}
