@@ -43,14 +43,14 @@ function ReportCard({
         </CardTitle>
         <p className="text-sm text-muted-foreground">{report.description}</p>
       </CardHeader>
-      <CardContent className="space-y-3 pt-0">
+      <CardContent className="space-y-3 pt-3">
         <div className="space-y-1">
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{isLoading ? "…" : totalSKUs.toLocaleString()}</span>
+            <span className="font-semibold">{isLoading ? "…" : totalSKUs.toLocaleString()}</span>
             {" "}SKUs · {universeLabel}
           </p>
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">{evaluatedAttrs}</span>
+            <span className="font-semibold">{evaluatedAttrs}</span>
             {" "}Atributos evaluados{totalEvaluableAttrs > 0 && <span> de {totalEvaluableAttrs}</span>}
           </p>
         </div>
