@@ -356,7 +356,8 @@ export default function CreatePredefinedReportPage() {
             </div>
           </div>
 
-          <div className="relative">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar atributo..."
@@ -364,17 +365,17 @@ export default function CreatePredefinedReportPage() {
                 onChange={(e) => setSearchAttr(e.target.value)}
                 className="pl-9"
               />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
+            </div>
+            <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
               <CheckSquare className="h-3 w-3" /> Todos
             </Button>
-            <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => setSelectedAttrs([])}>
+            <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs([])}>
               <Square className="h-3 w-3" /> Ninguno
             </Button>
-            <Badge variant="secondary">{selectedAttrs.length} seleccionados</Badge>
           </div>
+          {selectedAttrs.length > 0 && (
+            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">{selectedAttrs.length} seleccionados</Badge>
+          )}
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
             <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
