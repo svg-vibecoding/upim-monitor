@@ -441,6 +441,7 @@ export default function NewReportPage() {
                 </div>
               </CollapsibleContent>
             </div>
+          </div>
           </Collapsible>
 
           {/* Dimension (optional, always visible) */}
