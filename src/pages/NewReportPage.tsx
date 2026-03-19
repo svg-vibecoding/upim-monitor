@@ -326,7 +326,7 @@ export default function NewReportPage() {
                 <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
                   <div className="text-left space-y-0.5 pr-20">
                     <p className="text-sm font-semibold">
-                      Definición del universo de productos
+                      1. Universo de productos
                       {!step1Open && universeLabel && (
                         <span className="font-normal text-muted-foreground"> · {universeLabel}</span>
                       )}
