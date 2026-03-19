@@ -47,6 +47,13 @@ const AttributeCheckboxItem = memo(({ attr, classification, checked, onToggle }:
 });
 AttributeCheckboxItem.displayName = "AttributeCheckboxItem";
 
+const SOURCE_LABELS: Record<UniverseSource, string> = {
+  general: "Todos los productos",
+  report: "Informe predefinido",
+  operation: "Operación",
+  file: "Archivo cargado",
+};
+
 export default function CreatePredefinedReportPage() {
   const { reportId } = useParams<{ reportId?: string }>();
   const isEditMode = !!reportId;

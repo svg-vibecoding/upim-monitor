@@ -371,12 +371,21 @@ export default function NewReportPage() {
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
               <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer hover:bg-accent/50 rounded-lg transition-colors">
                 <div className="text-left space-y-0.5">
-                  <p className="text-sm font-semibold">Definición de atributos</p>
-                  <p className="text-sm text-muted-foreground">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud.</p>
+                  <p className="text-sm font-semibold">
+                    Definición de atributos
+                    {!step2Open && selectedAttrs.length > 0 && (
+                      <span className="font-normal text-muted-foreground"> · {selectedAttrs.length} atributos seleccionados</span>
+                    )}
+                  </p>
+                  {step2Open && (
+                    <p className="text-sm text-muted-foreground">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud.</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-4">
                   <span className="text-xs text-muted-foreground">2 de 2</span>
-                  {step2Complete ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <Circle className="h-5 w-5 text-muted-foreground" />}
+                  <span className={`inline-flex items-center justify-center h-6 min-w-6 px-1.5 rounded-md text-xs font-semibold transition-colors ${step2Complete ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"}`}>
+                    {step2Complete ? <Check className="h-3.5 w-3.5" /> : "2"}
+                  </span>
                   <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${step2Open ? "rotate-180" : ""}`} />
                 </div>
               </CollapsibleTrigger>
