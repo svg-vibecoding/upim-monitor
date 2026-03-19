@@ -367,57 +367,56 @@ export default function NewReportPage() {
 
           {/* Step 2: Attributes */}
           <Collapsible open={step2Open} onOpenChange={setStep2Open}>
-            <div className="relative overflow-visible rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
-              {/* Floating circle indicator — outside card */}
-              <div className="absolute -top-2.5 -right-2.5 flex items-center gap-1.5 z-10">
-                <span className="text-xs text-muted-foreground">2 de 2</span>
+            <div className="relative pt-3">
+              <div className="absolute top-0 right-3 z-10">
                 <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-[11px] font-bold transition-colors ${step2Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
                   {step2Complete ? <Check className="h-3.5 w-3.5" /> : "2"}
                 </span>
               </div>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
-                <div className="text-left space-y-0.5 pr-20">
-                  <p className="text-sm font-semibold">
-                    Definición de atributos
-                    {!step2Open && selectedAttrs.length > 0 && (
-                      <span className="font-normal text-muted-foreground"> · {selectedAttrs.length} atributos seleccionados</span>
-                    )}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud.</p>
-                </div>
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${step2Open ? "rotate-180" : ""}`} />
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <div className="px-4 pb-4 space-y-3">
-                  <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">Desde un informe:</p>
-                    <div className="flex items-center gap-2">
-                      <Select onValueChange={handleApplyTemplate}>
-                        <SelectTrigger className="w-56 text-xs shrink-0">
-                          <SelectValue placeholder="Seleccionar" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">Ninguna</SelectItem>
-                          {sortedReports.map((r) => (
-                            <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <div className="relative flex-1">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Buscar atributo..."
-                          value={searchAttr}
-                          onChange={(e) => setSearchAttr(e.target.value)}
-                          className="pl-9"
-                        />
-                      </div>
-                      <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
-                        <CheckSquare className="h-3 w-3" /> Todos
-                      </Button>
-                      <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs([])}>
-                        <Square className="h-3 w-3" /> Ninguno
-                      </Button>
+              <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
+                  <div className="text-left space-y-0.5 pr-20">
+                    <p className="text-sm font-semibold">
+                      Definición de atributos
+                      {!step2Open && selectedAttrs.length > 0 && (
+                        <span className="font-normal text-muted-foreground"> · {selectedAttrs.length} atributos seleccionados</span>
+                      )}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud.</p>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${step2Open ? "rotate-180" : ""}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                  <div className="px-4 pb-4 space-y-3">
+                    <div className="space-y-1">
+                      <p className="text-xs text-muted-foreground">Desde un informe:</p>
+                      <div className="flex items-center gap-2">
+                        <Select onValueChange={handleApplyTemplate}>
+                          <SelectTrigger className="w-56 text-xs shrink-0">
+                            <SelectValue placeholder="Seleccionar" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="none">Ninguna</SelectItem>
+                            {sortedReports.map((r) => (
+                              <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <div className="relative flex-1">
+                          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Buscar atributo..."
+                            value={searchAttr}
+                            onChange={(e) => setSearchAttr(e.target.value)}
+                            className="pl-9"
+                          />
+                        </div>
+                        <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
+                          <CheckSquare className="h-3 w-3" /> Todos
+                        </Button>
+                        <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs([])}>
+                          <Square className="h-3 w-3" /> Ninguno
+                        </Button>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
