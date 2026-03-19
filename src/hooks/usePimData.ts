@@ -386,16 +386,30 @@ export function getProtectedAttributes(
   // Note: universe_key attributes from reports are NOT added here because
   // they are already captured via active operation conditions.
 
-  // Functional from operations
+  // Functional from operations (recursive resolution for operation refs)
   if (operations) {
-    for (const op of operations) {
-      if (!op.active) continue;
+    const visited = new Set<string>();
+    const opMap = new Map(operations.map(op => [op.id, op]));
+
+    function collectForOp(opId: string, rootOpName: string) {
+      if (visited.has(opId)) return;
+      visited.add(opId);
+      const op = opMap.get(opId);
+      if (!op || !op.active) return;
       for (const c of op.conditions) {
-        const source = c.sourceType || "attribute";
-        if (source === "attribute" && c.attribute && !seen.has(c.attribute)) {
+        if (c.sourceType === "operation" && c.attribute) {
+          collectForOp(c.attribute, rootOpName);
+        } else if (c.attribute && !seen.has(c.attribute)) {
           seen.add(c.attribute);
-          result.push({ attr: c.attribute, type: "funcional", reason: `Operación "${op.name}"` });
+          result.push({ attr: c.attribute, type: "funcional", reason: `Operación "${rootOpName}"` });
         }
+      }
+    }
+
+    for (const op of operations) {
+      if (op.active) {
+        visited.clear();
+        collectForOp(op.id, op.name);
       }
     }
   }
