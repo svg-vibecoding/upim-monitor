@@ -644,33 +644,8 @@ export default function AdminPage() {
         setCsvProgress(`Procesando... 1 de ${totalChunks} lotes completados`);
 
         if (totalChunks > 1) {
-          let nextIndex = 0;
           const remaining = Array.from({ length: totalChunks - 1 }, (_, k) => k + 1);
-          const activePromises = new Map<Promise<{ idx: number; result: Awaited<ReturnType<typeof processOneChunk>> }>, true>();
-
-          const enqueue = () => {
-            while (activePromises.size < CONCURRENCY && nextIndex < remaining.length) {
-              const chunkIdx = remaining[nextIndex++];
-              const p = processOneChunk(chunkIdx).then(result => ({ idx: chunkIdx, result }));
-              activePromises.set(p, true);
-            }
-          };
-
-          enqueue();
-
-          while (activePromises.size > 0) {
-            const finished = await Promise.race(activePromises.keys());
-            activePromises.delete(
-              [...activePromises.keys()].find(p => p === Promise.resolve(finished) || true)!
-            );
-            // We need a different approach — use a wrapper
-            // Actually let's redo this with a cleaner pattern
-            break; // placeholder
-          }
-
-          // Cleaner pool implementation
-          activePromises.clear();
-          nextIndex = 0;
+          let nextIndex = 0;
 
           await new Promise<void>((resolvePool) => {
             let inFlight = 0;
