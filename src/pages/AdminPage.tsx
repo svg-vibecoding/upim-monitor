@@ -760,12 +760,36 @@ export default function AdminPage() {
                         </div>
                       </div>
 
-                      {csvResult.columnsDetected && (
-                        <div className="text-xs text-muted-foreground mt-2">
-                          <p><strong>Columnas fijas detectadas:</strong> {csvResult.columnsDetected.fixed.join(", ")}</p>
-                          <p><strong>Atributos detectados:</strong> {csvResult.columnsDetected.attributes.length} columnas adicionales</p>
-                        </div>
-                      )}
+                      {csvResult.columnsDetected && (() => {
+                        const totalDetected = csvResult.columnsDetected.fixed.length + csvResult.columnsDetected.attributes.length;
+                        const functionalAttrs = protectedAttributes.filter(p => p.attr !== "Código Jaivaná");
+                        const totalFunctional = functionalAttrs.length;
+                        const uploadedSet = new Set([
+                          ...(csvResult.attributeOrder || []),
+                          ...(csvResult.columnsDetected.fixed || []),
+                        ]);
+                        const presentFunctional = functionalAttrs.filter(p => uploadedSet.has(p.attr)).length;
+                        const missingFunctional = functionalAttrs.filter(p => !uploadedSet.has(p.attr));
+                        const allPresent = presentFunctional === totalFunctional;
+
+                        return (
+                          <div className="text-xs mt-2 space-y-1">
+                            <p className="text-muted-foreground">
+                              <strong>Atributos detectados:</strong> {totalDetected}
+                            </p>
+                            <p className={allPresent ? "text-green-600" : "text-orange-600"}>
+                              <strong>Atributos funcionales:</strong> {presentFunctional} de {totalFunctional} identificados correctamente
+                            </p>
+                            {!allPresent && missingFunctional.length > 0 && (
+                              <ul className="list-disc list-inside text-orange-600 ml-2">
+                                {missingFunctional.map((p, i) => (
+                                  <li key={i}>{p.attr} <span className="text-muted-foreground">({p.reason})</span></li>
+                                ))}
+                              </ul>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {csvResult.errorDetails && csvResult.errorDetails.length > 0 && (
                         <div className="mt-2">
