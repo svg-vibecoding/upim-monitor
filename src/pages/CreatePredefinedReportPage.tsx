@@ -371,9 +371,6 @@ export default function CreatePredefinedReportPage() {
               <Square className="h-3 w-3" /> Ninguno
             </Button>
           </div>
-          {selectedAttrs.length > 0 && (
-            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">{selectedAttrs.length} seleccionados</Badge>
-          )}
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
             <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
@@ -391,6 +388,9 @@ export default function CreatePredefinedReportPage() {
               />
             ))}
           </div>
+          {selectedAttrs.length > 0 && (
+            <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">{selectedAttrs.length} seleccionados</Badge>
+          )}
         </CardContent>
       </Card>
 
