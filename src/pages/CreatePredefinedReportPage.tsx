@@ -346,7 +346,7 @@ export default function CreatePredefinedReportPage() {
             <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
               <div className="text-left space-y-0.5 pr-20">
                 <p className="text-sm font-semibold">
-                  Definición del universo de productos
+                  1. Universo de productos
                   {!step1Open && universeSummary && (
                     <span className="font-normal text-muted-foreground"> · {universeSummary}</span>
                   )}
@@ -410,7 +410,7 @@ export default function CreatePredefinedReportPage() {
             <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
               <div className="text-left space-y-0.5 pr-20">
                 <p className="text-sm font-semibold">
-                  Definición de atributos
+                  2. Selección de atributos
                   {!step2Open && selectedAttrs.length > 0 && (
                     <span className="font-normal text-muted-foreground"> · {selectedAttrs.length} atributos seleccionados</span>
                   )}
