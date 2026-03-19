@@ -319,12 +319,21 @@ export default function NewReportPage() {
             <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
               <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer hover:bg-accent/50 rounded-lg transition-colors">
                 <div className="text-left space-y-0.5">
-                  <p className="text-sm font-semibold">Definición del universo de productos</p>
-                  <p className="text-sm text-muted-foreground">El universo define qué productos se evalúan: todos los productos del catálogo, un informe predefinido, un subconjunto filtrado mediante una operación, o una lista de productos cargada desde un archivo.</p>
+                  <p className="text-sm font-semibold">
+                    Definición del universo de productos
+                    {!step1Open && universeLabel && (
+                      <span className="font-normal text-muted-foreground"> · {universeLabel}</span>
+                    )}
+                  </p>
+                  {step1Open && (
+                    <p className="text-sm text-muted-foreground">El universo define qué productos se evalúan: todos los productos del catálogo, un informe predefinido, un subconjunto filtrado mediante una operación, o una lista de productos cargada desde un archivo.</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-4">
                   <span className="text-xs text-muted-foreground">1 de 2</span>
-                  {step1Complete ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <Circle className="h-5 w-5 text-muted-foreground" />}
+                  <span className={`inline-flex items-center justify-center h-6 min-w-6 px-1.5 rounded-md text-xs font-semibold transition-colors ${step1Complete ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"}`}>
+                    {step1Complete ? <Check className="h-3.5 w-3.5" /> : "1"}
+                  </span>
                   <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${step1Open ? "rotate-180" : ""}`} />
                 </div>
               </CollapsibleTrigger>
