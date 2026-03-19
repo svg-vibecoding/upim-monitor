@@ -36,26 +36,28 @@ function ReportCard({
       className="cursor-pointer transition-all hover:shadow-md hover:border-primary/40"
       onClick={onClick}
     >
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-1">
         <CardTitle className="text-base flex items-center gap-2">
           <FileText className="h-4 w-4 text-primary" />
           {report.name}
         </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2 pt-0">
         <p className="text-sm text-muted-foreground">{report.description}</p>
-        <p className="text-sm">
-          <span className="font-semibold">{isLoading ? "…" : totalSKUs.toLocaleString()}</span>
-          <span className="text-muted-foreground"> · {universeLabel}</span>
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Atributos evaluados: <span className="font-semibold text-foreground">{evaluatedAttrs}</span>
-          {totalEvaluableAttrs > 0 && <span> de {totalEvaluableAttrs}</span>}
-        </p>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">
+        <div className="space-y-1">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">{isLoading ? "…" : totalSKUs.toLocaleString()}</span>
+            {" "}SKUs · {universeLabel}
+          </p>
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">{evaluatedAttrs}</span>
+            {" "}Atributos evaluados{totalEvaluableAttrs > 0 && <span> de {totalEvaluableAttrs}</span>}
+          </p>
+        </div>
         <div>
-          <div className="flex justify-between text-xs mb-1">
+          <div className="flex justify-between items-baseline text-sm mb-1">
             <span className="text-muted-foreground">Completitud promedio</span>
-            <span className="font-semibold">{isLoading ? "…" : `${avgCompleteness}%`}</span>
+            <span className="text-lg font-semibold text-foreground">{isLoading ? "…" : `${avgCompleteness}%`}</span>
           </div>
           <CompletenessBar value={avgCompleteness} showLabel={false} />
         </div>
