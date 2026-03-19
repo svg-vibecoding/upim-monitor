@@ -347,13 +347,7 @@ export function getAttributeClassification(
 
   const evaluable = !NON_EVALUABLE_SET.has(attr);
 
-  // Check if any report depends on this attribute via universe_key
-  if (reports) {
-    for (const r of reports) {
-      const depAttr = UNIVERSE_KEY_ATTRIBUTE_MAP[r.universeKey];
-      if (depAttr === attr) return { type: "funcional", evaluable };
-    }
-  }
+  // Note: universe_key → attribute mapping removed (redundant — captured via operations)
 
   // Check if any active operation uses this attribute in its conditions
   if (operations) {
