@@ -335,7 +335,8 @@ export default function NewReportPage() {
           <Card>
             <CardContent className="pt-4 space-y-3">
               <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
-              <p className="text-xs text-muted-foreground mb-0">Desde un informe:</p>
+              <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Desde un informe:</p>
               <div className="flex items-center gap-2">
                 <Select onValueChange={handleApplyTemplate}>
                   <SelectTrigger className="w-56 text-xs shrink-0">
