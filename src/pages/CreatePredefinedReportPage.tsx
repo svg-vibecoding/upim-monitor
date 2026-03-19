@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, FileText, Loader2, Search, CheckSquare, Square, ChevronDown, CheckCircle2, Circle } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Search, CheckSquare, Square, ChevronDown, Check } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +46,13 @@ const AttributeCheckboxItem = memo(({ attr, classification, checked, onToggle }:
   );
 });
 AttributeCheckboxItem.displayName = "AttributeCheckboxItem";
+
+const SOURCE_LABELS: Record<UniverseSource, string> = {
+  general: "Todos los productos",
+  report: "Informe predefinido",
+  operation: "Operación",
+  file: "Archivo cargado",
+};
 
 export default function CreatePredefinedReportPage() {
   const { reportId } = useParams<{ reportId?: string }>();
@@ -84,21 +91,46 @@ export default function CreatePredefinedReportPage() {
   const [showInFocus, setShowInFocus] = useState(true);
   const [step1Open, setStep1Open] = useState(true);
   const [step2Open, setStep2Open] = useState(false);
-  const [step1Touched, setStep1Touched] = useState(false);
 
   const handleSourceChange = useCallback((s: UniverseSource) => {
     setSource(s);
-    setStep1Touched(true);
   }, []);
-
-  const step1Complete = step1Touched || (isEditMode && initialized);
-  const step2Complete = selectedAttrs.length > 0;
 
   // File upload state
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState("");
   const [uploadedFileReady, setUploadedFileReady] = useState(false);
   const [uploadedTotalRows, setUploadedTotalRows] = useState(0);
+
+  const step1Complete = useMemo(() => {
+    if (isEditMode && initialized) return true;
+    if (source === "general") return true;
+    if (source === "report") return !!selectedReportId;
+    if (source === "operation") {
+      if (opMode === "existing") return !!selectedOperationId;
+      if (opMode === "new") return inlineOp.conditions.some((c) => c.attribute.trim() !== "");
+    }
+    if (source === "file") return uploadedFileReady && csvCodes.length > 0;
+    return false;
+  }, [isEditMode, initialized, source, selectedReportId, selectedOperationId, opMode, inlineOp, uploadedFileReady, csvCodes]);
+  const step2Complete = selectedAttrs.length > 0;
+
+  const universeSummary = useMemo(() => {
+    if (source === "general") return SOURCE_LABELS.general;
+    if (source === "report") {
+      const r = sortedReports.find((rep) => rep.id === selectedReportId);
+      return r ? r.name : SOURCE_LABELS.report;
+    }
+    if (source === "operation") {
+      if (opMode === "existing") {
+        const op = operations.find((o) => o.id === selectedOperationId);
+        return op ? `Operación: ${op.name}` : SOURCE_LABELS.operation;
+      }
+      return "Operación personalizada";
+    }
+    if (source === "file") return uploadedFileName || SOURCE_LABELS.file;
+    return "";
+  }, [source, selectedReportId, selectedOperationId, opMode, sortedReports, operations, uploadedFileName]);
 
   // Populate form when editing
   useEffect(() => {
@@ -307,12 +339,21 @@ export default function CreatePredefinedReportPage() {
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
           <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer hover:bg-accent/50 rounded-lg transition-colors">
             <div className="text-left space-y-0.5">
-              <p className="text-sm font-semibold">Definición del universo de productos</p>
-              <p className="text-sm text-muted-foreground">El universo define qué productos se evalúan: todos los productos del catálogo, un informe predefinido, un subconjunto filtrado mediante una operación, o una lista de productos cargada desde un archivo.</p>
+              <p className="text-sm font-semibold">
+                Definición del universo de productos
+                {!step1Open && universeSummary && (
+                  <span className="font-normal text-muted-foreground"> · {universeSummary}</span>
+                )}
+              </p>
+              {step1Open && (
+                <p className="text-sm text-muted-foreground">El universo define qué productos se evalúan: todos los productos del catálogo, un informe predefinido, un subconjunto filtrado mediante una operación, o una lista de productos cargada desde un archivo.</p>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0 ml-4">
               <span className="text-xs text-muted-foreground">1 de 2</span>
-              {step1Complete ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <Circle className="h-5 w-5 text-muted-foreground" />}
+              <span className={`inline-flex items-center justify-center h-6 min-w-6 px-1.5 rounded-md text-xs font-semibold transition-colors ${step1Complete ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"}`}>
+                {step1Complete ? <Check className="h-3.5 w-3.5" /> : "1"}
+              </span>
               <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${step1Open ? "rotate-180" : ""}`} />
             </div>
           </CollapsibleTrigger>
@@ -363,12 +404,21 @@ export default function CreatePredefinedReportPage() {
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
           <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer hover:bg-accent/50 rounded-lg transition-colors">
             <div className="text-left space-y-0.5">
-              <p className="text-sm font-semibold">Definición de atributos</p>
-              <p className="text-sm text-muted-foreground">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud.</p>
+              <p className="text-sm font-semibold">
+                Definición de atributos
+                {!step2Open && selectedAttrs.length > 0 && (
+                  <span className="font-normal text-muted-foreground"> · {selectedAttrs.length} atributos seleccionados</span>
+                )}
+              </p>
+              {step2Open && (
+                <p className="text-sm text-muted-foreground">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud.</p>
+              )}
             </div>
             <div className="flex items-center gap-2 shrink-0 ml-4">
               <span className="text-xs text-muted-foreground">2 de 2</span>
-              {step2Complete ? <CheckCircle2 className="h-5 w-5 text-green-500" /> : <Circle className="h-5 w-5 text-muted-foreground" />}
+              <span className={`inline-flex items-center justify-center h-6 min-w-6 px-1.5 rounded-md text-xs font-semibold transition-colors ${step2Complete ? "bg-green-500 text-white" : "bg-muted text-muted-foreground"}`}>
+                {step2Complete ? <Check className="h-3.5 w-3.5" /> : "2"}
+              </span>
               <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${step2Open ? "rotate-180" : ""}`} />
             </div>
           </CollapsibleTrigger>
