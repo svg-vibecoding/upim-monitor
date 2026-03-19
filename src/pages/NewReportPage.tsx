@@ -107,14 +107,21 @@ export default function NewReportPage() {
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
   const [step1Open, setStep1Open] = useState(true);
   const [step2Open, setStep2Open] = useState(false);
-  const [step1Touched, setStep1Touched] = useState(false);
 
   const handleSourceChange = useCallback((s: UniverseSource) => {
     setSource(s);
-    setStep1Touched(true);
   }, []);
 
-  const step1Complete = step1Touched;
+  const step1Complete = useMemo(() => {
+    if (source === "general") return true;
+    if (source === "report") return !!selectedReportId;
+    if (source === "operation") {
+      if (opMode === "existing") return !!selectedOperationId;
+      if (opMode === "new") return inlineOp.conditions.some((c) => c.attribute.trim() !== "");
+    }
+    if (source === "file") return uploadedFileReady && csvCodes.length > 0;
+    return false;
+  }, [source, selectedReportId, selectedOperationId, opMode, inlineOp, uploadedFileReady, csvCodes]);
   const step2Complete = selectedAttrs.length > 0;
 
   const shouldFetchRecords = step === "results";
