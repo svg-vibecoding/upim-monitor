@@ -84,14 +84,22 @@ export default function CreatePredefinedReportPage() {
   const [showInFocus, setShowInFocus] = useState(true);
   const [step1Open, setStep1Open] = useState(true);
   const [step2Open, setStep2Open] = useState(false);
-  const [step1Touched, setStep1Touched] = useState(false);
 
   const handleSourceChange = useCallback((s: UniverseSource) => {
     setSource(s);
-    setStep1Touched(true);
   }, []);
 
-  const step1Complete = step1Touched || (isEditMode && initialized);
+  const step1Complete = useMemo(() => {
+    if (isEditMode && initialized) return true;
+    if (source === "general") return true;
+    if (source === "report") return !!selectedReportId;
+    if (source === "operation") {
+      if (opMode === "existing") return !!selectedOperationId;
+      if (opMode === "new") return inlineOp.conditions.some((c) => c.attribute.trim() !== "");
+    }
+    if (source === "file") return uploadedFileReady && csvCodes.length > 0;
+    return false;
+  }, [isEditMode, initialized, source, selectedReportId, selectedOperationId, opMode, inlineOp, uploadedFileReady, csvCodes]);
   const step2Complete = selectedAttrs.length > 0;
 
   // File upload state
