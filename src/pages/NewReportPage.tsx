@@ -290,11 +290,13 @@ export default function NewReportPage() {
       {step === "config" && (
         <>
         <h1 className="text-2xl font-bold text-foreground">Crear nuevo informe</h1>
+        <p className="text-sm text-muted-foreground">Un informe mide qué tan completa está la información de un conjunto de productos en los atributos que elijas. El resultado muestra qué porcentaje de productos tiene un valor asignado para esos atributos.</p>
         <div className="space-y-4">
           {/* Step 1: Universe */}
           <Card>
             <CardContent className="pt-4 space-y-3">
               <Label className="text-sm font-semibold">1. Definición del universo de productos</Label>
+              <p className="text-sm text-muted-foreground">El universo define qué productos se evalúan: todos los productos del catálogo, un informe predefinido, un subconjunto filtrado mediante una operación, o una lista de productos cargada desde un archivo.</p>
               <UniverseSelector
                 source={source}
                 onSourceChange={setSource}
@@ -325,6 +327,7 @@ export default function NewReportPage() {
             <CardContent className="pt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
+                <p className="text-sm text-muted-foreground">Los atributos son las características del producto que quieres evaluar. El informe calculará qué porcentaje de los productos del universo tienen valor registrado en cada una.</p>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
                   <Select onValueChange={handleApplyTemplate}>
@@ -373,7 +376,7 @@ export default function NewReportPage() {
           <Card>
             <CardContent className="pt-4 space-y-3">
               <Label className="text-sm font-semibold">3. Dimensión (opcional)</Label>
-              <p className="text-sm text-muted-foreground">Distribuye los resultados por una dimensión. Por ejemplo, seleccionar 'Categoría del Producto' mostrará la completitud de los atributos del informe separada para cada categoría: Herramientas, Seguridad Industrial, Tornillería, etc.</p>
+              <p className="text-sm text-muted-foreground">Una dimensión distribuye los resultados en los valores únicos de un atributo. Por ejemplo, si seleccionas Categoría Comercial, verás la completitud calculada de forma independiente para cada categoría existente.</p>
               <Select value={dimensionId} onValueChange={setDimensionId}>
                 <SelectTrigger className="w-64">
                   <SelectValue placeholder="Sin dimensión" />
