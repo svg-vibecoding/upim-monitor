@@ -367,7 +367,7 @@ export default function NewReportPage() {
 
           {/* Step 2: Attributes */}
           <Collapsible open={step2Open} onOpenChange={setStep2Open}>
-            <div className="relative rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
+            <div className="relative overflow-visible rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
               {/* Floating circle indicator — outside card */}
               <div className="absolute -top-2.5 -right-2.5 flex items-center gap-1.5 z-10">
                 <span className="text-xs text-muted-foreground">2 de 2</span>
