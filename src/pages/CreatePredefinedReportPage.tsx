@@ -96,6 +96,12 @@ export default function CreatePredefinedReportPage() {
     setSource(s);
   }, []);
 
+  // File upload state
+  const [csvCodes, setCsvCodes] = useState<string[]>([]);
+  const [uploadedFileName, setUploadedFileName] = useState("");
+  const [uploadedFileReady, setUploadedFileReady] = useState(false);
+  const [uploadedTotalRows, setUploadedTotalRows] = useState(0);
+
   const step1Complete = useMemo(() => {
     if (isEditMode && initialized) return true;
     if (source === "general") return true;
@@ -109,11 +115,22 @@ export default function CreatePredefinedReportPage() {
   }, [isEditMode, initialized, source, selectedReportId, selectedOperationId, opMode, inlineOp, uploadedFileReady, csvCodes]);
   const step2Complete = selectedAttrs.length > 0;
 
-  // File upload state
-  const [csvCodes, setCsvCodes] = useState<string[]>([]);
-  const [uploadedFileName, setUploadedFileName] = useState("");
-  const [uploadedFileReady, setUploadedFileReady] = useState(false);
-  const [uploadedTotalRows, setUploadedTotalRows] = useState(0);
+  const universeSummary = useMemo(() => {
+    if (source === "general") return SOURCE_LABELS.general;
+    if (source === "report") {
+      const r = sortedReports.find((rep) => rep.id === selectedReportId);
+      return r ? r.name : SOURCE_LABELS.report;
+    }
+    if (source === "operation") {
+      if (opMode === "existing") {
+        const op = operations.find((o) => o.id === selectedOperationId);
+        return op ? `Operación: ${op.name}` : SOURCE_LABELS.operation;
+      }
+      return "Operación personalizada";
+    }
+    if (source === "file") return uploadedFileName || SOURCE_LABELS.file;
+    return "";
+  }, [source, selectedReportId, selectedOperationId, opMode, sortedReports, operations, uploadedFileName]);
 
   // Populate form when editing
   useEffect(() => {
