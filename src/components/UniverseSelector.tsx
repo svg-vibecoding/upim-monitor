@@ -88,12 +88,7 @@ export const UniverseSelector = memo(function UniverseSelector({
 
   return (
     <div className="space-y-3">
-      <div>
-        <Label className="text-sm font-semibold">1. Universo de productos</Label>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Define el universo de productos sobre el cual se construirá el informe.
-        </p>
-      </div>
+      
       <RadioGroup
         value={source}
         onValueChange={(v) => onSourceChange(v as UniverseSource)}
