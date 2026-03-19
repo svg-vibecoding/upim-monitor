@@ -301,7 +301,6 @@ export default function NewReportPage() {
           </div>
           <Card>
             <CardContent className="pt-4 space-y-3">
-              <Label className="text-sm font-semibold">1. Define el universo de productos por analizar</Label>
               <UniverseSelector
                 source={source}
                 onSourceChange={setSource}
