@@ -291,12 +291,9 @@ export default function CreatePredefinedReportPage() {
       </Card>
 
       {/* Step 1: Universe */}
-      <div className="space-y-1">
-        <Label className="text-sm font-semibold">1. Definición del universo de productos</Label>
-        <p className="text-sm text-muted-foreground">El universo define qué productos se evalúan: todos los productos del catálogo, un subconjunto filtrado mediante una operación, o una lista de productos cargada desde un archivo.</p>
-      </div>
       <Card>
         <CardContent className="pt-4 space-y-3">
+          <Label className="text-sm font-semibold">1. Definición del universo de productos</Label>
           <UniverseSelector
             source={source}
             onSourceChange={setSource}
@@ -336,30 +333,27 @@ export default function CreatePredefinedReportPage() {
       </Card>
 
       {/* Step 2: Attributes */}
-      <div className="space-y-1">
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
-            <Select onValueChange={handleApplyTemplate}>
-              <SelectTrigger className="w-56 h-8 text-xs">
-                <SelectValue placeholder="Ninguna" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">Ninguna</SelectItem>
-                {sortedReports.map((r) => (
-                  <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <p className="text-sm text-muted-foreground">Los atributos son las características del producto que quieres evaluar.</p>
-      </div>
       <Card>
         <CardContent className="pt-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Cargar plantilla de:</span>
+              <Select onValueChange={handleApplyTemplate}>
+                <SelectTrigger className="w-56 h-8 text-xs">
+                  <SelectValue placeholder="Ninguna" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Ninguna</SelectItem>
+                  {sortedReports.map((r) => (
+                    <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar atributo..."
@@ -367,18 +361,17 @@ export default function CreatePredefinedReportPage() {
                 onChange={(e) => setSearchAttr(e.target.value)}
                 className="pl-9"
               />
-            </div>
-            <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
-              <CheckSquare className="h-3 w-3" /> Todos
-            </Button>
-            <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs([])}>
-              <Square className="h-3 w-3" /> Ninguno
-            </Button>
           </div>
 
-          {selectedAttrs.length > 0 && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => setSelectedAttrs(getEvaluableAttributes(fullAttributes))}>
+              <CheckSquare className="h-3 w-3" /> Todos
+            </Button>
+            <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={() => setSelectedAttrs([])}>
+              <Square className="h-3 w-3" /> Ninguno
+            </Button>
             <Badge variant="secondary">{selectedAttrs.length} seleccionados</Badge>
-          )}
+          </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
             <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
@@ -396,6 +389,9 @@ export default function CreatePredefinedReportPage() {
               />
             ))}
           </div>
+          {selectedAttrs.length > 0 && (
+            <p className="text-xs text-muted-foreground">{selectedAttrs.length} atributos seleccionados</p>
+          )}
         </CardContent>
       </Card>
 
