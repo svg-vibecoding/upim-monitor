@@ -43,21 +43,21 @@ function ReportCard({
         </CardTitle>
         <p className="text-sm text-muted-foreground">{report.description}</p>
       </CardHeader>
-      <CardContent className="space-y-3 pt-3">
-        <div className="space-y-1">
-          <p className="text-sm text-muted-foreground">
+      <CardContent className="space-y-2 pt-2">
+        <div className="space-y-0.5">
+          <p className="text-xs text-muted-foreground">
             <span className="font-semibold">{isLoading ? "…" : totalSKUs.toLocaleString()}</span>
             {" "}SKUs · {universeLabel}
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             <span className="font-semibold">{evaluatedAttrs}</span>
             {" "}Atributos evaluados{totalEvaluableAttrs > 0 && <span> de {totalEvaluableAttrs}</span>}
           </p>
         </div>
         <div>
-          <div className="flex justify-between items-baseline text-sm mb-1">
+          <div className="flex justify-between items-baseline text-xs mb-0.5">
             <span className="text-muted-foreground">Completitud promedio</span>
-            <span className="text-lg font-semibold text-foreground">{isLoading ? "…" : `${avgCompleteness}%`}</span>
+            <span className="text-base font-semibold text-foreground">{isLoading ? "…" : `${avgCompleteness}%`}</span>
           </div>
           <CompletenessBar value={avgCompleteness} showLabel={false} />
         </div>
