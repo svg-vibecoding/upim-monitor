@@ -316,7 +316,7 @@ export default function NewReportPage() {
         <div className="space-y-4">
           {/* Step 1: Universe */}
           <Collapsible open={step1Open} onOpenChange={setStep1Open}>
-            <div className="relative rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
+            <div className="relative overflow-visible rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
               {/* Floating circle indicator — outside card */}
               <div className="absolute -top-2.5 -right-2.5 flex items-center gap-1.5 z-10">
                 <span className="text-xs text-muted-foreground">1 de 2</span>
