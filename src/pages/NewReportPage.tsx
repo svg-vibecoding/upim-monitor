@@ -335,11 +335,12 @@ export default function NewReportPage() {
           <Card>
             <CardContent className="pt-4 space-y-3">
               <Label className="text-sm font-semibold">2. Seleccionar atributos</Label>
-              <p className="text-xs text-muted-foreground">Cargar plantilla de:</p>
+              <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Desde un informe:</p>
               <div className="flex items-center gap-2">
                 <Select onValueChange={handleApplyTemplate}>
-                  <SelectTrigger className="w-56 h-8 text-xs shrink-0">
-                    <SelectValue placeholder="Ninguna" />
+                  <SelectTrigger className="w-56 text-xs shrink-0">
+                    <SelectValue placeholder="Seleccionar" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Ninguna</SelectItem>
@@ -363,6 +364,7 @@ export default function NewReportPage() {
                 <Button variant="outline" size="sm" className="gap-1 text-xs shrink-0" onClick={() => setSelectedAttrs([])}>
                   <Square className="h-3 w-3" /> Ninguno
                 </Button>
+              </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-1 max-h-64 overflow-auto">
                 <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
