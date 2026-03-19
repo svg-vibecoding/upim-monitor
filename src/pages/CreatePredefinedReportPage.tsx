@@ -82,6 +82,17 @@ export default function CreatePredefinedReportPage() {
   const [saving, setSaving] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [showInFocus, setShowInFocus] = useState(true);
+  const [step1Open, setStep1Open] = useState(true);
+  const [step2Open, setStep2Open] = useState(false);
+  const [step1Touched, setStep1Touched] = useState(false);
+
+  const handleSourceChange = useCallback((s: UniverseSource) => {
+    setSource(s);
+    setStep1Touched(true);
+  }, []);
+
+  const step1Complete = step1Touched || (isEditMode && initialized);
+  const step2Complete = selectedAttrs.length > 0;
 
   // File upload state
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
