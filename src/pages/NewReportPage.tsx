@@ -381,7 +381,7 @@ export default function NewReportPage() {
                 ))}
               </div>
               {selectedAttrs.length > 0 && (
-                <p className="text-xs text-muted-foreground">{selectedAttrs.length} atributos seleccionados</p>
+                <Badge className="bg-green-100 text-green-800 hover:bg-green-100 border-green-200">{selectedAttrs.length} seleccionados</Badge>
               )}
             </CardContent>
           </Card>

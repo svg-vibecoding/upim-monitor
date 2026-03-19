@@ -393,9 +393,6 @@ export default function CreatePredefinedReportPage() {
               />
             ))}
           </div>
-          {selectedAttrs.length > 0 && (
-            <p className="text-xs text-muted-foreground">{selectedAttrs.length} atributos seleccionados</p>
-          )}
         </CardContent>
       </Card>
 
