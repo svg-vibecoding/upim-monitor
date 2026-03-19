@@ -291,9 +291,12 @@ export default function CreatePredefinedReportPage() {
       </Card>
 
       {/* Step 1: Universe */}
+      <div className="space-y-1">
+        <Label className="text-sm font-semibold">Definición del universo de productos</Label>
+        <p className="text-sm text-muted-foreground">El universo define qué productos se evalúan: todos los productos del catálogo, un informe predefinido, un subconjunto filtrado mediante una operación, o una lista de productos cargada desde un archivo.</p>
+      </div>
       <Card>
         <CardContent className="pt-4 space-y-3">
-          <Label className="text-sm font-semibold">1. Definición del universo de productos</Label>
           <UniverseSelector
             source={source}
             onSourceChange={setSource}
