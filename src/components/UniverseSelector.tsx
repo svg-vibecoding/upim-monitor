@@ -110,7 +110,7 @@ export const UniverseSelector = memo(function UniverseSelector({
       </RadioGroup>
 
       {source === "general" && (
-        <p className="text-xs text-muted-foreground">SKUs totales (activos e inactivos)</p>
+        <p className="text-xs text-muted-foreground">Todos los productos del catálogo (activos e inactivos)</p>
       )}
 
       {source === "operation" && (
