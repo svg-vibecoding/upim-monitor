@@ -489,17 +489,24 @@ export default function DashboardPage() {
                   </div>
 
                   {/* Universe guide text */}
-                  {activeReport && !loadingFocus && (
-                    <div className="text-xs text-muted-foreground mb-3 shrink-0 space-y-0.5">
-                      <p>
-                        Universo: {activeReport.universe}
-                        {focusItems.length > 0 && focusItems[0].totalSKUs > 0 && (
-                          <span className="ml-1 font-medium">{focusItems[0].totalSKUs.toLocaleString()} SKUs</span>
-                        )}
-                      </p>
-                      <p>Atributos evaluados: {focusItems.length}{totalEvaluableAttrs > 0 ? ` de ${totalEvaluableAttrs}` : ""}</p>
-                    </div>
-                  )}
+                  {activeReport && !loadingFocus && (() => {
+                    const evaluatedAttrsCount = (rawFocusItems || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name)).length;
+                    const focusAttrsCount = focusItems.length;
+                    const focusAttrsPct = evaluatedAttrsCount > 0 ? Math.round((focusAttrsCount / evaluatedAttrsCount) * 100) : 0;
+                    const totalSKUs = rawFocusItems && rawFocusItems.length > 0 ? rawFocusItems[0].totalSKUs : 0;
+                    return (
+                      <div className="text-xs text-muted-foreground mb-3 shrink-0 space-y-0.5">
+                        <p>
+                          Universo definido: {activeReport.universe}
+                          {totalSKUs > 0 && (
+                            <span> · <span className="font-semibold">{totalSKUs.toLocaleString()}</span> SKUs</span>
+                          )}
+                        </p>
+                        <p>Atributos evaluados en el informe: <span className="font-semibold">{evaluatedAttrsCount}</span>{totalEvaluableAttrs > 0 ? ` de ${totalEvaluableAttrs}` : ""}</p>
+                        <p>Atributos foco de atención: <span className="font-semibold">{focusAttrsCount}</span> · <span className="font-semibold">{focusAttrsPct}%</span></p>
+                      </div>
+                    );
+                  })()}
 
                   {/* Focus list */}
                   {loadingFocus ? (
