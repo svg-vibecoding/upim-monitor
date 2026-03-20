@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Layers, CheckCircle2 } from "lucide-react";
-import { getSeverity, severityDot } from "@/lib/severity";
+import { Layers } from "lucide-react";
+import { getSeverity } from "@/lib/severity";
+import { CompletenessCircle } from "@/components/CompletenessCircle";
 import type { DimensionResult } from "@/data/mockData";
 
 interface DimensionSummaryCardsProps {
@@ -72,7 +73,7 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
           <p className="text-xs text-muted-foreground mb-1">Completitud promedio de los grupos</p>
           <p className={`text-3xl font-bold ${severityTextColor(avgCompleteness)}`}>{avgCompleteness}%</p>
         </CardContent>
-        <CheckCircle2 className="absolute bottom-2 right-2 h-12 w-12 text-primary/[0.06]" />
+        <CompletenessCircle value={avgCompleteness} />
       </Card>
     </div>
   );

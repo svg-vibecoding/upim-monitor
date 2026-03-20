@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { FileText, ArrowLeft, Download, Search, CheckSquare, Square, ChevronDown, Check, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
+import { CompletenessCircle } from "@/components/CompletenessCircle";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
@@ -556,7 +557,6 @@ export default function NewReportPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{records.length.toLocaleString()}</p></CardContent></Card>
             <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{selectedAttrs.length}{totalEvaluableAttrs > 0 && <span className="text-sm font-normal text-muted-foreground"> de {totalEvaluableAttrs}</span>}</p></CardContent></Card>
-            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent></Card>
             {(() => {
               const focusCount = attrResults.filter((a) => a.completeness < 50).length;
               const focusPct = attrResults.length > 0 ? Math.round((focusCount / attrResults.length) * 100) : 0;
@@ -575,6 +575,7 @@ export default function NewReportPage() {
                 </Card>
               );
             })()}
+            <Card className="relative overflow-hidden"><CardContent className="pt-4 pb-4 px-4 relative z-10"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent><CompletenessCircle value={avgCompleteness} /></Card>
           </div>
 
           <Card>
