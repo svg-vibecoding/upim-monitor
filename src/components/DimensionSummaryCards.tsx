@@ -1,26 +1,32 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Layers, CheckCircle2, AlertTriangle } from "lucide-react";
-import { focusSeverityColors } from "@/lib/severity";
+import { Layers, CheckCircle2 } from "lucide-react";
+import { getSeverity, severityDot } from "@/lib/severity";
 import type { DimensionResult } from "@/data/mockData";
 
 interface DimensionSummaryCardsProps {
   dimensionResults: DimensionResult[];
 }
 
+/** Map severity to text color for the average completeness card */
+function severityTextColor(pct: number): string {
+  const s = getSeverity(pct);
+  switch (s) {
+    case "critical": return "text-destructive";
+    case "low": return "text-warning";
+    case "medium": return "text-caution";
+    case "good": return "text-good";
+    case "excellent": return "text-success";
+  }
+}
+
 export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCardsProps) {
   const realGroups = dimensionResults.filter(d => d.value !== "Sin valor asignado");
-  const sinValor = dimensionResults.find(d => d.value === "Sin valor asignado");
-  const sinValorSKUs = sinValor?.totalSKUs ?? 0;
-  const totalSKUsInDim = dimensionResults.reduce((s, d) => s + d.totalSKUs, 0);
-  const sinValorPct = totalSKUsInDim > 0 ? (sinValorSKUs / totalSKUsInDim) * 100 : 0;
   const best = realGroups.length > 0 ? realGroups.reduce((a, b) => a.completeness >= b.completeness ? a : b) : null;
   const worst = realGroups.length > 0 ? realGroups.reduce((a, b) => a.completeness <= b.completeness ? a : b) : null;
 
-  const fc = focusSeverityColors(sinValorPct);
-  const svBg = sinValorSKUs === 0 ? "bg-success text-white" : fc.bg;
-  const svText = sinValorSKUs === 0 ? "text-white" : fc.text;
-  const svLabel = sinValorSKUs === 0 ? "text-white/80" : fc.label;
-  const SvIcon = sinValorSKUs === 0 ? CheckCircle2 : AlertTriangle;
+  const avgCompleteness = realGroups.length > 0
+    ? Math.round(realGroups.reduce((s, d) => s + d.completeness, 0) / realGroups.length)
+    : 0;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -28,6 +34,7 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
         <CardContent className="pt-4 pb-4 px-4 relative z-10">
           <p className="text-xs text-muted-foreground mb-1">Grupos evaluados</p>
           <p className="text-3xl font-bold">{realGroups.length}</p>
+          <p className="text-xs font-semibold truncate mt-0.5">Valores únicos</p>
         </CardContent>
         <Layers className="absolute bottom-2 right-2 h-12 w-12 text-primary/[0.06]" />
       </Card>
@@ -60,16 +67,12 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
         </CardContent>
       </Card>
 
-      <Card className={`relative overflow-hidden border-0 ${svBg}`}>
+      <Card className="relative overflow-hidden">
         <CardContent className="pt-4 pb-4 px-4 relative z-10">
-          <p className={`text-xs mb-1 ${svLabel}`}>SKUs sin valor asignado</p>
-          {sinValorSKUs === 0 ? (
-            <p className={`text-sm font-semibold ${svText}`}>Todos los SKUs tienen<br />valor asignado</p>
-          ) : (
-            <p className={`text-3xl font-bold ${svText}`}>{sinValorSKUs.toLocaleString()}</p>
-          )}
+          <p className="text-xs text-muted-foreground mb-1">Completitud promedio de los grupos</p>
+          <p className={`text-3xl font-bold ${severityTextColor(avgCompleteness)}`}>{avgCompleteness}%</p>
         </CardContent>
-        <SvIcon className={`absolute bottom-2 right-2 h-12 w-12 ${svText} opacity-[0.12]`} />
+        <CheckCircle2 className="absolute bottom-2 right-2 h-12 w-12 text-primary/[0.06]" />
       </Card>
     </div>
   );
