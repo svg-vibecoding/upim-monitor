@@ -59,8 +59,6 @@ export default function ReportDetailPage() {
 
   const isLoading = loadingReports || loadingDimensions || loadingCompleteness;
 
-
-  // Use server-side completeness data (already filtered by universe and evaluable)
   const attrResults = useMemo(() => (completenessData || []).filter(a => !NON_EVALUABLE_FIELDS.includes(a.name)), [completenessData]);
   const avgCompleteness = attrResults.length > 0
     ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length)
@@ -72,7 +70,6 @@ export default function ReportDetailPage() {
   const sortedAttrResults = useMemo(() => {
     const filtered = attrResults.filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter);
     if (sortField === "pim_order") {
-      // Default order: PIM order (no explicit sort needed beyond index)
       const sorted = [...filtered];
       sorted.sort((a, b) => {
         const idxA = pimOrderList.indexOf(a.name);
@@ -94,6 +91,36 @@ export default function ReportDetailPage() {
     return sorted;
   }, [attrResults, severityFilter, sortField, sortDir, pimOrderList]);
 
+  const dimension = useMemo(() => dimensions?.find((d) => d.id === selectedDimension), [dimensions, selectedDimension]);
+  const records = useMemo(() => {
+    if (!report || !needsRecords) return [];
+    return getRecordsForReport(allRecords || [], report, operations);
+  }, [report, needsRecords, allRecords, operations]);
+  const validAttrs = useMemo(() => attrResults.map(a => a.name), [attrResults]);
+  const dimensionResults = useMemo(() => {
+    if (!dimension || !needsRecords) return [];
+    return computeDimensionResults(records, validAttrs, dimension.field);
+  }, [dimension, needsRecords, records, validAttrs]);
+
+  const sortedDimensionResults = useMemo(() => {
+    if (dimensionResults.length === 0) return [];
+    const filtered = dimensionResults.filter((d) => !dimSeverityFilter || getSeverity(d.completeness) === dimSeverityFilter);
+    const sinValor = filtered.filter(d => d.value === "Sin valor asignado");
+    const rest = filtered.filter(d => d.value !== "Sin valor asignado");
+    if (dimSortField === "value") {
+      rest.sort((a, b) => {
+        const cmp = a.value.localeCompare(b.value, "es");
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    } else {
+      rest.sort((a, b) => {
+        const cmp = a.completeness - b.completeness;
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    }
+    return [...rest, ...sinValor];
+  }, [dimensionResults, dimSeverityFilter, dimSortField, dimSortDir]);
+
   // 3-state cycle: inactive (pim_order) → asc → desc → inactive
   const handleSort = (field: "attribute" | "completeness") => {
     if (sortField !== field) {
@@ -102,7 +129,6 @@ export default function ReportDetailPage() {
     } else if (sortDir === "asc") {
       setSortDir("desc");
     } else {
-      // Back to default
       setSortField("pim_order");
       setSortDir("asc");
     }
@@ -121,7 +147,7 @@ export default function ReportDetailPage() {
     }
   };
 
-  const SortIcon = ({ field, activeField, activeDir }: { field: string; activeField: string; activeDir: SortDir }) => {
+  const SortIcon = ({ field, activeField, activeDir }: { field: string; activeField: string; activeDir: "asc" | "desc" }) => {
     if (activeField !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
     return activeDir === "asc"
       ? <ArrowUp className="h-3.5 w-3.5 text-foreground" />
@@ -152,31 +178,6 @@ export default function ReportDetailPage() {
       report_type: "predefined",
     });
   }
-
-  const dimension = dimensions?.find((d) => d.id === selectedDimension);
-  const records = needsRecords ? getRecordsForReport(allRecords || [], report, operations) : [];
-  const validAttrs = attrResults.map(a => a.name);
-  const dimensionResults = dimension && needsRecords ? computeDimensionResults(records, validAttrs, dimension.field) : [];
-
-  const sortedDimensionResults = useMemo(() => {
-    if (!dimensionResults || dimensionResults.length === 0) return [];
-    const filtered = dimensionResults.filter((d) => !dimSeverityFilter || getSeverity(d.completeness) === dimSeverityFilter);
-    const sinValor = filtered.filter(d => d.value === "Sin valor asignado");
-    const rest = filtered.filter(d => d.value !== "Sin valor asignado");
-    if (dimSortField === "value") {
-      rest.sort((a, b) => {
-        const cmp = a.value.localeCompare(b.value, "es");
-        return dimSortDir === "asc" ? cmp : -cmp;
-      });
-    } else {
-      rest.sort((a, b) => {
-        const cmp = a.completeness - b.completeness;
-        return dimSortDir === "asc" ? cmp : -cmp;
-      });
-    }
-    return [...rest, ...sinValor];
-  }, [dimensionResults, dimSeverityFilter, dimSortField, dimSortDir]);
-
 
   const handleDownload = () => {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
