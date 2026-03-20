@@ -170,13 +170,90 @@ export default function NewReportPage() {
     return computeAttributeResults(records, selectedAttrs);
   }, [step, records, selectedAttrs]);
 
+  const pimOrderList = useMemo(() => getFullAttributeList(attributeOrder), [attributeOrder]);
+
+  const sortedAttrResults = useMemo(() => {
+    const filtered = attrResults.filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter);
+    if (sortField === "pim_order") {
+      const sorted = [...filtered];
+      sorted.sort((a, b) => {
+        const idxA = pimOrderList.indexOf(a.name);
+        const idxB = pimOrderList.indexOf(b.name);
+        return (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
+      });
+      return sorted;
+    }
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (sortField === "completeness") {
+        cmp = a.completeness - b.completeness;
+      } else {
+        cmp = a.name.localeCompare(b.name, "es");
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [attrResults, severityFilter, sortField, sortDir, pimOrderList]);
+
   const dimension = dimensionsData.find((d) => d.id === dimensionId);
   const dimensionResults = useMemo(() => {
     if (step !== "results" || !dimension) return [];
     return computeDimensionResults(records, selectedAttrs, dimension.field);
   }, [step, records, selectedAttrs, dimension]);
 
+  const sortedDimensionResults = useMemo(() => {
+    if (dimensionResults.length === 0) return [];
+    const filtered = dimensionResults.filter((d) => !dimSeverityFilter || getSeverity(d.completeness) === dimSeverityFilter);
+    const sinValor = filtered.filter(d => d.value === "Sin valor asignado");
+    const rest = filtered.filter(d => d.value !== "Sin valor asignado");
+    if (dimSortField === "value") {
+      rest.sort((a, b) => {
+        const cmp = a.value.localeCompare(b.value, "es");
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    } else {
+      rest.sort((a, b) => {
+        const cmp = a.completeness - b.completeness;
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    }
+    return [...rest, ...sinValor];
+  }, [dimensionResults, dimSeverityFilter, dimSortField, dimSortDir]);
+
   const avgCompleteness = attrResults.length > 0 ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length) : 0;
+
+  // 3-state cycle: inactive (pim_order) → asc → desc → inactive
+  const handleAttrSort = (field: "attribute" | "completeness") => {
+    if (sortField !== field) {
+      setSortField(field);
+      setSortDir("asc");
+    } else if (sortDir === "asc") {
+      setSortDir("desc");
+    } else {
+      setSortField("pim_order");
+      setSortDir("asc");
+    }
+  };
+
+  const handleDimSort = (field: "value" | "completeness") => {
+    if (dimSortField !== field) {
+      setDimSortField(field);
+      setDimSortDir("asc");
+    } else if (dimSortDir === "asc") {
+      setDimSortDir("desc");
+    } else {
+      setDimSortField("value");
+      setDimSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ field, activeField, activeDir }: { field: string; activeField: string; activeDir: "asc" | "desc" }) => {
+    if (activeField !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
+    return activeDir === "asc"
+      ? <ArrowUp className="h-3.5 w-3.5 text-foreground" />
+      : <ArrowDown className="h-3.5 w-3.5 text-foreground" />;
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
