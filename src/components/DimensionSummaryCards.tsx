@@ -17,9 +17,10 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
   const best = realGroups.length > 0 ? realGroups.reduce((a, b) => a.completeness >= b.completeness ? a : b) : null;
   const worst = realGroups.length > 0 ? realGroups.reduce((a, b) => a.completeness <= b.completeness ? a : b) : null;
 
-  const svBg = sinValorSKUs === 0 ? "bg-success text-white" : sinValorPct > 25 ? "bg-destructive/10" : "bg-warning/10";
-  const svText = sinValorSKUs === 0 ? "text-white" : sinValorPct > 25 ? "text-destructive" : "text-warning";
-  const svLabel = sinValorSKUs === 0 ? "text-white/80" : "text-muted-foreground";
+  const fc = focusSeverityColors(sinValorPct);
+  const svBg = sinValorSKUs === 0 ? "bg-success text-white" : fc.bg;
+  const svText = sinValorSKUs === 0 ? "text-white" : fc.text;
+  const svLabel = sinValorSKUs === 0 ? "text-white/80" : fc.label;
   const SvIcon = sinValorSKUs === 0 ? CheckCircle2 : AlertTriangle;
 
   return (
