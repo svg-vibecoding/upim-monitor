@@ -128,26 +128,6 @@ export default function ReportDetailPage() {
       : <ArrowDown className="h-3.5 w-3.5 text-foreground" />;
   };
 
-  // Sort dimension results
-  const sortedDimensionResults = useMemo(() => {
-    if (!dimensionResults || dimensionResults.length === 0) return [];
-    const filtered = dimensionResults.filter((d) => !dimSeverityFilter || getSeverity(d.completeness) === dimSeverityFilter);
-    const sinValor = filtered.filter(d => d.value === "Sin valor asignado");
-    const rest = filtered.filter(d => d.value !== "Sin valor asignado");
-    if (dimSortField === "value") {
-      rest.sort((a, b) => {
-        const cmp = a.value.localeCompare(b.value, "es");
-        return dimSortDir === "asc" ? cmp : -cmp;
-      });
-    } else {
-      rest.sort((a, b) => {
-        const cmp = a.completeness - b.completeness;
-        return dimSortDir === "asc" ? cmp : -cmp;
-      });
-    }
-    return [...rest, ...sinValor];
-  }, [dimensionResults, dimSeverityFilter, dimSortField, dimSortDir]);
-
   if (isLoading) {
     return (
       <div className="space-y-6 max-w-6xl">
