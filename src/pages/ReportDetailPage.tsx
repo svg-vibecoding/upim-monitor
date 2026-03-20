@@ -305,10 +305,21 @@ export default function ReportDetailPage() {
           ) : dimensionResults.length > 0 ? (
             <>
               <DimensionSummaryCards dimensionResults={dimensionResults} />
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-1">
                 <h2 className="text-sm font-semibold text-foreground">Distribución por {dimension?.name}</h2>
                 <SeverityFilter results={dimensionResults} activeFilter={dimSeverityFilter} onFilterChange={setDimSeverityFilter} />
               </div>
+              {(() => {
+                const sinValor = dimensionResults.find(d => d.value === "Sin valor asignado");
+                const sinValorSKUs = sinValor?.totalSKUs ?? 0;
+                const sinValorPct = totalSKUs > 0 ? Math.round((sinValorSKUs / totalSKUs) * 100) : 0;
+                return (
+                  <div className="text-xs text-muted-foreground mb-3 space-y-0.5">
+                    <p>• SKUs evaluados: {totalSKUs.toLocaleString()}</p>
+                    <p>• SKUs sin {dimension?.name}: {sinValorSKUs.toLocaleString()} · {sinValorPct}%</p>
+                  </div>
+                );
+              })()}
               <div className="overflow-auto">
                 <Table>
                   <TableHeader>
