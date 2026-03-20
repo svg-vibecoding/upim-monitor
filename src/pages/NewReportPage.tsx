@@ -19,44 +19,14 @@ import {
   type Condition, type LogicMode,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Filter, ArrowLeft, Download, Search, CheckSquare, Square, ChevronDown, Check } from "lucide-react";
+import { FileText, ArrowLeft, Download, Search, CheckSquare, Square, ChevronDown, Check, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
-
+import { type SeverityLevel, getSeverity } from "@/lib/severity";
+import { SeverityFilter } from "@/components/SeverityFilter";
 type Step = "config" | "results";
-type SeverityLevel = "critical" | "low" | "medium" | "good" | "excellent";
-
-function getSeverity(pct: number): SeverityLevel {
-  if (pct < 25) return "critical";
-  if (pct < 50) return "low";
-  if (pct < 70) return "medium";
-  if (pct < 90) return "good";
-  return "excellent";
-}
-
-function severityLabel(s: SeverityLevel) {
-  switch (s) {
-    case "critical": return "0–25 %";
-    case "low": return "25–50 %";
-    case "medium": return "50–70 %";
-    case "good": return "70–90 %";
-    case "excellent": return "90–100 %";
-  }
-}
-
-function severityDot(s: SeverityLevel) {
-  switch (s) {
-    case "critical": return "bg-destructive";
-    case "low": return "bg-warning";
-    case "medium": return "bg-caution";
-    case "good": return "bg-good";
-    case "excellent": return "bg-success";
-  }
-}
-
-const severityLevels: SeverityLevel[] = ["critical", "low", "medium", "good", "excellent"];
 
 const AttributeCheckboxItem = memo(({ attr, classification, checked, onToggle }: {
   attr: string;
@@ -105,6 +75,15 @@ export default function NewReportPage() {
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
+  type SortField = "completeness" | "attribute" | "pim_order";
+  type SortDir = "asc" | "desc";
+  const [sortField, setSortField] = useState<SortField>("pim_order");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  // Dimension sort & filter
+  type DimSortField = "value" | "completeness";
+  const [dimSortField, setDimSortField] = useState<DimSortField>("value");
+  const [dimSortDir, setDimSortDir] = useState<SortDir>("asc");
+  const [dimSeverityFilter, setDimSeverityFilter] = useState<SeverityLevel | null>(null);
   const [step1Open, setStep1Open] = useState(true);
   const [step2Open, setStep2Open] = useState(false);
 
@@ -191,13 +170,90 @@ export default function NewReportPage() {
     return computeAttributeResults(records, selectedAttrs);
   }, [step, records, selectedAttrs]);
 
+  const pimOrderList = useMemo(() => getFullAttributeList(attributeOrder), [attributeOrder]);
+
+  const sortedAttrResults = useMemo(() => {
+    const filtered = attrResults.filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter);
+    if (sortField === "pim_order") {
+      const sorted = [...filtered];
+      sorted.sort((a, b) => {
+        const idxA = pimOrderList.indexOf(a.name);
+        const idxB = pimOrderList.indexOf(b.name);
+        return (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
+      });
+      return sorted;
+    }
+    const sorted = [...filtered];
+    sorted.sort((a, b) => {
+      let cmp = 0;
+      if (sortField === "completeness") {
+        cmp = a.completeness - b.completeness;
+      } else {
+        cmp = a.name.localeCompare(b.name, "es");
+      }
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+    return sorted;
+  }, [attrResults, severityFilter, sortField, sortDir, pimOrderList]);
+
   const dimension = dimensionsData.find((d) => d.id === dimensionId);
   const dimensionResults = useMemo(() => {
     if (step !== "results" || !dimension) return [];
     return computeDimensionResults(records, selectedAttrs, dimension.field);
   }, [step, records, selectedAttrs, dimension]);
 
+  const sortedDimensionResults = useMemo(() => {
+    if (dimensionResults.length === 0) return [];
+    const filtered = dimensionResults.filter((d) => !dimSeverityFilter || getSeverity(d.completeness) === dimSeverityFilter);
+    const sinValor = filtered.filter(d => d.value === "Sin valor asignado");
+    const rest = filtered.filter(d => d.value !== "Sin valor asignado");
+    if (dimSortField === "value") {
+      rest.sort((a, b) => {
+        const cmp = a.value.localeCompare(b.value, "es");
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    } else {
+      rest.sort((a, b) => {
+        const cmp = a.completeness - b.completeness;
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    }
+    return [...rest, ...sinValor];
+  }, [dimensionResults, dimSeverityFilter, dimSortField, dimSortDir]);
+
   const avgCompleteness = attrResults.length > 0 ? Math.round(attrResults.reduce((s, a) => s + a.completeness, 0) / attrResults.length) : 0;
+
+  // 3-state cycle: inactive (pim_order) → asc → desc → inactive
+  const handleAttrSort = (field: "attribute" | "completeness") => {
+    if (sortField !== field) {
+      setSortField(field);
+      setSortDir("asc");
+    } else if (sortDir === "asc") {
+      setSortDir("desc");
+    } else {
+      setSortField("pim_order");
+      setSortDir("asc");
+    }
+  };
+
+  const handleDimSort = (field: "value" | "completeness") => {
+    if (dimSortField !== field) {
+      setDimSortField(field);
+      setDimSortDir("asc");
+    } else if (dimSortDir === "asc") {
+      setDimSortDir("desc");
+    } else {
+      setDimSortField("value");
+      setDimSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ field, activeField, activeDir }: { field: string; activeField: string; activeDir: "asc" | "desc" }) => {
+    if (activeField !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
+    return activeDir === "asc"
+      ? <ArrowUp className="h-3.5 w-3.5 text-foreground" />
+      : <ArrowDown className="h-3.5 w-3.5 text-foreground" />;
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -508,39 +564,28 @@ export default function NewReportPage() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-foreground">Detalle por atributo</h2>
-                <div className="flex items-center gap-1.5">
-                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                  {severityLevels.map((level) => {
-                    const count = attrResults.filter((a) => getSeverity(a.completeness) === level).length;
-                    const isActive = severityFilter === level;
-                    return (
-                      <button
-                        key={level}
-                        onClick={() => setSeverityFilter(isActive ? null : level)}
-                        className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors ${isActive ? "bg-accent ring-1 ring-ring" : "hover:bg-muted"}`}
-                        title={severityLabel(level)}
-                      >
-                        <span className={`inline-block h-2.5 w-2.5 rounded-full ${severityDot(level)}`} />
-                        <span className="tabular-nums text-muted-foreground">{count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                <SeverityFilter results={attrResults} activeFilter={severityFilter} onFilterChange={setSeverityFilter} />
               </div>
               <div className="overflow-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Atributo</TableHead>
+                      <TableHead>
+                        <button onClick={() => handleAttrSort("attribute")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          Atributo <SortIcon field="attribute" activeField={sortField} activeDir={sortDir} />
+                        </button>
+                      </TableHead>
                       <TableHead className="text-right w-28">SKUs evaluados</TableHead>
                       <TableHead className="text-right w-28">Poblados</TableHead>
-                      <TableHead className="w-48">Completitud</TableHead>
+                      <TableHead className="w-48">
+                        <button onClick={() => handleAttrSort("completeness")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          Completitud <SortIcon field="completeness" activeField={sortField} activeDir={sortDir} />
+                        </button>
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {attrResults
-                      .filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter)
-                      .map((a) => (
+                    {sortedAttrResults.map((a) => (
                       <TableRow key={a.name}>
                         <TableCell className="font-medium text-sm">{a.name}</TableCell>
                         <TableCell className="text-right tabular-nums">{a.totalSKUs.toLocaleString()}</TableCell>
@@ -557,33 +602,44 @@ export default function NewReportPage() {
           {dimensionResults.length > 0 && dimension && (
             <>
               <DimensionSummaryCards dimensionResults={dimensionResults} />
-            <Card>
-              <CardContent className="pt-4">
-                <h2 className="text-sm font-semibold mb-3 text-foreground">Distribución por {dimension.name}</h2>
-                <div className="overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{dimension.name}</TableHead>
-                        <TableHead className="text-right w-24">SKUs</TableHead>
-                        <TableHead className="text-right w-28">Poblados</TableHead>
-                        <TableHead className="w-48">Completitud</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {dimensionResults.map((d) => (
-                        <TableRow key={d.value}>
-                          <TableCell className="font-medium text-sm">{d.value}</TableCell>
-                          <TableCell className="text-right tabular-nums">{d.totalSKUs.toLocaleString()}</TableCell>
-                          <TableCell className="text-right tabular-nums">{d.populated.toLocaleString()}</TableCell>
-                          <TableCell><CompletenessBar value={d.completeness} /></TableCell>
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-sm font-semibold text-foreground">Distribución por {dimension.name}</h2>
+                    <SeverityFilter results={dimensionResults} activeFilter={dimSeverityFilter} onFilterChange={setDimSeverityFilter} />
+                  </div>
+                  <div className="overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>
+                            <button onClick={() => handleDimSort("value")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                              {dimension.name} <SortIcon field="value" activeField={dimSortField} activeDir={dimSortDir} />
+                            </button>
+                          </TableHead>
+                          <TableHead className="text-right w-24">SKUs</TableHead>
+                          <TableHead className="text-right w-28">Poblados</TableHead>
+                          <TableHead className="w-48">
+                            <button onClick={() => handleDimSort("completeness")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                              Completitud <SortIcon field="completeness" activeField={dimSortField} activeDir={dimSortDir} />
+                            </button>
+                          </TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedDimensionResults.map((d) => (
+                          <TableRow key={d.value}>
+                            <TableCell className="font-medium text-sm">{d.value}</TableCell>
+                            <TableCell className="text-right tabular-nums">{d.totalSKUs.toLocaleString()}</TableCell>
+                            <TableCell className="text-right tabular-nums">{d.populated.toLocaleString()}</TableCell>
+                            <TableCell><CompletenessBar value={d.completeness} /></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>
