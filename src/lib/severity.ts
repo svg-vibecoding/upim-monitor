@@ -29,3 +29,23 @@ export function severityDot(s: SeverityLevel) {
     case "excellent": return "bg-success";
   }
 }
+
+/** Inverse severity: higher percentage = more critical (used for "focus" / "sin valor" cards) */
+export function getFocusSeverity(pct: number): SeverityLevel {
+  if (pct <= 0) return "excellent";
+  if (pct < 25) return "good";
+  if (pct < 50) return "medium";
+  if (pct < 70) return "low";
+  if (pct < 90) return "critical";
+  return "critical";
+}
+
+/** Returns bg + text classes for focus severity cards (soft bg, colored text) */
+export function focusSeverityColors(pct: number): { bg: string; text: string; label: string } {
+  if (pct <= 0) return { bg: "bg-success/10", text: "text-success", label: "text-muted-foreground" };
+  if (pct < 25) return { bg: "bg-success/10", text: "text-success", label: "text-muted-foreground" };
+  if (pct < 50) return { bg: "bg-info/10", text: "text-info", label: "text-muted-foreground" };
+  if (pct < 70) return { bg: "bg-caution/10", text: "text-caution", label: "text-muted-foreground" };
+  if (pct < 90) return { bg: "bg-warning/10", text: "text-warning", label: "text-muted-foreground" };
+  return { bg: "bg-destructive/10", text: "text-destructive", label: "text-muted-foreground" };
+}
