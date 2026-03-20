@@ -15,6 +15,7 @@ import {
 import { downloadCSV } from "@/data/mockData";
 import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
+import { CompletenessCircle } from "@/components/CompletenessCircle";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
 import { type SeverityLevel, getSeverity, focusSeverityColors } from "@/lib/severity";
