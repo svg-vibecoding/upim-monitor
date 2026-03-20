@@ -13,11 +13,11 @@ import {
   filterRealAttributes, getEvaluableAttributes, useOperations,
 } from "@/hooks/usePimData";
 import { downloadCSV } from "@/data/mockData";
-import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
-import { type SeverityLevel, getSeverity } from "@/lib/severity";
+import { type SeverityLevel, getSeverity, focusSeverityColors } from "@/lib/severity";
 import { SeverityFilter } from "@/components/SeverityFilter";
 
 /* ── Sort helpers ─────────────────────────────────────────── */
@@ -218,7 +218,21 @@ export default function ReportDetailPage() {
         <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{totalSKUs.toLocaleString()}</p></CardContent></Card>
         <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{attrResults.length}{totalEvaluableAttrs > 0 && <span className="text-sm font-normal text-muted-foreground"> de {totalEvaluableAttrs}</span>}</p></CardContent></Card>
         <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos &lt;50%</p><p className="text-xl font-bold text-destructive">{attrResults.filter((a) => a.completeness < 50).length}</p></CardContent></Card>
+        {(() => {
+          const focusCount = attrResults.filter((a) => a.completeness < 50).length;
+          const focusPct = attrResults.length > 0 ? Math.round((focusCount / attrResults.length) * 100) : 0;
+          const fc = focusSeverityColors(focusPct);
+          return (
+            <Card className={`relative overflow-hidden border-0 ${fc.bg}`}>
+              <CardContent className="pt-4 pb-4 px-4 relative z-10">
+                <p className={`text-xs mb-1 ${fc.label}`}>Atributos foco de atención</p>
+                <p className={`text-xl font-bold ${fc.text}`}>{focusCount}</p>
+                <p className="text-xs text-muted-foreground">de {attrResults.length} · {focusPct}%</p>
+              </CardContent>
+              <AlertTriangle className={`absolute bottom-2 right-2 h-12 w-12 ${fc.text} opacity-[0.12]`} />
+            </Card>
+          );
+        })()}
       </div>
 
       {/* Attribute table */}
