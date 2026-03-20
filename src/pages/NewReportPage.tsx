@@ -24,7 +24,8 @@ import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
-
+import { type SeverityLevel, getSeverity } from "@/lib/severity";
+import { SeverityFilter } from "@/components/SeverityFilter";
 type Step = "config" | "results";
 type SeverityLevel = "critical" | "low" | "medium" | "good" | "excellent";
 
