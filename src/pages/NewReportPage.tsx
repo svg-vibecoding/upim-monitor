@@ -19,7 +19,7 @@ import {
   type Condition, type LogicMode,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { FileText, ArrowLeft, Download, Search, CheckSquare, Square, ChevronDown, Check, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { FileText, ArrowLeft, Download, Search, CheckSquare, Square, ChevronDown, Check, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
