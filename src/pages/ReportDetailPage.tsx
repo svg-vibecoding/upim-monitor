@@ -217,7 +217,6 @@ export default function ReportDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{totalSKUs.toLocaleString()}</p></CardContent></Card>
         <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{attrResults.length}{totalEvaluableAttrs > 0 && <span className="text-sm font-normal text-muted-foreground"> de {totalEvaluableAttrs}</span>}</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent></Card>
         {(() => {
           const focusCount = attrResults.filter((a) => a.completeness < 50).length;
           const focusPct = attrResults.length > 0 ? Math.round((focusCount / attrResults.length) * 100) : 0;
@@ -236,6 +235,7 @@ export default function ReportDetailPage() {
             </Card>
           );
         })()}
+        <Card className="relative overflow-hidden"><CardContent className="pt-4 pb-4 px-4 relative z-10"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent><CompletenessCircle value={avgCompleteness} /></Card>
       </div>
 
       {/* Attribute table */}
