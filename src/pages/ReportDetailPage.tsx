@@ -30,9 +30,15 @@ export default function ReportDetailPage() {
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
   type SortField = "completeness" | "attribute" | "pim_order";
   type SortDir = "asc" | "desc";
-  const [sortField, setSortField] = useState<SortField>("completeness");
+  const [sortField, setSortField] = useState<SortField>("pim_order");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [tracked, setTracked] = useState(false);
+
+  // Dimension sort & filter state
+  type DimSortField = "value" | "completeness";
+  const [dimSortField, setDimSortField] = useState<DimSortField>("value");
+  const [dimSortDir, setDimSortDir] = useState<SortDir>("asc");
+  const [dimSeverityFilter, setDimSeverityFilter] = useState<SeverityLevel | null>(null);
 
   const { data: reports, isLoading: loadingReports } = usePredefinedReports();
   const { data: dimensions, isLoading: loadingDimensions } = useDimensions();
@@ -65,38 +71,82 @@ export default function ReportDetailPage() {
 
   const sortedAttrResults = useMemo(() => {
     const filtered = attrResults.filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter);
+    if (sortField === "pim_order") {
+      // Default order: PIM order (no explicit sort needed beyond index)
+      const sorted = [...filtered];
+      sorted.sort((a, b) => {
+        const idxA = pimOrderList.indexOf(a.name);
+        const idxB = pimOrderList.indexOf(b.name);
+        return (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
+      });
+      return sorted;
+    }
     const sorted = [...filtered];
     sorted.sort((a, b) => {
       let cmp = 0;
       if (sortField === "completeness") {
         cmp = a.completeness - b.completeness;
-      } else if (sortField === "attribute") {
-        cmp = a.name.localeCompare(b.name, "es");
       } else {
-        const idxA = pimOrderList.indexOf(a.name);
-        const idxB = pimOrderList.indexOf(b.name);
-        cmp = (idxA === -1 ? 9999 : idxA) - (idxB === -1 ? 9999 : idxB);
+        cmp = a.name.localeCompare(b.name, "es");
       }
       return sortDir === "asc" ? cmp : -cmp;
     });
     return sorted;
   }, [attrResults, severityFilter, sortField, sortDir, pimOrderList]);
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      setSortDir(prev => prev === "asc" ? "desc" : "asc");
-    } else {
+  // 3-state cycle: inactive (pim_order) → asc → desc → inactive
+  const handleSort = (field: "attribute" | "completeness") => {
+    if (sortField !== field) {
       setSortField(field);
+      setSortDir("asc");
+    } else if (sortDir === "asc") {
+      setSortDir("desc");
+    } else {
+      // Back to default
+      setSortField("pim_order");
       setSortDir("asc");
     }
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
-    return sortDir === "asc"
+  // Dimension sort: 3-state cycle, default = value asc (A-Z)
+  const handleDimSort = (field: "value" | "completeness") => {
+    if (dimSortField !== field) {
+      setDimSortField(field);
+      setDimSortDir("asc");
+    } else if (dimSortDir === "asc") {
+      setDimSortDir("desc");
+    } else {
+      setDimSortField("value");
+      setDimSortDir("asc");
+    }
+  };
+
+  const SortIcon = ({ field, activeField, activeDir }: { field: string; activeField: string; activeDir: SortDir }) => {
+    if (activeField !== field) return <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground/50" />;
+    return activeDir === "asc"
       ? <ArrowUp className="h-3.5 w-3.5 text-foreground" />
       : <ArrowDown className="h-3.5 w-3.5 text-foreground" />;
   };
+
+  // Sort dimension results
+  const sortedDimensionResults = useMemo(() => {
+    if (!dimensionResults || dimensionResults.length === 0) return [];
+    const filtered = dimensionResults.filter((d) => !dimSeverityFilter || getSeverity(d.completeness) === dimSeverityFilter);
+    const sinValor = filtered.filter(d => d.value === "Sin valor asignado");
+    const rest = filtered.filter(d => d.value !== "Sin valor asignado");
+    if (dimSortField === "value") {
+      rest.sort((a, b) => {
+        const cmp = a.value.localeCompare(b.value, "es");
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    } else {
+      rest.sort((a, b) => {
+        const cmp = a.completeness - b.completeness;
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    }
+    return [...rest, ...sinValor];
+  }, [dimensionResults, dimSeverityFilter, dimSortField, dimSortDir]);
 
   if (isLoading) {
     return (
