@@ -158,6 +158,26 @@ export default function ReportDetailPage() {
   const validAttrs = attrResults.map(a => a.name);
   const dimensionResults = dimension && needsRecords ? computeDimensionResults(records, validAttrs, dimension.field) : [];
 
+  const sortedDimensionResults = useMemo(() => {
+    if (!dimensionResults || dimensionResults.length === 0) return [];
+    const filtered = dimensionResults.filter((d) => !dimSeverityFilter || getSeverity(d.completeness) === dimSeverityFilter);
+    const sinValor = filtered.filter(d => d.value === "Sin valor asignado");
+    const rest = filtered.filter(d => d.value !== "Sin valor asignado");
+    if (dimSortField === "value") {
+      rest.sort((a, b) => {
+        const cmp = a.value.localeCompare(b.value, "es");
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    } else {
+      rest.sort((a, b) => {
+        const cmp = a.completeness - b.completeness;
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    }
+    return [...rest, ...sinValor];
+  }, [dimensionResults, dimSeverityFilter, dimSortField, dimSortDir]);
+
+
   const handleDownload = () => {
     const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
     const rows: (string | number)[][] = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
