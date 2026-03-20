@@ -13,10 +13,12 @@ import {
   filterRealAttributes, getEvaluableAttributes, useOperations,
 } from "@/hooks/usePimData";
 import { downloadCSV } from "@/data/mockData";
-import { ArrowLeft, Download, Filter, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
+import { type SeverityLevel, getSeverity } from "@/lib/severity";
+import { SeverityFilter } from "@/components/SeverityFilter";
 
 /* ── Severity helpers ─────────────────────────────────────────── */
 type SeverityLevel = "critical" | "low" | "medium" | "good" | "excellent";
