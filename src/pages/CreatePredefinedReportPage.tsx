@@ -338,9 +338,12 @@ export default function CreatePredefinedReportPage() {
       <Collapsible open={step1Open} onOpenChange={setStep1Open}>
         <div className="relative pt-3">
           <div className="absolute top-0 right-3 z-10">
-            <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-[11px] font-bold transition-colors ${step1Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
-              {step1Complete ? <Check className="h-3.5 w-3.5" /> : "1"}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-muted-foreground font-medium">1 de 2</span>
+              <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-[11px] font-bold transition-colors ${step1Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
+                {step1Complete ? <Check className="h-3.5 w-3.5" /> : "1"}
+              </span>
+            </div>
           </div>
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
             <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
@@ -402,9 +405,12 @@ export default function CreatePredefinedReportPage() {
       <Collapsible open={step2Open} onOpenChange={setStep2Open}>
         <div className="relative pt-3">
           <div className="absolute top-0 right-3 z-10">
-            <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-[11px] font-bold transition-colors ${step2Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
-              {step2Complete ? <Check className="h-3.5 w-3.5" /> : "2"}
-            </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-muted-foreground font-medium">2 de 2</span>
+              <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-[11px] font-bold transition-colors ${step2Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
+                {step2Complete ? <Check className="h-3.5 w-3.5" /> : "2"}
+              </span>
+            </div>
           </div>
           <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow">
             <CollapsibleTrigger className="flex items-center justify-between w-full p-4 cursor-pointer rounded-lg">
