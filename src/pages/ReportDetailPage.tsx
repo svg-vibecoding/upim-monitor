@@ -17,7 +17,7 @@ import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } f
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
-import { type SeverityLevel, getSeverity } from "@/lib/severity";
+import { type SeverityLevel, getSeverity, focusSeverityColors } from "@/lib/severity";
 import { SeverityFilter } from "@/components/SeverityFilter";
 
 /* ── Sort helpers ─────────────────────────────────────────── */
