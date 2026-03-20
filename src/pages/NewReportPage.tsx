@@ -564,39 +564,28 @@ export default function NewReportPage() {
             <CardContent className="pt-4">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-sm font-semibold text-foreground">Detalle por atributo</h2>
-                <div className="flex items-center gap-1.5">
-                  <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-                  {severityLevels.map((level) => {
-                    const count = attrResults.filter((a) => getSeverity(a.completeness) === level).length;
-                    const isActive = severityFilter === level;
-                    return (
-                      <button
-                        key={level}
-                        onClick={() => setSeverityFilter(isActive ? null : level)}
-                        className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors ${isActive ? "bg-accent ring-1 ring-ring" : "hover:bg-muted"}`}
-                        title={severityLabel(level)}
-                      >
-                        <span className={`inline-block h-2.5 w-2.5 rounded-full ${severityDot(level)}`} />
-                        <span className="tabular-nums text-muted-foreground">{count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                <SeverityFilter results={attrResults} activeFilter={severityFilter} onFilterChange={setSeverityFilter} />
               </div>
               <div className="overflow-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Atributo</TableHead>
+                      <TableHead>
+                        <button onClick={() => handleAttrSort("attribute")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          Atributo <SortIcon field="attribute" activeField={sortField} activeDir={sortDir} />
+                        </button>
+                      </TableHead>
                       <TableHead className="text-right w-28">SKUs evaluados</TableHead>
                       <TableHead className="text-right w-28">Poblados</TableHead>
-                      <TableHead className="w-48">Completitud</TableHead>
+                      <TableHead className="w-48">
+                        <button onClick={() => handleAttrSort("completeness")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          Completitud <SortIcon field="completeness" activeField={sortField} activeDir={sortDir} />
+                        </button>
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {attrResults
-                      .filter((a) => !severityFilter || getSeverity(a.completeness) === severityFilter)
-                      .map((a) => (
+                    {sortedAttrResults.map((a) => (
                       <TableRow key={a.name}>
                         <TableCell className="font-medium text-sm">{a.name}</TableCell>
                         <TableCell className="text-right tabular-nums">{a.totalSKUs.toLocaleString()}</TableCell>
@@ -613,33 +602,44 @@ export default function NewReportPage() {
           {dimensionResults.length > 0 && dimension && (
             <>
               <DimensionSummaryCards dimensionResults={dimensionResults} />
-            <Card>
-              <CardContent className="pt-4">
-                <h2 className="text-sm font-semibold mb-3 text-foreground">Distribución por {dimension.name}</h2>
-                <div className="overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{dimension.name}</TableHead>
-                        <TableHead className="text-right w-24">SKUs</TableHead>
-                        <TableHead className="text-right w-28">Poblados</TableHead>
-                        <TableHead className="w-48">Completitud</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {dimensionResults.map((d) => (
-                        <TableRow key={d.value}>
-                          <TableCell className="font-medium text-sm">{d.value}</TableCell>
-                          <TableCell className="text-right tabular-nums">{d.totalSKUs.toLocaleString()}</TableCell>
-                          <TableCell className="text-right tabular-nums">{d.populated.toLocaleString()}</TableCell>
-                          <TableCell><CompletenessBar value={d.completeness} /></TableCell>
+              <Card>
+                <CardContent className="pt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-sm font-semibold text-foreground">Distribución por {dimension.name}</h2>
+                    <SeverityFilter results={dimensionResults} activeFilter={dimSeverityFilter} onFilterChange={setDimSeverityFilter} />
+                  </div>
+                  <div className="overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>
+                            <button onClick={() => handleDimSort("value")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                              {dimension.name} <SortIcon field="value" activeField={dimSortField} activeDir={dimSortDir} />
+                            </button>
+                          </TableHead>
+                          <TableHead className="text-right w-24">SKUs</TableHead>
+                          <TableHead className="text-right w-28">Poblados</TableHead>
+                          <TableHead className="w-48">
+                            <button onClick={() => handleDimSort("completeness")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                              Completitud <SortIcon field="completeness" activeField={dimSortField} activeDir={dimSortDir} />
+                            </button>
+                          </TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedDimensionResults.map((d) => (
+                          <TableRow key={d.value}>
+                            <TableCell className="font-medium text-sm">{d.value}</TableCell>
+                            <TableCell className="text-right tabular-nums">{d.totalSKUs.toLocaleString()}</TableCell>
+                            <TableCell className="text-right tabular-nums">{d.populated.toLocaleString()}</TableCell>
+                            <TableCell><CompletenessBar value={d.completeness} /></TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
             </>
           )}
         </div>
