@@ -286,30 +286,41 @@ export default function ReportDetailPage() {
             </div>
           ) : dimensionResults.length > 0 ? (
             <>
-              {/* Dimension summary cards */}
               <DimensionSummaryCards dimensionResults={dimensionResults} />
-            <div className="overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{dimension?.name}</TableHead>
-                    <TableHead className="text-right w-24">SKUs</TableHead>
-                    <TableHead className="text-right w-28">Poblados</TableHead>
-                    <TableHead className="w-48">Completitud</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {dimensionResults.map((d) => (
-                    <TableRow key={d.value}>
-                      <TableCell className="font-medium text-sm">{d.value}</TableCell>
-                      <TableCell className="text-right tabular-nums">{d.totalSKUs.toLocaleString()}</TableCell>
-                      <TableCell className="text-right tabular-nums">{d.populated.toLocaleString()}</TableCell>
-                      <TableCell><CompletenessBar value={d.completeness} /></TableCell>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-sm font-semibold text-foreground">Distribución por {dimension?.name}</h2>
+                <SeverityFilter results={dimensionResults} activeFilter={dimSeverityFilter} onFilterChange={setDimSeverityFilter} />
+              </div>
+              <div className="overflow-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>
+                        <button onClick={() => handleDimSort("value")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          {dimension?.name} <SortIcon field="value" activeField={dimSortField} activeDir={dimSortDir} />
+                        </button>
+                      </TableHead>
+                      <TableHead className="text-right w-24">SKUs</TableHead>
+                      <TableHead className="text-right w-28">Poblados</TableHead>
+                      <TableHead className="w-48">
+                        <button onClick={() => handleDimSort("completeness")} className="flex items-center gap-1 hover:text-foreground transition-colors">
+                          Completitud <SortIcon field="completeness" activeField={dimSortField} activeDir={dimSortDir} />
+                        </button>
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedDimensionResults.map((d) => (
+                      <TableRow key={d.value}>
+                        <TableCell className="font-medium text-sm">{d.value}</TableCell>
+                        <TableCell className="text-right tabular-nums">{d.totalSKUs.toLocaleString()}</TableCell>
+                        <TableCell className="text-right tabular-nums">{d.populated.toLocaleString()}</TableCell>
+                        <TableCell><CompletenessBar value={d.completeness} /></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </>
           ) : (
             <p className="text-sm text-muted-foreground py-4 text-center">Selecciona una dimensión para ver la distribución.</p>
