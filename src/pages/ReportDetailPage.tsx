@@ -225,24 +225,7 @@ export default function ReportDetailPage() {
         <CardContent className="pt-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-semibold text-foreground">Detalle por atributo</h2>
-            <div className="flex items-center gap-1.5">
-              <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-              {severityLevels.map((level) => {
-                const count = attrResults.filter((a) => getSeverity(a.completeness) === level).length;
-                const isActive = severityFilter === level;
-                return (
-                  <button
-                    key={level}
-                    onClick={() => setSeverityFilter(isActive ? null : level)}
-                    className={`flex items-center gap-1 px-2 py-1 rounded-md text-xs transition-colors ${isActive ? "bg-accent ring-1 ring-ring" : "hover:bg-muted"}`}
-                    title={severityLabel(level)}
-                  >
-                    <span className={`inline-block h-2.5 w-2.5 rounded-full ${severityDot(level)}`} />
-                    <span className="tabular-nums text-muted-foreground">{count}</span>
-                  </button>
-                );
-              })}
-            </div>
+            <SeverityFilter results={attrResults} activeFilter={severityFilter} onFilterChange={setSeverityFilter} />
           </div>
           <div className="overflow-auto">
             <Table>
@@ -250,14 +233,14 @@ export default function ReportDetailPage() {
                 <TableRow>
                   <TableHead>
                     <button onClick={() => handleSort("attribute")} className="flex items-center gap-1 hover:text-foreground transition-colors">
-                      Atributo <SortIcon field="attribute" />
+                      Atributo <SortIcon field="attribute" activeField={sortField} activeDir={sortDir} />
                     </button>
                   </TableHead>
                   <TableHead className="text-right w-28">SKUs evaluados</TableHead>
                   <TableHead className="text-right w-28">Poblados</TableHead>
                   <TableHead className="w-48">
                     <button onClick={() => handleSort("completeness")} className="flex items-center gap-1 hover:text-foreground transition-colors">
-                      Completitud <SortIcon field="completeness" />
+                      Completitud <SortIcon field="completeness" activeField={sortField} activeDir={sortDir} />
                     </button>
                   </TableHead>
                 </TableRow>
