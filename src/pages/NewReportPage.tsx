@@ -75,6 +75,15 @@ export default function NewReportPage() {
   const [step, setStep] = useState<Step>("config");
   const [searchAttr, setSearchAttr] = useState("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
+  type SortField = "completeness" | "attribute" | "pim_order";
+  type SortDir = "asc" | "desc";
+  const [sortField, setSortField] = useState<SortField>("pim_order");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  // Dimension sort & filter
+  type DimSortField = "value" | "completeness";
+  const [dimSortField, setDimSortField] = useState<DimSortField>("value");
+  const [dimSortDir, setDimSortDir] = useState<SortDir>("asc");
+  const [dimSeverityFilter, setDimSeverityFilter] = useState<SeverityLevel | null>(null);
   const [step1Open, setStep1Open] = useState(true);
   const [step2Open, setStep2Open] = useState(false);
 
