@@ -565,8 +565,11 @@ export default function NewReportPage() {
                 <Card className={`relative overflow-hidden border-0 ${fc.bg}`}>
                   <CardContent className="pt-4 pb-4 px-4 relative z-10">
                     <p className={`text-xs mb-1 ${fc.label}`}>Atributos foco de atención</p>
-                    <p className={`text-xl font-bold ${fc.text}`}>{focusCount}</p>
-                    <p className="text-xs text-muted-foreground">de {attrResults.length} · {focusPct}%</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className={`text-xl font-bold ${fc.text}`}>{focusCount}</span>
+                      <span className="text-xs text-muted-foreground">de {attrResults.length}</span>
+                      <span className={`text-xl font-bold ${fc.text}`}>· {focusPct}%</span>
+                    </div>
                   </CardContent>
                   <AlertTriangle className={`absolute bottom-2 right-2 h-12 w-12 ${fc.text} opacity-[0.12]`} />
                 </Card>
