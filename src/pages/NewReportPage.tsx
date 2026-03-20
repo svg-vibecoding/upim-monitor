@@ -568,7 +568,7 @@ export default function NewReportPage() {
                     <div className="flex items-baseline gap-1.5">
                       <span className={`text-xl font-bold ${fc.text}`}>{focusCount}</span>
                       <span className="text-xs text-muted-foreground">de {attrResults.length}</span>
-                      <span className={`text-xl font-bold ${fc.text}`}>· {focusPct}%</span>
+                      <span className={`text-xl font-bold ${fc.text}`}>{focusPct}%</span>
                     </div>
                   </CardContent>
                   <AlertTriangle className={`absolute bottom-2 right-2 h-12 w-12 ${fc.text} opacity-[0.12]`} />
