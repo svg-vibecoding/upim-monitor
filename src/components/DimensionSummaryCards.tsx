@@ -1,5 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Layers, CheckCircle2, AlertTriangle } from "lucide-react";
+import { focusSeverityColors } from "@/lib/severity";
+import type { DimensionResult } from "@/data/mockData";
 import type { DimensionResult } from "@/data/mockData";
 
 interface DimensionSummaryCardsProps {
