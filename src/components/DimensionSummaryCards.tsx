@@ -1,23 +1,11 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Layers } from "lucide-react";
-import { getSeverity } from "@/lib/severity";
+import { severityTextColor, severityBgColor } from "@/lib/severity";
 import { CompletenessCircle } from "@/components/CompletenessCircle";
 import type { DimensionResult } from "@/data/mockData";
 
 interface DimensionSummaryCardsProps {
   dimensionResults: DimensionResult[];
-}
-
-/** Map severity to text color for the average completeness card */
-function severityTextColor(pct: number): string {
-  const s = getSeverity(pct);
-  switch (s) {
-    case "critical": return "text-destructive";
-    case "low": return "text-warning";
-    case "medium": return "text-caution";
-    case "good": return "text-good";
-    case "excellent": return "text-success";
-  }
 }
 
 export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCardsProps) {
@@ -42,10 +30,10 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
 
       <Card>
         <CardContent className="pt-4 pb-4 px-4">
-          <p className="text-xs text-muted-foreground mb-1">Mejor completitud</p>
+          <p className="text-xs text-muted-foreground mb-1">Grupo con mejor completitud</p>
           {best ? (
             <>
-              <p className="text-3xl font-bold text-success">{best.completeness}%</p>
+              <p className={`text-3xl font-bold ${severityTextColor(best.completeness)}`}>{best.completeness}%</p>
               <p className="text-xs font-semibold truncate mt-0.5">{best.value}</p>
             </>
           ) : (
@@ -59,7 +47,7 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
           <p className="text-xs text-muted-foreground mb-1">Grupo a mejorar</p>
           {worst ? (
             <>
-              <p className="text-3xl font-bold text-destructive">{worst.completeness}%</p>
+              <p className={`text-3xl font-bold ${severityTextColor(worst.completeness)}`}>{worst.completeness}%</p>
               <p className="text-xs font-semibold truncate mt-0.5">{worst.value}</p>
             </>
           ) : (
@@ -68,7 +56,7 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
         </CardContent>
       </Card>
 
-      <Card className="relative overflow-hidden">
+      <Card className={`relative overflow-hidden border-0 ${severityBgColor(avgCompleteness)}`}>
         <CardContent className="pt-4 pb-4 px-4 relative z-10">
           <p className="text-xs text-muted-foreground mb-1">Completitud promedio de los grupos</p>
           <p className={`text-3xl font-bold ${severityTextColor(avgCompleteness)}`}>{avgCompleteness}%</p>

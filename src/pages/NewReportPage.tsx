@@ -25,7 +25,7 @@ import { CompletenessCircle } from "@/components/CompletenessCircle";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
 import * as XLSX from "xlsx";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
-import { type SeverityLevel, getSeverity, focusSeverityColors } from "@/lib/severity";
+import { type SeverityLevel, getSeverity, focusSeverityColors, severityBgColor, severityTextColor } from "@/lib/severity";
 import { SeverityFilter } from "@/components/SeverityFilter";
 type Step = "config" | "results";
 
@@ -562,20 +562,20 @@ export default function NewReportPage() {
               const focusPct = attrResults.length > 0 ? Math.round((focusCount / attrResults.length) * 100) : 0;
               const fc = focusSeverityColors(focusPct);
               return (
-                <Card className={`relative overflow-hidden border-0 ${fc.bg}`}>
+                <Card className="relative overflow-hidden">
                   <CardContent className="pt-4 pb-4 px-4 relative z-10">
-                    <p className={`text-xs mb-1 ${fc.label}`}>Atributos foco de atención</p>
+                    <p className="text-xs text-muted-foreground mb-1">Atributos foco de atención</p>
                     <div className="flex items-baseline gap-1.5">
-                      <span className={`text-xl font-bold ${fc.text}`}>{focusCount}</span>
+                      <span className="text-xl font-bold">{focusCount}</span>
                       <span className="text-xs text-muted-foreground">de {attrResults.length}</span>
-                      <span className={`text-xl font-bold ${fc.text}`}>{focusPct}%</span>
+                      <span className="text-xl font-bold">{focusPct}%</span>
                     </div>
                   </CardContent>
                   <AlertTriangle className={`absolute bottom-2 right-2 h-12 w-12 ${fc.text} opacity-[0.12]`} />
                 </Card>
               );
             })()}
-            <Card className="relative overflow-hidden"><CardContent className="pt-4 pb-4 px-4 relative z-10"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className="text-xl font-bold">{avgCompleteness}%</p></CardContent><CompletenessCircle value={avgCompleteness} /></Card>
+            <Card className={`relative overflow-hidden border-0 ${severityBgColor(avgCompleteness)}`}><CardContent className="pt-4 pb-4 px-4 relative z-10"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className={`text-xl font-bold ${severityTextColor(avgCompleteness)}`}>{avgCompleteness}%</p></CardContent><CompletenessCircle value={avgCompleteness} /></Card>
           </div>
 
           <Card>
