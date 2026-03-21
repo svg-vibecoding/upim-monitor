@@ -431,7 +431,7 @@ export default function DashboardPage() {
                     <div className="flex-1 min-h-6" />
                     <div className="pt-4 border-t border-border">
                       {card3Cfg.config.mode !== 'dynamic' && <p className="text-xs text-muted-foreground mb-2">Mostrando: {completenessReportName}</p>}
-                      <p className="text-[10px] text-muted-foreground/60 mb-2">Completitud promedio</p>
+                      <p className="text-xs text-muted-foreground mb-2">Completitud promedio</p>
                       <CompletenessBar value={completenessValue} showLabel={false} size="sm" />
                     </div>
                   </>
