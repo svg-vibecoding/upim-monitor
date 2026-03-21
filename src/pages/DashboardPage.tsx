@@ -122,7 +122,7 @@ export default function DashboardPage() {
 
   const card3Cfg = useMemo(() => {
     const raw = cardsConfig?.find((c) => c.card_key === "card_3");
-    const defaults: Card3Config = { report_id: null };
+    const defaults: Card3Config = { mode: "dynamic", report_id: null };
     return { label: raw?.label || "Completitud General", config: raw ? { ...defaults, ...(raw.config as Card3Config) } : defaults };
   }, [cardsConfig]);
 
@@ -162,9 +162,12 @@ export default function DashboardPage() {
   const { data: rawFocusItems, isLoading: loadingFocus } = useReportCompleteness(activeReport?.id);
 
   // Card 3: report completeness
-  const card3ReportId = card3Cfg.config.report_id;
-  const pimGeneralReport = useMemo(() => reports?.find((r) => r.name === "PIM General"), [reports]);
-  const completenessReportId = card3ReportId || pimGeneralReport?.id || null;
+  const card3Mode = card3Cfg.config.mode || "dynamic";
+  const card3StaticReportId = card3Cfg.config.report_id;
+  // For dynamic mode, use the active focus report; for static, use the configured report
+  const completenessReportId = card3Mode === "dynamic"
+    ? (activeReport?.id || null)
+    : (card3StaticReportId || null);
   const { data: completenessItems } = useReportCompleteness(completenessReportId);
 
   const completenessValue = useMemo(() => {
@@ -214,10 +217,12 @@ export default function DashboardPage() {
   const card2Sec1Pct = card2MainValue > 0 ? Math.round((card2Sec1Value / card2MainValue) * 100) : 0;
   const card2Sec2Pct = card2MainValue > 0 ? Math.round((card2Sec2Value / card2MainValue) * 100) : 0;
 
-  // Card 3 label for progress bar subtitle
-  const completenessReportName = card3ReportId
-    ? reports?.find((r) => r.id === card3ReportId)?.name || "Informe seleccionado"
-    : pimGeneralReport?.name || "Sin informe configurado";
+  // Card 3 label
+  const completenessReportName = card3Mode === "dynamic"
+    ? (activeReport?.name || "Sin informe seleccionado")
+    : (card3StaticReportId
+        ? (reports?.find((r) => r.id === card3StaticReportId)?.name || "Informe seleccionado")
+        : "Sin informe configurado");
 
   return (
     <div className="space-y-8 max-w-6xl">
@@ -419,7 +424,8 @@ export default function DashboardPage() {
                     </p>
                     <div className="flex-1 min-h-6" />
                     <div className="pt-4 border-t border-border">
-                      <p className="text-xs text-muted-foreground mb-2">Progreso {completenessReportName}</p>
+                      <p className="text-xs text-muted-foreground mb-2">Mostrando: {completenessReportName}</p>
+                      <p className="text-[10px] text-muted-foreground/60 mb-2">Completitud promedio</p>
                       <CompletenessBar value={completenessValue} showLabel={false} size="sm" />
                     </div>
                   </>
