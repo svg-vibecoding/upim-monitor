@@ -217,10 +217,12 @@ export default function DashboardPage() {
   const card2Sec1Pct = card2MainValue > 0 ? Math.round((card2Sec1Value / card2MainValue) * 100) : 0;
   const card2Sec2Pct = card2MainValue > 0 ? Math.round((card2Sec2Value / card2MainValue) * 100) : 0;
 
-  // Card 3 label for progress bar subtitle
-  const completenessReportName = card3ReportId
-    ? reports?.find((r) => r.id === card3ReportId)?.name || "Informe seleccionado"
-    : pimGeneralReport?.name || "Sin informe configurado";
+  // Card 3 label
+  const completenessReportName = card3Mode === "dynamic"
+    ? (activeReport?.name || "Sin informe seleccionado")
+    : (card3StaticReportId
+        ? (reports?.find((r) => r.id === card3StaticReportId)?.name || "Informe seleccionado")
+        : "Sin informe configurado");
 
   return (
     <div className="space-y-8 max-w-6xl">
