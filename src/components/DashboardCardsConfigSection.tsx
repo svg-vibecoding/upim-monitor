@@ -209,6 +209,7 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
     if (c3) {
       const cfg = c3.config as Card3Config;
       setC3Label(c3.label);
+      setC3Mode(cfg.mode || (cfg.report_id ? "static" : "dynamic"));
       setC3ReportId(cfg.report_id || NONE);
     }
   }, [cardsConfig]);
