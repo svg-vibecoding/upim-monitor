@@ -432,14 +432,10 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
         <Card>
           <CardContent className="pt-5 space-y-4">
             <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 3 — Completitud</p>
-            <div>
-              <Label className="text-xs">Label del card</Label>
-              <Input value={c3Label} onChange={(e) => setC3Label(e.target.value)} placeholder="Completitud General" className="h-8 text-sm" />
-            </div>
             <Tabs value={c3Mode} onValueChange={(v) => setC3Mode(v as "dynamic" | "static")}>
-              <TabsList className="w-full">
-                <TabsTrigger value="dynamic" className="flex-1 text-xs">Dinámico</TabsTrigger>
-                <TabsTrigger value="static" className="flex-1 text-xs">Estático</TabsTrigger>
+              <TabsList className="w-full bg-muted/60 p-1">
+                <TabsTrigger value="dynamic" className="flex-1 text-xs data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:font-medium data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground">Dinámico</TabsTrigger>
+                <TabsTrigger value="static" className="flex-1 text-xs data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:font-medium data-[state=active]:shadow-sm data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground">Estático</TabsTrigger>
               </TabsList>
               <TabsContent value="dynamic" className="space-y-3 pt-2">
                 <p className="text-xs text-muted-foreground">
@@ -454,6 +450,10 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
                 <p className="text-xs text-muted-foreground">
                   El card siempre muestra el mismo informe, sin importar la navegación del usuario.
                 </p>
+                <div>
+                  <Label className="text-xs">Label del card</Label>
+                  <Input value={c3Label} onChange={(e) => setC3Label(e.target.value)} placeholder="Completitud Promedio" className="h-8 text-sm" />
+                </div>
                 <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
                   <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Dato principal</p>
                   <div>
