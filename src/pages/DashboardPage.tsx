@@ -229,7 +229,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Inicio</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Inicio</h1>
           <p className="text-xs text-muted-foreground mt-1">
             Última actualización: {lastUpdateFormatted}
           </p>
@@ -263,13 +263,13 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="pt-5 pb-5 px-5 flex flex-col">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+                  <span className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
                     {card1Cfg.label}
                   </span>
                   {c1Cfg.main_label && (
                     <>
-                      <span className="text-[10px] text-muted-foreground/50">/</span>
-                      <span className="text-[10px] text-muted-foreground">{c1Cfg.main_label}</span>
+                      <span className="text-xs text-muted-foreground/50">/</span>
+                      <span className="text-xs text-muted-foreground">{c1Cfg.main_label}</span>
                     </>
                   )}
                 </div>
@@ -277,7 +277,7 @@ export default function DashboardPage() {
                   {c1Cfg.main_color !== "none" && (
                     <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", COLOR_DOT_MAP[c1Cfg.main_color])} />
                   )}
-                  <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
+                  <p className="text-4xl font-bold text-foreground tabular-nums leading-none">
                     {card1MainValue.toLocaleString()}
                   </p>
                   {c1Cfg.main_pct && (
@@ -292,7 +292,7 @@ export default function DashboardPage() {
                         {card1Sec1Value.toLocaleString()}
                       </span>
                       {c1Cfg.secondary_1_pct && (
-                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                        <span className="text-xs text-muted-foreground tabular-nums">
                           {card1Sec1Pct}%
                         </span>
                       )}
@@ -303,7 +303,7 @@ export default function DashboardPage() {
                           <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", COLOR_DOT_MAP[c1Cfg.secondary_1_color])} />
                         )}
                         {c1Cfg.secondary_1_label && (
-                          <p className="text-[10px] text-muted-foreground">{c1Cfg.secondary_1_label}</p>
+                          <p className="text-xs text-muted-foreground">{c1Cfg.secondary_1_label}</p>
                         )}
                       </div>
                     )}
@@ -314,7 +314,7 @@ export default function DashboardPage() {
                         {card1Sec2Value.toLocaleString()}
                       </span>
                       {c1Cfg.secondary_2_pct && (
-                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                        <span className="text-xs text-muted-foreground tabular-nums">
                           {card1Sec2Pct}%
                         </span>
                       )}
@@ -325,7 +325,7 @@ export default function DashboardPage() {
                           <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", COLOR_DOT_MAP[c1Cfg.secondary_2_color])} />
                         )}
                         {c1Cfg.secondary_2_label && (
-                          <p className="text-[10px] text-muted-foreground">{c1Cfg.secondary_2_label}</p>
+                          <p className="text-xs text-muted-foreground">{c1Cfg.secondary_2_label}</p>
                         )}
                       </div>
                     )}
@@ -338,13 +338,13 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="pt-5 pb-5 px-5 flex flex-col">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+                  <span className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
                     {card2Cfg.label}
                   </span>
                   {c2Cfg.main_label && (
                     <>
-                      <span className="text-[10px] text-muted-foreground/50">/</span>
-                      <span className="text-[10px] text-muted-foreground">{c2Cfg.main_label}</span>
+                      <span className="text-xs text-muted-foreground/50">/</span>
+                      <span className="text-xs text-muted-foreground">{c2Cfg.main_label}</span>
                     </>
                   )}
                 </div>
@@ -352,7 +352,7 @@ export default function DashboardPage() {
                   {c2Cfg.main_color !== "none" && (
                     <span className={cn("h-2.5 w-2.5 rounded-full shrink-0", COLOR_DOT_MAP[c2Cfg.main_color])} />
                   )}
-                  <p className="text-5xl font-bold text-foreground tabular-nums leading-none">
+                  <p className="text-4xl font-bold text-foreground tabular-nums leading-none">
                     {card2MainValue.toLocaleString()}
                   </p>
                   {c2Cfg.main_pct && (
@@ -367,7 +367,7 @@ export default function DashboardPage() {
                         {card2Sec1Value.toLocaleString()}
                       </span>
                       {c2Cfg.secondary_1_pct && (
-                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                        <span className="text-xs text-muted-foreground tabular-nums">
                           {card2Sec1Pct}%
                         </span>
                       )}
@@ -378,7 +378,7 @@ export default function DashboardPage() {
                           <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", COLOR_DOT_MAP[c2Cfg.secondary_1_color])} />
                         )}
                         {c2Cfg.secondary_1_label && (
-                          <p className="text-[10px] text-muted-foreground">{c2Cfg.secondary_1_label}</p>
+                          <p className="text-xs text-muted-foreground">{c2Cfg.secondary_1_label}</p>
                         )}
                       </div>
                     )}
@@ -389,7 +389,7 @@ export default function DashboardPage() {
                         {card2Sec2Value.toLocaleString()}
                       </span>
                       {c2Cfg.secondary_2_pct && (
-                        <span className="text-[11px] text-muted-foreground tabular-nums">
+                        <span className="text-xs text-muted-foreground tabular-nums">
                           {card2Sec2Pct}%
                         </span>
                       )}
@@ -400,7 +400,7 @@ export default function DashboardPage() {
                           <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", COLOR_DOT_MAP[c2Cfg.secondary_2_color])} />
                         )}
                         {c2Cfg.secondary_2_label && (
-                          <p className="text-[10px] text-muted-foreground">{c2Cfg.secondary_2_label}</p>
+                          <p className="text-xs text-muted-foreground">{c2Cfg.secondary_2_label}</p>
                         )}
                       </div>
                     )}
@@ -413,19 +413,19 @@ export default function DashboardPage() {
             <Card>
               <CardContent className="pt-5 pb-5 px-5 flex flex-col">
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
+                  <span className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
                     {card3Cfg.config.mode === 'dynamic' ? 'MOSTRANDO' : card3Cfg.label}
                   </span>
                   {card3Cfg.config.mode === 'dynamic' && completenessReportName && (
                     <>
-                      <span className="text-[10px] text-muted-foreground/50">/</span>
-                      <span className="text-[10px] text-muted-foreground">{completenessReportName}</span>
+                      <span className="text-xs text-muted-foreground/50">/</span>
+                      <span className="text-xs text-muted-foreground">{completenessReportName}</span>
                     </>
                   )}
                 </div>
                 {completenessValue !== null ? (
                   <>
-                    <p className="text-5xl font-bold text-foreground tabular-nums leading-none mt-3">
+                    <p className="text-4xl font-bold text-foreground tabular-nums leading-none mt-3">
                       {completenessValue}%
                     </p>
                     <div className="flex-1 min-h-6" />
@@ -437,7 +437,7 @@ export default function DashboardPage() {
                   </>
                 ) : (
                   <>
-                    <p className="text-5xl font-bold text-muted-foreground/30 tabular-nums leading-none mt-3">—</p>
+                    <p className="text-4xl font-bold text-muted-foreground/30 tabular-nums leading-none mt-3">—</p>
                     <div className="flex-1 min-h-6" />
                     <div className="pt-4 border-t border-border">
                       <p className="text-xs text-muted-foreground">Informe en proceso…</p>
@@ -471,7 +471,7 @@ export default function DashboardPage() {
                       <span className={`h-2.5 w-2.5 rounded-full ${severityDot(s)} ${
                         severityFilter === s ? "ring-2 ring-offset-1 ring-foreground/20" : ""
                       }`} />
-                      <span className="text-[10px] tabular-nums text-muted-foreground font-medium">
+                      <span className="text-xs tabular-nums text-muted-foreground font-medium">
                           {severityCounts[s]}
                         </span>
                     </button>
@@ -584,7 +584,7 @@ export default function DashboardPage() {
                       >
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground">{r.name}</p>
-                          <p className="text-[11px] text-muted-foreground line-clamp-1">{r.description}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{r.description}</p>
                         </div>
                         <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       </div>

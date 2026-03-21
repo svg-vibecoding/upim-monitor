@@ -168,7 +168,7 @@ export default function InsightsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Insights de uso</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Insights de uso</h1>
           <p className="text-xs text-muted-foreground mt-1">Analítica básica de adopción y consumo de la plataforma</p>
         </div>
         <div className="flex gap-1 bg-muted rounded-md p-0.5">
@@ -206,7 +206,7 @@ export default function InsightsPage() {
             <KPICard icon={Download} label="Descargas" value={kpis.totalDownloads} />
             <Card className="col-span-2 md:col-span-2">
               <CardContent className="pt-4 pb-4 px-4">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Informe más consultado</p>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Informe más consultado</p>
                 {kpis.topReport ? (
                   <div className="flex items-baseline gap-2">
                     <p className="text-lg font-bold text-foreground truncate">{kpis.topReport.name}</p>
@@ -316,9 +316,9 @@ function KPICard({ icon: Icon, label, value }: { icon: React.ElementType; label:
       <CardContent className="pt-4 pb-4 px-4">
         <div className="flex items-center gap-2 mb-1">
           <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-          <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{label}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
         </div>
-        <p className="text-2xl font-bold text-foreground tabular-nums">{value}</p>
+        <p className="text-4xl font-bold text-foreground tabular-nums">{value}</p>
       </CardContent>
     </Card>
   );

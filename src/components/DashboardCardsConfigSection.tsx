@@ -82,7 +82,7 @@ function DataPointConfig({
 }) {
   return (
     <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
-      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">{title}</p>
+      <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">{title}</p>
       <div>
         <Label className="text-xs">Valor</Label>
         <Select value={valueId} onValueChange={onValueChange}>
@@ -313,7 +313,7 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
         {/* ── Card 1: Universo total ── */}
         <Card>
           <CardContent className="pt-5 space-y-4">
-            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 1 — Universo total</p>
+            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">Card 1 — Universo total</p>
             <div>
               <Label className="text-xs">Label del card</Label>
               <Input value={c1Label} onChange={(e) => setC1Label(e.target.value)} placeholder="Catálogo" className="h-8 text-sm" />
@@ -370,7 +370,7 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
         {/* ── Card 2: Universo configurable ── */}
         <Card>
           <CardContent className="pt-5 space-y-4">
-            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 2 — Universo configurable</p>
+            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">Card 2 — Universo configurable</p>
             <div>
               <Label className="text-xs">Label del card</Label>
               <Input value={c2Label} onChange={(e) => setC2Label(e.target.value)} placeholder="Base Digital" className="h-8 text-sm" />
@@ -431,7 +431,7 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
         {/* ── Card 3: Completitud ── */}
         <Card>
           <CardContent className="pt-5 space-y-4">
-            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 3 — Completitud</p>
+            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">Card 3 — Completitud</p>
             <Tabs value={c3Mode} onValueChange={(v) => setC3Mode(v as "dynamic" | "static")}>
               <TabsList className="w-full bg-muted p-1 rounded-md">
                 <TabsTrigger value="dynamic" className="flex-1 text-xs rounded-sm data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:font-medium data-[state=active]:shadow-none data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground">Dinámico</TabsTrigger>
@@ -442,7 +442,7 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
                   El card refleja automáticamente el informe de Focos de atención que el usuario tiene seleccionado en el dashboard.
                 </p>
                 <div className="p-3 rounded-md border border-border/50 bg-muted/30">
-                  <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">Dato principal</p>
+                  <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider mb-1">Dato principal</p>
                   <p className="text-xs text-muted-foreground">Mostrando: según el informe seleccionado en Focos de atención</p>
                 </div>
               </TabsContent>
@@ -455,7 +455,7 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
                   <Input value={c3Label} onChange={(e) => setC3Label(e.target.value)} placeholder="Completitud Promedio" className="h-8 text-sm" />
                 </div>
                 <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
-                  <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Dato principal</p>
+                  <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">Dato principal</p>
                   <div>
                     <Label className="text-xs">Informe fijo</Label>
                     <Select value={c3ReportId} onValueChange={setC3ReportId}>

@@ -206,7 +206,7 @@ export default function ReportDetailPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-foreground">{report.name}</h1>
+          <h1 className="text-2xl font-semibold text-foreground">{report.name}</h1>
           <p className="text-sm text-muted-foreground">{report.universe}</p>
         </div>
         <Button variant="outline" onClick={handleDownload} className="gap-2">
@@ -216,8 +216,8 @@ export default function ReportDetailPage() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{totalSKUs.toLocaleString()}</p></CardContent></Card>
-        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{attrResults.length}{totalEvaluableAttrs > 0 && <span className="text-sm font-normal text-muted-foreground"> de {totalEvaluableAttrs}</span>}</p></CardContent></Card>
+        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-4xl font-bold tabular-nums">{totalSKUs.toLocaleString()}</p></CardContent></Card>
+        <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-4xl font-bold tabular-nums">{attrResults.length}{totalEvaluableAttrs > 0 && <span className="text-sm font-normal text-muted-foreground"> de {totalEvaluableAttrs}</span>}</p></CardContent></Card>
         {(() => {
           const focusCount = attrResults.filter((a) => a.completeness < 50).length;
           const focusPct = attrResults.length > 0 ? Math.round((focusCount / attrResults.length) * 100) : 0;
@@ -227,16 +227,16 @@ export default function ReportDetailPage() {
               <CardContent className="pt-4 pb-4 px-4 relative z-10">
                 <p className="text-xs text-muted-foreground mb-1">Atributos foco de atención</p>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-xl font-bold">{focusCount}</span>
+                  <span className="text-4xl font-bold tabular-nums">{focusCount}</span>
                   <span className="text-xs text-muted-foreground">de {attrResults.length}</span>
-                  <span className="text-xl font-bold">{focusPct}%</span>
+                  <span className="text-4xl font-bold tabular-nums">{focusPct}%</span>
                 </div>
               </CardContent>
               <AlertTriangle className={`absolute bottom-2 right-2 h-12 w-12 ${fc.text} opacity-[0.12]`} />
             </Card>
           );
         })()}
-        <Card className={`relative overflow-hidden border-0 ${severityBgColor(avgCompleteness)}`}><CardContent className="pt-4 pb-4 px-4 relative z-10"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className={`text-xl font-bold ${severityTextColor(avgCompleteness)}`}>{avgCompleteness}%</p></CardContent><CompletenessCircle value={avgCompleteness} /></Card>
+        <Card className={`relative overflow-hidden border-0 ${severityBgColor(avgCompleteness)}`}><CardContent className="pt-4 pb-4 px-4 relative z-10"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className={`text-4xl font-bold tabular-nums ${severityTextColor(avgCompleteness)}`}>{avgCompleteness}%</p></CardContent><CompletenessCircle value={avgCompleteness} /></Card>
       </div>
 
       {/* Attribute table */}

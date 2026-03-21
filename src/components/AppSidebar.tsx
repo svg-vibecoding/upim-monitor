@@ -36,7 +36,7 @@ export function AppSidebar() {
           {!collapsed && (
             <div className="mb-1">
               <img src={upimLogo} alt="UPIM" className="h-5 w-auto" />
-              <p className="text-[11px] text-sidebar-muted leading-tight mt-1">Monitor de Completitud</p>
+              <p className="text-xs text-sidebar-muted leading-tight mt-1">Monitor de Completitud</p>
             </div>
           )}
           {collapsed && (
@@ -70,7 +70,7 @@ export function AppSidebar() {
         {user?.role === "usuario_pro" && (
           <SidebarGroup>
             {!collapsed && (
-              <p className="px-4 pt-2 pb-1 text-[11px] font-medium text-sidebar-muted uppercase tracking-wider">Pro</p>
+              <p className="px-4 pt-2 pb-1 text-xs font-medium text-sidebar-muted uppercase tracking-wider">Pro</p>
             )}
             <SidebarGroupContent>
               <SidebarMenu>

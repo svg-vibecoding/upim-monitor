@@ -715,7 +715,7 @@ export default function AdminPage() {
 
   return (
     <div className="space-y-6 max-w-5xl">
-      <h1 className="text-2xl font-bold text-foreground">Administración</h1>
+      <h1 className="text-2xl font-semibold text-foreground">Administración</h1>
 
       <Tabs defaultValue="pim-upload">
         <TabsList>
@@ -783,23 +783,23 @@ export default function AdminPage() {
                     <>
                       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-2">
                         <div className="text-center p-2 rounded-md bg-muted">
-                          <div className="text-lg font-bold text-foreground">{csvResult.totalRows}</div>
+                          <div className="text-lg font-bold tabular-nums text-foreground">{csvResult.totalRows}</div>
                           <div className="text-xs text-muted-foreground">Filas en archivo</div>
                         </div>
                         <div className="text-center p-2 rounded-md bg-muted">
-                          <div className="text-lg font-bold text-foreground">{csvResult.uniqueRows}</div>
+                          <div className="text-lg font-bold tabular-nums text-foreground">{csvResult.uniqueRows}</div>
                           <div className="text-xs text-muted-foreground">Códigos únicos</div>
                         </div>
                         <div className="text-center p-2 rounded-md bg-muted">
-                          <div className="text-lg font-bold text-success">{csvResult.inserted}</div>
+                          <div className="text-lg font-bold tabular-nums text-success">{csvResult.inserted}</div>
                           <div className="text-xs text-muted-foreground">Insertados</div>
                         </div>
                         <div className="text-center p-2 rounded-md bg-muted">
-                          <div className="text-lg font-bold text-primary">{csvResult.updated}</div>
+                          <div className="text-lg font-bold tabular-nums text-primary">{csvResult.updated}</div>
                           <div className="text-xs text-muted-foreground">Actualizados</div>
                         </div>
                         <div className="text-center p-2 rounded-md bg-muted">
-                          <div className="text-lg font-bold text-destructive">{csvResult.errors}</div>
+                          <div className="text-lg font-bold tabular-nums text-destructive">{csvResult.errors}</div>
                           <div className="text-xs text-muted-foreground">Errores</div>
                         </div>
                       </div>
@@ -853,7 +853,7 @@ export default function AdminPage() {
                           <ul className="text-xs text-destructive list-none mt-1 space-y-0.5">
                             {missingProtected.map((p) => (
                               <li key={p.attr} className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-[10px] shrink-0">{p.type}</Badge>
+                                <Badge variant="outline" className="text-xs shrink-0">{p.type}</Badge>
                                 <span className="font-medium">{p.attr}</span>
                                 <span className="text-muted-foreground">— {p.reason}</span>
                               </li>
@@ -1057,11 +1057,11 @@ export default function AdminPage() {
                               hour: "2-digit", minute: "2-digit",
                             })}
                           </TableCell>
-                          <TableCell className="text-right text-sm">{entry.total_rows}</TableCell>
-                          <TableCell className="text-right text-sm">{entry.unique_rows}</TableCell>
-                          <TableCell className="text-right text-sm text-success">{entry.inserted}</TableCell>
-                          <TableCell className="text-right text-sm text-primary">{entry.updated}</TableCell>
-                          <TableCell className="text-right text-sm text-destructive">{entry.errors}</TableCell>
+                          <TableCell className="text-right text-sm tabular-nums">{entry.total_rows}</TableCell>
+                          <TableCell className="text-right text-sm tabular-nums">{entry.unique_rows}</TableCell>
+                          <TableCell className="text-right text-sm tabular-nums text-success">{entry.inserted}</TableCell>
+                          <TableCell className="text-right text-sm tabular-nums text-primary">{entry.updated}</TableCell>
+                          <TableCell className="text-right text-sm tabular-nums text-destructive">{entry.errors}</TableCell>
                           <TableCell>
                             {/* Empty - actions removed for V1 */}
                           </TableCell>
@@ -1078,7 +1078,7 @@ export default function AdminPage() {
         {/* ATTRIBUTES */}
         <TabsContent value="attributes" className="space-y-4 pt-4">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Atributos</h2>
+            <h2 className="text-lg font-semibold text-foreground">Atributos</h2>
             <p className="text-sm text-muted-foreground mt-1">Los atributos son las características que describen un producto en el catálogo: desde datos de identificación hasta información comercial, logística o digital. Cada atributo puede evaluarse en los informes para medir su completitud. La app los clasifica según el uso que se hace de ellos: base, funcional, dimensión o general.</p>
           </div>
           {attrsLoading ? (
@@ -1206,7 +1206,7 @@ export default function AdminPage() {
         {/* REPORTS - now with two sections */}
         <TabsContent value="reports" className="space-y-6 pt-4">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Informes</h2>
+            <h2 className="text-lg font-semibold text-foreground">Informes</h2>
             <p className="text-sm text-muted-foreground mt-1">Configura los informes predefinidos disponibles para todos los usuarios y los indicadores del dashboard. Los informes predefinidos definen un universo de productos y los atributos a evaluar. Los cards del dashboard muestran los indicadores principales de la base.</p>
           </div>
           {attrsLoading || reportsLoading ? (
@@ -1320,7 +1320,7 @@ export default function AdminPage() {
         {/* DIMENSIONS */}
         <TabsContent value="dimensions" className="space-y-4 pt-4">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Dimensiones</h2>
+            <h2 className="text-lg font-semibold text-foreground">Dimensiones</h2>
             <p className="text-sm text-muted-foreground mt-1">Una dimensión es un atributo del catálogo cuyos valores únicos se usan para distribuir los resultados de un informe. Por ejemplo, si defines 'Categoría' como dimensión, los informes podrán mostrar la completitud por cada categoría: Herramientas, Seguridad Industrial, Tornillería, etc.</p>
           </div>
           <div className="flex justify-end">
@@ -1430,7 +1430,7 @@ export default function AdminPage() {
         {/* OPERATIONS */}
         <TabsContent value="operations" className="space-y-4 pt-4">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Operaciones</h2>
+            <h2 className="text-lg font-semibold text-foreground">Operaciones</h2>
             <p className="text-sm text-muted-foreground mt-1">Una operación es una regla o conjunto de reglas que filtra productos del catálogo según condiciones definidas. Las operaciones se usan para definir el universo de productos de un informe y para alimentar los indicadores del dashboard.</p>
           </div>
           <div className="flex justify-end">
@@ -1469,7 +1469,7 @@ export default function AdminPage() {
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <span className="font-medium text-foreground">{op.name}</span>
-                            <Badge variant="outline" className="text-[10px]">{op.conditions.length} cond.</Badge>
+                            <Badge variant="outline" className="text-xs">{op.conditions.length} cond.</Badge>
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{op.description || "—"}</TableCell>
