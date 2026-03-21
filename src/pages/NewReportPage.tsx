@@ -42,12 +42,12 @@ const AttributeCheckboxItem = memo(({ attr, classification, checked, onToggle }:
       <Checkbox checked={checked} onCheckedChange={() => onToggle(attr)} />
       <span className="truncate">{attr}</span>
       {showTypeBadge && (
-        <Badge variant="outline" className="text-[10px] shrink-0">
+        <Badge variant="outline" className="text-xs shrink-0">
           {classification.type}
         </Badge>
       )}
       {nonEvaluable && (
-        <Badge variant="secondary" className="text-[10px] shrink-0">
+        <Badge variant="secondary" className="text-xs shrink-0">
           no evaluable
         </Badge>
       )}
@@ -367,7 +367,7 @@ export default function NewReportPage() {
       {step === "config" && (
         <>
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold text-foreground">Crear nuevo informe</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Crear nuevo informe</h1>
           <p className="text-sm text-muted-foreground">Un informe mide qué tan completa está la información de un conjunto de productos (universo) en un grupo de atributos (características del producto) definidos. Selecciona el universo de productos que quieres analizar y los atributos relevantes para medirlo.</p>
         </div>
         <div className="space-y-4">
@@ -375,8 +375,8 @@ export default function NewReportPage() {
           <Collapsible open={step1Open} onOpenChange={setStep1Open}>
             <div className="relative pt-3">
               <div className="absolute top-0 right-3 z-10 flex items-center gap-1.5">
-                <span className="text-[11px] text-muted-foreground font-medium">1 de 2</span>
-                <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-[11px] font-bold transition-colors ${step1Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
+                <span className="text-xs text-muted-foreground font-medium">1 de 2</span>
+                <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-xs font-bold transition-colors ${step1Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
                   {step1Complete ? <Check className="h-3.5 w-3.5" /> : "1"}
                 </span>
               </div>
@@ -427,8 +427,8 @@ export default function NewReportPage() {
           <Collapsible open={step2Open} onOpenChange={setStep2Open}>
             <div className="relative pt-3">
               <div className="absolute top-0 right-3 z-10 flex items-center gap-1.5">
-                <span className="text-[11px] text-muted-foreground font-medium">2 de 2</span>
-                <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-[11px] font-bold transition-colors ${step2Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
+                <span className="text-xs text-muted-foreground font-medium">2 de 2</span>
+                <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full border-2 text-xs font-bold transition-colors ${step2Complete ? "border-green-500 bg-green-500 text-white" : "border-muted-foreground/30 bg-card text-muted-foreground"}`}>
                   {step2Complete ? <Check className="h-3.5 w-3.5" /> : "2"}
                 </span>
               </div>
@@ -482,7 +482,7 @@ export default function NewReportPage() {
                     <label className="flex items-center gap-2 py-1 px-1 text-sm rounded opacity-70">
                       <Checkbox checked={true} disabled />
                       <span className="truncate">Código Jaivaná</span>
-                      <Badge variant="outline" className="text-[10px] ml-auto shrink-0">siempre visible</Badge>
+                      <Badge variant="outline" className="text-xs ml-auto shrink-0">siempre visible</Badge>
                     </label>
                     {filteredAttrsWithClassification.map(({ attr, classification }) => (
                       <AttributeCheckboxItem
@@ -545,7 +545,7 @@ export default function NewReportPage() {
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-foreground">Informe personalizado</h1>
+              <h1 className="text-2xl font-semibold text-foreground">Informe personalizado</h1>
               <p className="text-sm text-muted-foreground">{universeLabel}</p>
             </div>
             <Button variant="outline" onClick={handleDownload} className="gap-2">
@@ -555,8 +555,8 @@ export default function NewReportPage() {
 
           {/* Summary cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-xl font-bold">{records.length.toLocaleString()}</p></CardContent></Card>
-            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-xl font-bold">{selectedAttrs.length}{totalEvaluableAttrs > 0 && <span className="text-sm font-normal text-muted-foreground"> de {totalEvaluableAttrs}</span>}</p></CardContent></Card>
+            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">SKUs evaluados</p><p className="text-4xl font-bold tabular-nums">{records.length.toLocaleString()}</p></CardContent></Card>
+            <Card><CardContent className="pt-4 pb-4 px-4"><p className="text-xs text-muted-foreground">Atributos evaluados</p><p className="text-4xl font-bold tabular-nums">{selectedAttrs.length}{totalEvaluableAttrs > 0 && <span className="text-sm font-normal text-muted-foreground"> de {totalEvaluableAttrs}</span>}</p></CardContent></Card>
             {(() => {
               const focusCount = attrResults.filter((a) => a.completeness < 50).length;
               const focusPct = attrResults.length > 0 ? Math.round((focusCount / attrResults.length) * 100) : 0;
@@ -566,16 +566,16 @@ export default function NewReportPage() {
                   <CardContent className="pt-4 pb-4 px-4 relative z-10">
                     <p className="text-xs text-muted-foreground mb-1">Atributos foco de atención</p>
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-xl font-bold">{focusCount}</span>
+                      <span className="text-4xl font-bold tabular-nums">{focusCount}</span>
                       <span className="text-xs text-muted-foreground">de {attrResults.length}</span>
-                      <span className="text-xl font-bold">{focusPct}%</span>
+                      <span className="text-4xl font-bold tabular-nums">{focusPct}%</span>
                     </div>
                   </CardContent>
                   <AlertTriangle className={`absolute bottom-2 right-2 h-12 w-12 ${fc.text} opacity-[0.12]`} />
                 </Card>
               );
             })()}
-            <Card className={`relative overflow-hidden border-0 ${severityBgColor(avgCompleteness)}`}><CardContent className="pt-4 pb-4 px-4 relative z-10"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className={`text-xl font-bold ${severityTextColor(avgCompleteness)}`}>{avgCompleteness}%</p></CardContent><CompletenessCircle value={avgCompleteness} /></Card>
+            <Card className={`relative overflow-hidden border-0 ${severityBgColor(avgCompleteness)}`}><CardContent className="pt-4 pb-4 px-4 relative z-10"><p className="text-xs text-muted-foreground">Completitud promedio</p><p className={`text-4xl font-bold tabular-nums ${severityTextColor(avgCompleteness)}`}>{avgCompleteness}%</p></CardContent><CompletenessCircle value={avgCompleteness} /></Card>
           </div>
 
           <Card>

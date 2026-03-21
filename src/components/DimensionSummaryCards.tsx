@@ -22,7 +22,7 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
       <Card className="relative overflow-hidden">
         <CardContent className="pt-4 pb-4 px-4 relative z-10">
           <p className="text-xs text-muted-foreground mb-1">Grupos evaluados</p>
-          <p className="text-3xl font-bold">{realGroups.length}</p>
+          <p className="text-4xl font-bold tabular-nums">{realGroups.length}</p>
           <p className="text-xs font-semibold truncate mt-0.5">Valores únicos</p>
         </CardContent>
         <Layers className="absolute bottom-2 right-2 h-12 w-12 text-primary/[0.06]" />
@@ -33,11 +33,11 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
           <p className="text-xs text-muted-foreground mb-1">Grupo con mejor completitud</p>
           {best ? (
             <>
-              <p className={`text-3xl font-bold ${severityTextColor(best.completeness)}`}>{best.completeness}%</p>
+              <p className={`text-4xl font-bold tabular-nums ${severityTextColor(best.completeness)}`}>{best.completeness}%</p>
               <p className="text-xs font-semibold truncate mt-0.5">{best.value}</p>
             </>
           ) : (
-            <p className="text-xl text-muted-foreground">—</p>
+            <p className="text-4xl text-muted-foreground">—</p>
           )}
         </CardContent>
       </Card>
@@ -47,11 +47,11 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
           <p className="text-xs text-muted-foreground mb-1">Grupo a mejorar</p>
           {worst ? (
             <>
-              <p className={`text-3xl font-bold ${severityTextColor(worst.completeness)}`}>{worst.completeness}%</p>
+              <p className={`text-4xl font-bold tabular-nums ${severityTextColor(worst.completeness)}`}>{worst.completeness}%</p>
               <p className="text-xs font-semibold truncate mt-0.5">{worst.value}</p>
             </>
           ) : (
-            <p className="text-xl text-muted-foreground">—</p>
+            <p className="text-4xl text-muted-foreground">—</p>
           )}
         </CardContent>
       </Card>
@@ -59,7 +59,7 @@ export function DimensionSummaryCards({ dimensionResults }: DimensionSummaryCard
       <Card className={`relative overflow-hidden border-0 ${severityBgColor(avgCompleteness)}`}>
         <CardContent className="pt-4 pb-4 px-4 relative z-10">
           <p className="text-xs text-muted-foreground mb-1">Completitud promedio de los grupos</p>
-          <p className={`text-3xl font-bold ${severityTextColor(avgCompleteness)}`}>{avgCompleteness}%</p>
+          <p className={`text-4xl font-bold tabular-nums ${severityTextColor(avgCompleteness)}`}>{avgCompleteness}%</p>
         </CardContent>
         <CompletenessCircle value={avgCompleteness} />
       </Card>

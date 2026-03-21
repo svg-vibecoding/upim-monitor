@@ -46,18 +46,18 @@ function ReportCard({
       <CardContent className="space-y-2 pt-2">
         <div className="space-y-0.5">
           <p className="text-xs text-muted-foreground">
-            <span className="font-semibold">{isLoading ? "…" : totalSKUs.toLocaleString()}</span>
+            <span className="font-semibold tabular-nums">{isLoading ? "…" : totalSKUs.toLocaleString()}</span>
             {" "}SKUs · {universeLabel}
           </p>
           <p className="text-xs text-muted-foreground">
-            <span className="font-semibold">{evaluatedAttrs}</span>
+            <span className="font-semibold tabular-nums">{evaluatedAttrs}</span>
             {" "}Atributos evaluados{totalEvaluableAttrs > 0 && <span> de {totalEvaluableAttrs}</span>}
           </p>
         </div>
         <div>
           <div className="flex justify-between items-baseline text-xs mb-0.5">
             <span className="text-muted-foreground">Completitud promedio</span>
-            <span className="text-base font-semibold text-foreground">{isLoading ? "…" : `${avgCompleteness}%`}</span>
+            <span className="text-base font-semibold tabular-nums text-foreground">{isLoading ? "…" : `${avgCompleteness}%`}</span>
           </div>
           <CompletenessBar value={avgCompleteness} showLabel={false} />
         </div>
@@ -84,7 +84,7 @@ export default function ReportsListPage() {
   return (
     <div className="space-y-6 max-w-5xl">
       <div className="space-y-1">
-        <h1 className="text-2xl font-bold text-foreground">Informes predefinidos</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Informes predefinidos</h1>
         <p className="text-sm text-muted-foreground">
           Cada informe mide qué tan completa está la información de un conjunto de productos (universo) en un grupo de atributos (características del producto) definidos. Cada uno representa la selección de un universo y los atributos relevantes para analizarlo.
         </p>
