@@ -428,31 +428,49 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
           </CardContent>
         </Card>
 
-        {/* ── Card 3: Progreso ── */}
+        {/* ── Card 3: Completitud ── */}
         <Card>
           <CardContent className="pt-5 space-y-4">
-            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 3 — Progreso</p>
+            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 3 — Completitud</p>
             <div>
               <Label className="text-xs">Label del card</Label>
               <Input value={c3Label} onChange={(e) => setC3Label(e.target.value)} placeholder="Completitud General" className="h-8 text-sm" />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Dato principal</p>
-                <div>
-                  <Label className="text-xs">Informe para completitud</Label>
-                  <Select value={c3ReportId} onValueChange={setC3ReportId}>
-                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={NONE}>(PIM General por defecto)</SelectItem>
-                      {reports.map((r) => (
-                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            <Tabs value={c3Mode} onValueChange={(v) => setC3Mode(v as "dynamic" | "static")}>
+              <TabsList className="w-full">
+                <TabsTrigger value="dynamic" className="flex-1 text-xs">Dinámico</TabsTrigger>
+                <TabsTrigger value="static" className="flex-1 text-xs">Estático</TabsTrigger>
+              </TabsList>
+              <TabsContent value="dynamic" className="space-y-3 pt-2">
+                <p className="text-xs text-muted-foreground">
+                  El card refleja automáticamente el informe de Focos de atención que el usuario tiene seleccionado en el dashboard.
+                </p>
+                <div className="p-3 rounded-md border border-border/50 bg-muted/30">
+                  <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">Dato principal</p>
+                  <p className="text-xs text-muted-foreground">Mostrando: según el informe seleccionado en Focos de atención</p>
                 </div>
-              </div>
-            </div>
+              </TabsContent>
+              <TabsContent value="static" className="space-y-3 pt-2">
+                <p className="text-xs text-muted-foreground">
+                  El card siempre muestra el mismo informe, sin importar la navegación del usuario.
+                </p>
+                <div className="space-y-2 p-3 rounded-md border border-border/50 bg-muted/30">
+                  <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Dato principal</p>
+                  <div>
+                    <Label className="text-xs">Informe fijo</Label>
+                    <Select value={c3ReportId} onValueChange={setC3ReportId}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={NONE}>(Seleccionar informe)</SelectItem>
+                        {reports.map((r) => (
+                          <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </TabsContent>
+            </Tabs>
             <div className="flex justify-end">
               <Button onClick={saveCard3} size="sm" className="gap-2" disabled={c3Saving}>
                 {c3Saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
