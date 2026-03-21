@@ -278,7 +278,10 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
       await updateCard.mutateAsync({
         cardKey: "card_3",
         label: c3Label,
-        config: { report_id: c3ReportId === NONE ? null : c3ReportId },
+        config: {
+          mode: c3Mode,
+          report_id: c3Mode === "static" && c3ReportId !== NONE ? c3ReportId : null,
+        },
       });
       toast.success("Card 3 guardado");
     } catch (e: any) {
