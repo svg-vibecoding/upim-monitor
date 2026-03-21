@@ -1,36 +1,18 @@
 
 
-## Plan: Adjust KPI card color system
+## Plan: Ajustar encabezado del Card 3 según modo
 
-### Changes
+### Cambio único en `src/pages/DashboardPage.tsx`
 
-#### 1. `src/lib/severity.ts` — Add `severityBgColor` helper
+**Líneas 415-418** — Reemplazar el encabezado estático `{card3Cfg.label}` por lógica condicional:
 
-New function mapping standard severity → soft background class (bg-destructive/10, bg-warning/10, bg-caution/10, bg-good/10, bg-success/10). Used by completeness cards.
+- **Modo dinámico**: Mostrar `"MOSTRANDO: {completenessReportName}"` (nombre del informe activo en Focos de atención)
+- **Modo estático**: Mostrar `{card3Cfg.label}` (el label guardado en `dashboard_cards_config`, default "Completitud Promedio")
 
-#### 2. `src/pages/ReportDetailPage.tsx` — Card 3 "Atributos foco" + Card 4 "Completitud promedio"
+Además, **línea 126** — cambiar el default del label de `"Completitud General"` a `"Completitud Promedio"`.
 
-**Card 3 (lines 226–236)**: Remove dynamic bg and border-0. Use default Card (white bg). Change text colors of focusCount, "de Y", and focusPct to foreground/black. Keep AlertTriangle with `fc.text` color and tenue opacity.
+**Línea 427** — En modo dinámico, la línea "Mostrando: {nombre}" ya queda redundante con el encabezado. Ocultarla en modo dinámico para no duplicar información.
 
-**Card 4 (line 239)**: Add dynamic soft bg using `severityBgColor(avgCompleteness)` and `border-0`. Keep CompletenessCircle and text color as-is.
-
-#### 3. `src/pages/NewReportPage.tsx` — Same changes as ReportDetailPage
-
-**Card 3 (lines 565–575)**: White bg, black text, AlertTriangle keeps dynamic color.
-
-**Card 4 (line 578)**: Dynamic soft bg from severity.
-
-#### 4. `src/components/DimensionSummaryCards.tsx`
-
-**Card "Mejor completitud" (line 45)**: Rename label to "Grupo con mejor completitud". Change `text-success` to `severityTextColor(best.completeness)`.
-
-**Card "Grupo a mejorar" (line 62)**: Change `text-destructive` to `severityTextColor(worst.completeness)`.
-
-**Card "Completitud promedio de los grupos" (line 71)**: Add dynamic soft bg using `severityBgColor(avgCompleteness)` and `border-0`.
-
-### Files modified
-- `src/lib/severity.ts`
-- `src/pages/ReportDetailPage.tsx`
-- `src/pages/NewReportPage.tsx`
-- `src/components/DimensionSummaryCards.tsx`
+### Archivos
+- `src/pages/DashboardPage.tsx` (3 ediciones puntuales)
 
