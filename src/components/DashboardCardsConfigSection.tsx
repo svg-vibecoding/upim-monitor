@@ -434,8 +434,8 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
             <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Card 3 — Completitud</p>
             <Tabs value={c3Mode} onValueChange={(v) => setC3Mode(v as "dynamic" | "static")}>
               <TabsList className="w-full bg-muted p-1 rounded-md">
-                <TabsTrigger value="dynamic" className="flex-1 text-xs rounded-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-medium data-[state=active]:shadow-none data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground">Dinámico</TabsTrigger>
-                <TabsTrigger value="static" className="flex-1 text-xs rounded-sm data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:font-medium data-[state=active]:shadow-none data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground">Estático</TabsTrigger>
+                <TabsTrigger value="dynamic" className="flex-1 text-xs rounded-sm data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:font-medium data-[state=active]:shadow-none data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground">Dinámico</TabsTrigger>
+                <TabsTrigger value="static" className="flex-1 text-xs rounded-sm data-[state=active]:bg-secondary data-[state=active]:text-secondary-foreground data-[state=active]:font-medium data-[state=active]:shadow-none data-[state=inactive]:bg-transparent data-[state=inactive]:text-muted-foreground">Estático</TabsTrigger>
               </TabsList>
               <TabsContent value="dynamic" className="space-y-3 pt-2">
                 <p className="text-xs text-muted-foreground">
