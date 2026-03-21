@@ -123,7 +123,7 @@ export default function DashboardPage() {
   const card3Cfg = useMemo(() => {
     const raw = cardsConfig?.find((c) => c.card_key === "card_3");
     const defaults: Card3Config = { mode: "dynamic", report_id: null };
-    return { label: raw?.label || "Completitud General", config: raw ? { ...defaults, ...(raw.config as Card3Config) } : defaults };
+    return { label: raw?.label || "Completitud Promedio", config: raw ? { ...defaults, ...(raw.config as Card3Config) } : defaults };
   }, [cardsConfig]);
 
   // Card 1 operation counts (skip fetch when value is "total")
@@ -414,7 +414,7 @@ export default function DashboardPage() {
               <CardContent className="pt-5 pb-5 px-5 flex flex-col">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
-                    {card3Cfg.label}
+                    {card3Cfg.config.mode === 'dynamic' ? `MOSTRANDO: ${completenessReportName}` : card3Cfg.label}
                   </span>
                 </div>
                 {completenessValue !== null ? (
@@ -424,7 +424,7 @@ export default function DashboardPage() {
                     </p>
                     <div className="flex-1 min-h-6" />
                     <div className="pt-4 border-t border-border">
-                      <p className="text-xs text-muted-foreground mb-2">Mostrando: {completenessReportName}</p>
+                      {card3Cfg.config.mode !== 'dynamic' && <p className="text-xs text-muted-foreground mb-2">Mostrando: {completenessReportName}</p>}
                       <p className="text-[10px] text-muted-foreground/60 mb-2">Completitud promedio</p>
                       <CompletenessBar value={completenessValue} showLabel={false} size="sm" />
                     </div>
