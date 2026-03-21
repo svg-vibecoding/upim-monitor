@@ -164,6 +164,7 @@ export function DashboardCardsConfigSection({ operations, reports }: Props) {
 
   // ── Card 3 state ──
   const [c3Label, setC3Label] = useState("");
+  const [c3Mode, setC3Mode] = useState<"dynamic" | "static">("dynamic");
   const [c3ReportId, setC3ReportId] = useState(NONE);
   const [c3Saving, setC3Saving] = useState(false);
 
