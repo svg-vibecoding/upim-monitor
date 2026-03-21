@@ -49,3 +49,27 @@ export function focusSeverityColors(pct: number): { bg: string; text: string; la
   if (pct < 90) return { bg: "bg-warning/10", text: "text-warning", label: "text-muted-foreground" };
   return { bg: "bg-destructive/10", text: "text-destructive", label: "text-muted-foreground" };
 }
+
+/** Returns soft background class for standard completeness severity */
+export function severityBgColor(pct: number): string {
+  const s = getSeverity(pct);
+  switch (s) {
+    case "critical": return "bg-destructive/10";
+    case "low": return "bg-warning/10";
+    case "medium": return "bg-caution/10";
+    case "good": return "bg-good/10";
+    case "excellent": return "bg-success/10";
+  }
+}
+
+/** Returns text color class for standard completeness severity */
+export function severityTextColor(pct: number): string {
+  const s = getSeverity(pct);
+  switch (s) {
+    case "critical": return "text-destructive";
+    case "low": return "text-warning";
+    case "medium": return "text-caution";
+    case "good": return "text-good";
+    case "excellent": return "text-success";
+  }
+}
