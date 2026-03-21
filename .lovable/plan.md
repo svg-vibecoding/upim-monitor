@@ -1,50 +1,36 @@
 
 
-## Plan: Fix floating step indicators
-
-### Problem
-The floating circle indicators are positioned with `absolute -top-2.5 -right-2.5` inside the card `div`, but the `overflow-auto` on the `<main>` scroll container in `AppLayout.tsx` clips them. Adding `overflow-visible` to the card doesn't help because ancestor elements still clip.
-
-### Solution
-Simplify the approach: remove the "X de 2" text labels and restructure so each step is wrapped in a container with `relative` and top padding, placing the indicator circle **outside and above** the card.
-
-### Structure (both pages, both steps)
-
-```text
-Before:
-<Collapsible>
-  <div class="relative overflow-visible rounded-lg border ...">  ← card
-    <div class="absolute -top-2.5 -right-2.5 ...">              ← indicator (clipped)
-    <CollapsibleTrigger>
-    <CollapsibleContent>
-
-After:
-<Collapsible>
-  <div class="relative pt-3">                                    ← wrapper with space
-    <div class="absolute top-0 right-3 z-10 ...">               ← indicator (free)
-      <span class="h-6 w-6 rounded-full ...">1 or ✓</span>
-    </div>
-    <div class="rounded-lg border bg-card ...">                  ← card (no relative/overflow)
-      <CollapsibleTrigger>
-      <CollapsibleContent>
-    </div>
-  </div>
-</Collapsible>
-```
+## Plan: Adjust KPI card color system
 
 ### Changes
 
-**`src/pages/NewReportPage.tsx`** and **`src/pages/CreatePredefinedReportPage.tsx`**:
+#### 1. `src/lib/severity.ts` — Add `severityBgColor` helper
 
-1. Wrap each step's card in a new `div` with `relative pt-3`
-2. Move the indicator `div` to be a sibling of the card, positioned `absolute top-0 right-3`
-3. Remove the "1 de 2" / "2 de 2" text labels — keep only the circles
-4. Remove `relative overflow-visible` from the card div (no longer needed)
-5. Keep `hover:shadow-md` on the card div
+New function mapping standard severity → soft background class (bg-destructive/10, bg-warning/10, bg-caution/10, bg-good/10, bg-success/10). Used by completeness cards.
+
+#### 2. `src/pages/ReportDetailPage.tsx` — Card 3 "Atributos foco" + Card 4 "Completitud promedio"
+
+**Card 3 (lines 226–236)**: Remove dynamic bg and border-0. Use default Card (white bg). Change text colors of focusCount, "de Y", and focusPct to foreground/black. Keep AlertTriangle with `fc.text` color and tenue opacity.
+
+**Card 4 (line 239)**: Add dynamic soft bg using `severityBgColor(avgCompleteness)` and `border-0`. Keep CompletenessCircle and text color as-is.
+
+#### 3. `src/pages/NewReportPage.tsx` — Same changes as ReportDetailPage
+
+**Card 3 (lines 565–575)**: White bg, black text, AlertTriangle keeps dynamic color.
+
+**Card 4 (line 578)**: Dynamic soft bg from severity.
+
+#### 4. `src/components/DimensionSummaryCards.tsx`
+
+**Card "Mejor completitud" (line 45)**: Rename label to "Grupo con mejor completitud". Change `text-success` to `severityTextColor(best.completeness)`.
+
+**Card "Grupo a mejorar" (line 62)**: Change `text-destructive` to `severityTextColor(worst.completeness)`.
+
+**Card "Completitud promedio de los grupos" (line 71)**: Add dynamic soft bg using `severityBgColor(avgCompleteness)` and `border-0`.
 
 ### Files modified
+- `src/lib/severity.ts`
+- `src/pages/ReportDetailPage.tsx`
 - `src/pages/NewReportPage.tsx`
-- `src/pages/CreatePredefinedReportPage.tsx`
-
-No logic or functionality changes.
+- `src/components/DimensionSummaryCards.tsx`
 
