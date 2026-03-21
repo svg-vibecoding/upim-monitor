@@ -18,7 +18,7 @@ import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { CompletenessCircle } from "@/components/CompletenessCircle";
 import { Badge } from "@/components/ui/badge";
 import { useTrackEvent } from "@/hooks/useTrackEvent";
-import { type SeverityLevel, getSeverity, focusSeverityColors } from "@/lib/severity";
+import { type SeverityLevel, getSeverity, focusSeverityColors, severityBgColor, severityTextColor } from "@/lib/severity";
 import { SeverityFilter } from "@/components/SeverityFilter";
 
 /* ── Sort helpers ─────────────────────────────────────────── */
