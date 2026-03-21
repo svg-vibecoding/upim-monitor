@@ -971,6 +971,7 @@ export interface Card2Config {
 }
 
 export interface Card3Config {
+  mode: "dynamic" | "static";
   report_id: string | null;
 }
 
