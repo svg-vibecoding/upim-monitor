@@ -162,9 +162,12 @@ export default function DashboardPage() {
   const { data: rawFocusItems, isLoading: loadingFocus } = useReportCompleteness(activeReport?.id);
 
   // Card 3: report completeness
-  const card3ReportId = card3Cfg.config.report_id;
-  const pimGeneralReport = useMemo(() => reports?.find((r) => r.name === "PIM General"), [reports]);
-  const completenessReportId = card3ReportId || pimGeneralReport?.id || null;
+  const card3Mode = card3Cfg.config.mode || "dynamic";
+  const card3StaticReportId = card3Cfg.config.report_id;
+  // For dynamic mode, use the active focus report; for static, use the configured report
+  const completenessReportId = card3Mode === "dynamic"
+    ? (activeReport?.id || null)
+    : (card3StaticReportId || null);
   const { data: completenessItems } = useReportCompleteness(completenessReportId);
 
   const completenessValue = useMemo(() => {
