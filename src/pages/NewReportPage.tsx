@@ -368,7 +368,7 @@ export default function NewReportPage() {
         <>
         <div className="space-y-1">
           <h1 className="text-2xl font-bold text-foreground">Crear nuevo informe</h1>
-          <p className="text-sm text-muted-foreground">Un informe mide qué tan completa está la información de un conjunto de productos en los atributos que elijas. El resultado muestra qué porcentaje de productos tiene un valor asignado para esos atributos.</p>
+          <p className="text-sm text-muted-foreground">Un informe mide qué tan completa está la información de un conjunto de productos (universo) en un grupo de atributos (características del producto) definidos. Selecciona el universo de productos que quieres analizar y los atributos relevantes para medirlo.</p>
         </div>
         <div className="space-y-4">
           {/* Step 1: Universe */}
