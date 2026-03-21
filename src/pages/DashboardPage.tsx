@@ -414,7 +414,7 @@ export default function DashboardPage() {
               <CardContent className="pt-5 pb-5 px-5 flex flex-col">
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
-                    {card3Cfg.label}
+                    {card3Cfg.config.mode === 'dynamic' ? `MOSTRANDO: ${completenessReportName}` : card3Cfg.label}
                   </span>
                 </div>
                 {completenessValue !== null ? (
