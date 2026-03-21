@@ -122,7 +122,7 @@ export default function DashboardPage() {
 
   const card3Cfg = useMemo(() => {
     const raw = cardsConfig?.find((c) => c.card_key === "card_3");
-    const defaults: Card3Config = { report_id: null };
+    const defaults: Card3Config = { mode: "dynamic", report_id: null };
     return { label: raw?.label || "Completitud General", config: raw ? { ...defaults, ...(raw.config as Card3Config) } : defaults };
   }, [cardsConfig]);
 
