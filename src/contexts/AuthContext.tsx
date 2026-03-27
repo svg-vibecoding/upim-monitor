@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -20,13 +20,15 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
-  isLoading: boolean;
+  isAuthReady: boolean;
+  isProfileLoading: boolean;
+  isLoading: boolean; // kept for backward compat — true until auth ready
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const PROFILE_TIMEOUT_MS = 8000;
-const SESSION_REFRESH_TIMEOUT_MS = 15000;
+const LOGIN_TIMEOUT_MS = 8000;
+const PROFILE_TIMEOUT_MS = 6000;
 
 function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
   return Promise.race([
@@ -41,34 +43,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<AppUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [isProfileLoading, setIsProfileLoading] = useState(false);
 
-  /** Load profile + role from DB for a given auth user */
+  // Track whether this is a fresh login (for tracking + inactive account handling)
+  const freshLoginRef = useRef(false);
+
+  /** Load profile + role from DB for a given auth user — parallel fetch */
   const loadAppUser = useCallback(async (authUser: User): Promise<AppUser | null> => {
     try {
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("name, email, active, track_insights")
-        .eq("id", authUser.id)
-        .maybeSingle();
+      const [profileRes, roleRes] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("name, email, active, track_insights")
+          .eq("id", authUser.id)
+          .maybeSingle(),
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", authUser.id)
+          .maybeSingle(),
+      ]);
 
-      if (profileError || !profile) {
-        console.warn("[Auth] profile_query_error", profileError?.message);
+      if (profileRes.error || !profileRes.data) {
+        console.warn("[Auth] profile_query_error", profileRes.error?.message);
         return null;
       }
+
+      const profile = profileRes.data;
 
       if (!profile.active) {
         console.warn("[Auth] inactive_user");
         return null;
       }
 
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", authUser.id)
-        .maybeSingle();
-
-      const role: AppRole = (roleData?.role as AppRole) || "pim_manager";
+      const role: AppRole = (roleRes.data?.role as AppRole) || "pim_manager";
 
       return {
         id: authUser.id,
@@ -84,103 +93,129 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Listen for auth state changes
+  // 1) Bootstrap: restore session from storage + listen for auth changes
   useEffect(() => {
+    // onAuthStateChange — lightweight: only sync session state
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
+      (_event, newSession) => {
         setSession(newSession);
         setSupabaseUser(newSession?.user ?? null);
 
-        if (newSession?.user) {
-          try {
-            const appUser = await withTimeout(
-              loadAppUser(newSession.user),
-              SESSION_REFRESH_TIMEOUT_MS,
-              "session_profile"
-            );
-            if (appUser) {
-              setUser((prev) => {
-                if (!prev && event === "SIGNED_IN" && appUser.track_insights) {
-                  import("@/hooks/useTrackEvent").then(({ trackEventDirect }) => {
-                    trackEventDirect(appUser.id, appUser.email, appUser.role, "login_success", undefined, true);
-                  });
-                }
-                return appUser;
-              });
-            } else if (event === "SIGNED_IN") {
-              // Solo cerrar sesión en login nuevo fallido (cuenta inactiva)
-              setUser(null);
-              await supabase.auth.signOut();
-            }
-            // Si es TOKEN_REFRESHED y falla, mantener el user actual
-          } catch {
-            console.warn("[Auth] session profile refresh timed out, keeping existing session");
-            // NO borrar usuario existente — mantener sesión
-          } finally {
-            setIsLoading(false);
-          }
-        } else {
+        if (!newSession) {
+          // Signed out
           setUser(null);
-          setIsLoading(false);
         }
       }
     );
 
-    // Determine initial auth state without waiting for onAuthStateChange
-    let safetyTimer: ReturnType<typeof setTimeout> | null = null;
-
+    // Restore session from local storage
     supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      if (!existingSession) {
-        // No session — stop loading immediately, show login
-        setIsLoading(false);
-      } else {
-        // Session exists — onAuthStateChange WILL fire and handle isLoading
-        // Add a long safety timeout only for extreme network failure
-        safetyTimer = setTimeout(() => {
-          setIsLoading(false);
-        }, 30000);
-      }
+      setSession(existingSession);
+      setSupabaseUser(existingSession?.user ?? null);
+      setIsAuthReady(true);
     });
 
     return () => {
       subscription.unsubscribe();
-      if (safetyTimer) clearTimeout(safetyTimer);
     };
-  }, [loadAppUser]);
+  }, []);
+
+  // 2) Hydrate profile whenever supabaseUser changes (separate from auth callback)
+  useEffect(() => {
+    if (!isAuthReady) return;
+
+    if (!supabaseUser) {
+      setUser(null);
+      setIsProfileLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setIsProfileLoading(true);
+
+    const hydrate = async () => {
+      try {
+        const appUser = await withTimeout(
+          loadAppUser(supabaseUser),
+          PROFILE_TIMEOUT_MS,
+          "profile_hydration"
+        );
+
+        if (cancelled) return;
+
+        if (appUser) {
+          setUser((prev) => {
+            // Track login event only on fresh login
+            if (!prev && freshLoginRef.current && appUser.track_insights) {
+              freshLoginRef.current = false;
+              import("@/hooks/useTrackEvent").then(({ trackEventDirect }) => {
+                trackEventDirect(appUser.id, appUser.email, appUser.role, "login_success", undefined, true);
+              });
+            }
+            return appUser;
+          });
+        } else if (freshLoginRef.current) {
+          // Fresh login but inactive account — sign out
+          freshLoginRef.current = false;
+          setUser(null);
+          await supabase.auth.signOut();
+        }
+        // If profile fails on background refresh (not fresh login), keep existing user
+      } catch {
+        console.warn("[Auth] profile hydration timed out");
+        // Don't clear user on timeout during background refresh
+      } finally {
+        if (!cancelled) setIsProfileLoading(false);
+      }
+    };
+
+    hydrate();
+
+    return () => { cancelled = true; };
+  }, [supabaseUser?.id, isAuthReady, loadAppUser]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
+      freshLoginRef.current = true;
+
       const { data, error } = await withTimeout(
         supabase.auth.signInWithPassword({ email, password }),
-        PROFILE_TIMEOUT_MS,
+        LOGIN_TIMEOUT_MS,
         "sign_in"
       );
 
       if (error) {
+        freshLoginRef.current = false;
         console.warn("[Auth] invalid_credentials");
         return { success: false, error: "Credenciales inválidas" };
       }
 
       const authUser = data?.user;
       if (!authUser) {
+        freshLoginRef.current = false;
         console.warn("[Auth] missing_auth_user_after_sign_in");
         return { success: false, error: "Problema de autenticación. Intenta de nuevo." };
       }
 
+      // Profile will be loaded by the useEffect above via supabaseUser change
+      // But we also do an eager load here for immediate feedback
       const appUser = await withTimeout(
         loadAppUser(authUser),
-        PROFILE_TIMEOUT_MS,
+        LOGIN_TIMEOUT_MS,
         "login_profile"
       );
 
       if (!appUser) {
+        freshLoginRef.current = false;
         await supabase.auth.signOut();
         return { success: false, error: "Cuenta inactiva. Contacta al administrador." };
       }
 
       setUser(appUser);
+      freshLoginRef.current = false;
       return { success: true };
     } catch (err) {
+      freshLoginRef.current = false;
       const message = err instanceof Error ? err.message : "unknown";
       console.warn("[Auth] login_timeout_or_network", message);
       await supabase.auth.signOut();
@@ -193,7 +228,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setSession(null);
     setSupabaseUser(null);
     supabase.auth.signOut().catch(() => {});
-    setSupabaseUser(null);
   }, []);
 
   return (
@@ -204,8 +238,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         session,
         login,
         logout,
-        isAuthenticated: !!user,
-        isLoading,
+        isAuthenticated: !!session,
+        isAuthReady,
+        isProfileLoading,
+        isLoading: !isAuthReady,
       }}
     >
       {children}
