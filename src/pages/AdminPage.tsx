@@ -502,7 +502,7 @@ export default function AdminPage() {
       .filter((p) => !uploadedSet.has(p.attr));
   }, [csvResult, protectedAttributes]);
 
-  const canActivate = csvResult?.success && missingProtected.length === 0 && (csvResult.uniqueRows || 0) > 0 && !!pendingUploadId;
+  const canActivate = csvResult?.success && missingProtected.length === 0 && (csvResult.uniqueRows || 0) > 0 && !!(pendingUploadId || csvResult.uploadId);
 
   const CHUNK_SIZE = 1000;
   const CONCURRENCY = 3;
@@ -700,6 +700,7 @@ export default function AdminPage() {
         errorDetails: allErrorDetails.slice(0, 20),
         columnsDetected,
         attributeOrder: attrOrder,
+        uploadId: currentUploadId,
       });
 
       // Refresh upload history
@@ -885,7 +886,7 @@ export default function AdminPage() {
 
                               if (pendingError) throw pendingError;
 
-                              const uploadIdToActivate = (latestPending as { id: string } | null)?.id || pendingUploadId;
+                              const uploadIdToActivate = (latestPending as { id: string } | null)?.id || pendingUploadId || csvResult?.uploadId;
                               if (!uploadIdToActivate) {
                                 throw new Error("No hay una carga pendiente para activar");
                               }
