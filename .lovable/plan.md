@@ -1,42 +1,111 @@
-## Diagnosis: Button "Actualizar datos de la app" disabled after successful upload
+Diagnóstico
 
-### Root cause
+El problema ya no está en el timeout de 30s en sí. La causa raíz actual es más estructural:
 
-The `canActivate` guard (line 505) requires four conditions:
+1. La app considera “autenticado” solo cuando `user` existe (`isAuthenticated: !!user` en `AuthContext`).
+2. Pero `user` no sale de la sesión persistida del navegador; sale de 2 queries adicionales a base de datos (`profiles` y `user_roles`) dentro de `onAuthStateChange`.
+3. Mientras esas queries terminan, existe una sesión válida, pero `user` sigue en `null`.
+4. En ese hueco:
+  - `AppRoutes` ve `isLoading = false` + `isAuthenticated = false`
+  - redirige a `/login`
+  - luego el perfil termina de cargar
+  - `user` aparece
+  - la app vuelve a entrar
 
-```
-csvResult?.success
-  && missingProtected.length === 0
-  && (csvResult.uniqueRows || 0) > 0
-  && !!pendingUploadId          // <-- this is the suspect
-```
+Eso explica exactamente el síntoma: loader gris → login → app.
 
-`pendingUploadId` is set via `setPendingUploadId(firstResult.uploadId)` on line 632 (React state setter), but the upload ID only comes from the **first chunk** response (`firstResult.uploadId`). The edge function only returns `uploadId` when `isFirstChunk === true` and the insert into `pim_upload_history` succeeds.
+Evidencia del código
 
-Two failure modes can cause `pendingUploadId` to be `null`:
+- `src/contexts/AuthContext.tsx`
+  - `isAuthenticated` depende de `!!user`, no de la sesión.
+  - `onAuthStateChange` hace trabajo async pesado (`loadAppUser`) antes de consolidar el estado final.
+  - `loadAppUser` hace 2 lecturas secuenciales: `profiles` y luego `user_roles`.
+- `src/App.tsx`
+  - el router decide entre app y login solo con `isLoading` + `isAuthenticated`.
+- `src/components/AppLayout.tsx`
+  - además vuelve a redirigir a login si `!isAuthenticated`.
 
-1. **Edge function returns `uploadId: null**`: If the `pim_upload_history` insert fails silently (the edge function catches the error with `console.error` but still returns `success: true` with `uploadId: null`), `setPendingUploadId(null)` is called, keeping the button disabled.
-2. **React state timing**: `setPendingUploadId` is called mid-async-function. If a re-render triggered by `setCsvProgress` causes the component to re-evaluate before `setPendingUploadId` takes effect, `canActivate` evaluates to `false`. This is less likely but explains intermittency.
+Por qué el refresh se siente largo
 
-### Fix (minimal, 1 file)
+No se está restaurando la app desde la sesión local de forma inmediata. Se está esperando a completar hidratación de perfil/rol para considerar al usuario “dentro”. Además:
 
-`**src/pages/AdminPage.tsx**` — Make `canActivate` resilient by also storing `uploadId` inside `csvResult` and checking both sources:
+- `loadAppUser` hoy es secuencial
+- se ejecuta dentro del callback de auth
+- el timeout de refresco de perfil es de 15s, demasiado alto para el camino crítico de recarga
 
-1. Add `uploadId` to the `csvResult` state object (line 693-703): include `uploadId: currentUploadId`.
-2. Update `canActivate` (line 505) to:
-  ```ts
-   const canActivate = csvResult?.success
-     && missingProtected.length === 0
-     && (csvResult.uniqueRows || 0) > 0
-     && !!(pendingUploadId || csvResult.uploadId);
-  ```
-3. Update the activation onClick (line 888) to also fall back to `csvResult.uploadId`:
-  ```ts
-   const uploadIdToActivate = (latestPending as ...)?.id || pendingUploadId || csvResult?.uploadId;
-  ```
+Lo que propongo
 
-This ensures the button enables even if `setPendingUploadId` was called with `null` or had a timing issue, as long as the upload ID was captured in the local variable `currentUploadId` which is set synchronously.
+1. Separar “sesión lista” de “perfil listo”
+  - `AuthContext` debe manejar al menos dos estados distintos:
+    - auth restaurada desde storage (`isAuthReady`)
+    - perfil de app cargado (`user`)
+  - La sesión (`session` / `supabaseUser`) debe ser la fuente para saber si el usuario está autenticado.
+  - El perfil debe quedar como capa adicional para nombre, rol y permisos.
+2. No bloquear `onAuthStateChange` con carga de perfil
+  - En `onAuthStateChange`, hacer solo:
+    - `setSession`
+    - `setSupabaseUser`
+    - marcar auth como lista
+  - Mover la carga de perfil a un `useEffect` separado que observe `supabaseUser?.id`.
+  - Así se evita el hueco de redirección y también la fragilidad de esperar lógica async dentro del callback de auth.
+3. Cambiar el criterio de routing
+  - `AppRoutes` no debe mandar a login cuando existe sesión pero el perfil aún está cargando.
+  - Regla:
+    - si `!isAuthReady` → spinner
+    - si no hay sesión → login
+    - si hay sesión pero el perfil sigue hidratando → spinner corto / shell loader
+    - si hay sesión y perfil → app
+  - `AppLayout` debe seguir la misma lógica y no hacer `Navigate` a login mientras exista sesión válida.
+4. Reducir el tiempo de refresh percibido
+  - Paralelizar `profiles` + `user_roles` con `Promise.all`.
+  - Usar un timeout corto para la carga inicial de perfil (por ejemplo 4–6s), pero sin redirigir a login si hay sesión.
+  - Si el perfil tarda más, mostrar loader de app o estado de recuperación, no login.
 
-### Files modified
+Implementación concreta
 
-- `src/pages/AdminPage.tsx` (3 line edits)
+1. `src/contexts/AuthContext.tsx`
+  - Introducir `isAuthReady` y opcionalmente `isProfileLoading`.
+  - `isAuthenticated` debe basarse en `!!session` o `!!supabaseUser`, no en `!!user`.
+  - `getSession()` al montar solo restaura sesión local y define el estado inicial.
+  - `onAuthStateChange` actualiza sesión de forma síncrona.
+  - Nuevo efecto separado para cargar `profile + role` cuando exista `supabaseUser`.
+  - `loadAppUser` pasa a usar `Promise.all` para reducir latencia.
+2. `src/App.tsx`
+  - Ajustar `AppRoutes` para usar:
+    - `isAuthReady`
+    - `session` o `supabaseUser`
+    - opcionalmente `isProfileLoading`
+  - Evitar cualquier `<Navigate to="/login" />` mientras haya sesión activa pero perfil pendiente.
+3. `src/components/AppLayout.tsx`
+  - No redirigir a login si hay sesión activa y el perfil todavía no está disponible.
+  - Mantener la validación de rol solo cuando `user` ya exista.
+
+Resultado esperado
+
+Flujo correcto tras el cambio:
+
+- Con sesión activa: recarga → spinner corto → app
+- Sin sesión: recarga → spinner muy breve → login
+- Si el perfil tarda: recarga → spinner / shell loader → app
+- Nunca: recarga → login → app
+
+Mejora específica para que el refresh no sea tan largo
+
+La mejora de mayor impacto no es bajar ciegamente un timeout, sino dejar de usar la carga de perfil como puerta de entrada a toda la app. Con eso:
+
+- la autenticación se resuelve instantáneamente desde storage
+- el login flash desaparece
+- el tiempo percibido baja mucho
+- el perfil/rol se hidrata en paralelo sin romper navegación
+
+Archivos a tocar
+
+- `src/contexts/AuthContext.tsx`
+- `src/App.tsx`
+- `src/components/AppLayout.tsx`
+
+Alcance recomendado
+
+No tocar hooks de negocio ni queries de datos. El fix debe ser exclusivamente de orquestación de sesión/hidratación, manteniendo intacta la lógica actual de perfiles, roles e inactividad.  
+  
+**Nota adicional:** En `AppLayout.tsx`, asegúrate de que la validación de rol (`user?.role !== "usuario_pro"`) solo se evalúe cuando `user` no sea null. Si `user` es null pero hay sesión activa, mostrar un spinner breve en vez de redirigir a home. Esto evita que un PIM Manager vea un flash del Dashboard mientras su perfil carga.
