@@ -126,13 +126,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
-      if (!existingSession) {
-        setIsLoading(false);
-      }
-    });
+    // Safety timeout: if onAuthStateChange never fires (network edge case)
+    const safetyTimeout = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
+    };
   }, [loadAppUser]);
 
   const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
