@@ -126,31 +126,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
-    // Safety timeout: only force isLoading=false if there's no persisted session
-    // If there IS a persisted session, give onAuthStateChange more time to complete
-    const checkPersistedSession = async () => {
-      const { data: { session: existingSession } } = await supabase.auth.getSession();
+    // Determine initial auth state without waiting for onAuthStateChange
+    let safetyTimer: ReturnType<typeof setTimeout> | null = null;
+
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
       if (!existingSession) {
+        // No session — stop loading immediately, show login
         setIsLoading(false);
       } else {
-        setTimeout(() => {
-          setIsLoading((current) => {
-            if (current) {
-              console.warn("[Auth] Extended safety timeout reached — forcing isLoading=false");
-            }
-            return false;
-          });
-        }, 15000);
+        // Session exists — onAuthStateChange WILL fire and handle isLoading
+        // Add a long safety timeout only for extreme network failure
+        safetyTimer = setTimeout(() => {
+          setIsLoading(false);
+        }, 30000);
       }
-    };
-
-    const initialCheckTimeout = setTimeout(() => {
-      checkPersistedSession();
-    }, 500);
+    });
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(initialCheckTimeout);
+      if (safetyTimer) clearTimeout(safetyTimer);
     };
   }, [loadAppUser]);
 
