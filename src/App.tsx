@@ -19,9 +19,10 @@ import { Loader2 } from "lucide-react";
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthReady, session, isLoading } = useAuth();
 
-  if (isLoading) {
+  // Wait until we know if there's a session in storage
+  if (!isAuthReady || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-muted">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -31,8 +32,8 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
-      {!isAuthenticated ? (
+      <Route path="/login" element={session ? <Navigate to="/" replace /> : <LoginPage />} />
+      {!session ? (
         <Route path="*" element={<Navigate to="/login" replace />} />
       ) : (
         <>
