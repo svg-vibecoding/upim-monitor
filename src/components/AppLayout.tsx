@@ -5,9 +5,10 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 import { toast } from "sonner";
 import { useCallback } from "react";
+import { Loader2 } from "lucide-react";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { session, user, isProfileLoading, logout } = useAuth();
   const location = useLocation();
 
   const handleInactivityLogout = useCallback(() => {
@@ -15,12 +16,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     logout();
   }, [logout]);
 
-  useInactivityTimeout(isAuthenticated, handleInactivityLogout);
+  useInactivityTimeout(!!session, handleInactivityLogout);
 
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  // No session at all — redirect to login
+  if (!session) return <Navigate to="/login" replace />;
+
+  // Session exists but profile still loading — show spinner, NOT login
+  if (isProfileLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-muted">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   // Block PIM Managers from admin
-  if (user?.role !== "usuario_pro" && (location.pathname.startsWith("/admin") || location.pathname.startsWith("/insights"))) {
+  if (user.role !== "usuario_pro" && (location.pathname.startsWith("/admin") || location.pathname.startsWith("/insights"))) {
     return <Navigate to="/" replace />;
   }
 
@@ -34,9 +45,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <SidebarTrigger />
             </div>
             <div className="flex items-center gap-3 text-sm">
-              <span className="text-muted-foreground">{user?.name}</span>
+              <span className="text-muted-foreground">{user.name}</span>
               <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                {user?.role === "usuario_pro" ? "UsuarioPRO" : "PIM Manager"}
+                {user.role === "usuario_pro" ? "UsuarioPRO" : "PIM Manager"}
               </span>
               <button onClick={logout} className="text-muted-foreground hover:text-foreground transition-colors text-sm">
                 Cerrar sesión
