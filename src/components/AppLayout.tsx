@@ -2,10 +2,20 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useLocation } from "react-router-dom";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
+import { toast } from "sonner";
+import { useCallback } from "react";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, user, logout } = useAuth();
   const location = useLocation();
+
+  const handleInactivityLogout = useCallback(() => {
+    toast.info("Tu sesión se cerró por inactividad");
+    logout();
+  }, [logout]);
+
+  useInactivityTimeout(isAuthenticated, handleInactivityLogout);
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
