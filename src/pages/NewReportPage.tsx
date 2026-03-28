@@ -70,7 +70,6 @@ export default function NewReportPage() {
     conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
   });
   const [isDownloading, setIsDownloading] = useState(false);
-  });
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string>("");
   const [uploadedFileReady, setUploadedFileReady] = useState(false);
