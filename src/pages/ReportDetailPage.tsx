@@ -181,23 +181,57 @@ export default function ReportDetailPage() {
     });
   }
 
-  const handleDownload = () => {
-    const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
-    const rows: (string | number)[][] = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
+  const [downloadingFull, setDownloadingFull] = useState(false);
 
-    if (dimensionResults.length > 0 && dimension) {
-      rows.push([]);
-      rows.push([`Distribución por ${dimension.name}`, "", "", ""]);
-      rows.push([dimension.name, "SKUs", "Poblados", "Completitud %"]);
-      dimensionResults.forEach((d) => rows.push([d.value, d.totalSKUs, d.populated, d.completeness]));
-    }
-
-    downloadCSV(`${report.name.replace(/\s/g, "_")}_resumen.csv`, headers, rows);
+  const handleDownloadCompleteness = () => {
+    const dimName = dimension?.name;
+    exportCompletenessXlsx(
+      `${report.name.replace(/\s/g, "_")}_completitud.xlsx`,
+      attrResults,
+      dimensionResults.length > 0 ? dimensionResults : undefined,
+      dimName,
+    );
     trackEvent("report_downloaded", {
       report_id: report.id,
       report_name: report.name,
       report_type: "predefined",
     });
+  };
+
+  const handleDownloadFull = async () => {
+    setDownloadingFull(true);
+    try {
+      // If records are already cached this resolves instantly
+      let recs = allRecords || [];
+      if (recs.length === 0) {
+        // Force fetch via react-query refetch — usePimRecords already mounted
+        // We wait for the existing query to have data
+        const maxWait = 30_000;
+        const start = Date.now();
+        while (recs.length === 0 && Date.now() - start < maxWait) {
+          await new Promise((r) => setTimeout(r, 500));
+          recs = allRecords || [];
+        }
+      }
+      const reportRecords = getRecordsForReport(recs, report, operations);
+      const dimName = dimension?.name;
+      exportFullReportXlsx(
+        `${report.name.replace(/\s/g, "_")}_completo.xlsx`,
+        attrResults,
+        reportRecords,
+        report.attributes,
+        pimOrderList,
+        dimensionResults.length > 0 ? dimensionResults : undefined,
+        dimName,
+      );
+      trackEvent("report_downloaded", {
+        report_id: report.id,
+        report_name: report.name,
+        report_type: "predefined",
+      });
+    } finally {
+      setDownloadingFull(false);
+    }
   };
 
   return (
@@ -210,9 +244,25 @@ export default function ReportDetailPage() {
           <h1 className="text-2xl font-semibold text-foreground">{report.name}</h1>
           <p className="text-sm text-muted-foreground">{report.universe}</p>
         </div>
-        <Button variant="outline" onClick={handleDownload} className="gap-2">
-          <Download className="h-4 w-4" /> Descargar resumen
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" /> Descargar informe <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleDownloadCompleteness}>
+              Informe de completitud
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDownloadFull} disabled={downloadingFull}>
+              {downloadingFull ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Preparando descarga...</>
+              ) : (
+                "Informe y Productos"
+              )}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Summary cards */}
