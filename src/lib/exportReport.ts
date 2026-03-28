@@ -88,10 +88,28 @@ function buildSummarySheet(
   rows.push(["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"]);
   attrResults.forEach((a) => rows.push([a.name, a.totalSKUs, a.populated, a.completeness]));
 
+  let dimTitleRow = -1;
+  let dimKpiStartRow = -1;
+  let dimKpiEndRow = -1;
   let dimHeaderRow = -1;
   if (dimensionResults?.length && dimensionName) {
+    const realGroups = dimensionResults.filter((d) => d.value !== "Sin valor asignado");
+    const groupCount = realGroups.length;
+    const best = realGroups.reduce((a, b) => (b.completeness > a.completeness ? b : a), realGroups[0]);
+    const worst = realGroups.reduce((a, b) => (b.completeness < a.completeness ? b : a), realGroups[0]);
+    const avgDim = groupCount > 0 ? Math.round(realGroups.reduce((s, d) => s + d.completeness, 0) / groupCount) : 0;
+
     rows.push([]);
+    dimTitleRow = rows.length;
     rows.push([`Distribución por ${dimensionName}`, "", "", ""]);
+    rows.push([]);
+    dimKpiStartRow = rows.length;
+    rows.push(["Grupos evaluados (valores únicos):", groupCount]);
+    rows.push(["Grupo con mejor completitud:", `${best.value} ${best.completeness}%`]);
+    rows.push(["Grupo a mejorar:", `${worst.value} ${worst.completeness}%`]);
+    rows.push(["Completitud promedio de los grupos:", `${avgDim}%`]);
+    dimKpiEndRow = rows.length - 1;
+    rows.push([]);
     dimHeaderRow = rows.length;
     rows.push([dimensionName, "SKUs", "Poblados", "Completitud %"]);
     dimensionResults.forEach((d) => rows.push([d.value, d.totalSKUs, d.populated, d.completeness]));
