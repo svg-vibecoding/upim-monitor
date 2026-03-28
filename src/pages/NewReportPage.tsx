@@ -570,9 +570,21 @@ export default function NewReportPage() {
               <h1 className="text-2xl font-semibold text-foreground">Informe personalizado</h1>
               <p className="text-sm text-muted-foreground">{universeLabel}</p>
             </div>
-            <Button variant="outline" onClick={handleDownload} className="gap-2">
-              <Download className="h-4 w-4" /> Descargar resumen
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Download className="h-4 w-4" /> Descargar informe <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleDownloadCompleteness}>
+                  Informe de completitud
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadFull}>
+                  Informe y Productos
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Summary cards */}
