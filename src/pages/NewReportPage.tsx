@@ -11,7 +11,7 @@ import { CompletenessBar } from "@/components/CompletenessBar";
 import {
   computeAttributeResults, computeDimensionResults, PIMRecord,
 } from "@/data/mockData";
-import { exportCompletenessXlsx, exportFullReportXlsx, exportProductsXlsx } from "@/lib/exportReport";
+import { exportCompletenessXlsx, exportFullReportXlsx, exportProductsXlsx, type ReportMeta } from "@/lib/exportReport";
 import {
   usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList,
   getAttributeClassification, isNonEvaluable, usePredefinedReports,
