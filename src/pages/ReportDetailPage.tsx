@@ -186,6 +186,15 @@ export default function ReportDetailPage() {
   }
 
 
+  const buildMeta = (): ReportMeta => ({
+    reportName: report.name,
+    universe: report.universe,
+    totalSKUs,
+    evaluatedAttrs: attrResults.length,
+    focusAttrs: attrResults.filter(a => a.completeness < 50).length,
+    avgCompleteness,
+  });
+
   const handleDownloadCompleteness = async () => {
     setIsDownloading(true);
     try {
@@ -195,6 +204,7 @@ export default function ReportDetailPage() {
         attrResults,
         dimensionResults.length > 0 ? dimensionResults : undefined,
         dimName,
+        buildMeta(),
       );
       trackEvent("report_downloaded", {
         report_id: report.id,
@@ -250,6 +260,7 @@ export default function ReportDetailPage() {
         pimOrderList,
         dimensionResults.length > 0 ? dimensionResults : undefined,
         dimName,
+        buildMeta(),
       );
       trackEvent("report_downloaded", {
         report_id: report.id,
