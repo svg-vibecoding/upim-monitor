@@ -248,7 +248,7 @@ export default function ReportDetailPage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleDownloadCompleteness}>
-              Informe de completitud
+              Informe
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleDownloadFull} disabled={downloadingFull}>
               {downloadingFull ? (

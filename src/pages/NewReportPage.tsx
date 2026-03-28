@@ -579,7 +579,7 @@ export default function NewReportPage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleDownloadCompleteness}>
-                  Informe de completitud
+                  Informe
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownloadFull}>
                   Informe y Productos
