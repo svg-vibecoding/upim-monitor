@@ -38,7 +38,7 @@ export default function ReportDetailPage() {
   const [sortField, setSortField] = useState<SortField>("pim_order");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [tracked, setTracked] = useState(false);
-  const [downloadingFull, setDownloadingFull] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Dimension sort & filter state
   type DimSortField = "value" | "completeness";
@@ -186,23 +186,28 @@ export default function ReportDetailPage() {
   }
 
 
-  const handleDownloadCompleteness = () => {
-    const dimName = dimension?.name;
-    exportCompletenessXlsx(
-      `${report.name.replace(/\s/g, "_")}_completitud.xlsx`,
-      attrResults,
-      dimensionResults.length > 0 ? dimensionResults : undefined,
-      dimName,
-    );
-    trackEvent("report_downloaded", {
-      report_id: report.id,
-      report_name: report.name,
-      report_type: "predefined",
-    });
+  const handleDownloadCompleteness = async () => {
+    setIsDownloading(true);
+    try {
+      const dimName = dimension?.name;
+      exportCompletenessXlsx(
+        `${report.name.replace(/\s/g, "_")}_completitud.xlsx`,
+        attrResults,
+        dimensionResults.length > 0 ? dimensionResults : undefined,
+        dimName,
+      );
+      trackEvent("report_downloaded", {
+        report_id: report.id,
+        report_name: report.name,
+        report_type: "predefined",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleDownloadFull = async () => {
-    setDownloadingFull(true);
+    setIsDownloading(true);
     try {
       const recs = await queryClient.fetchQuery({
         queryKey: ["pim-records"],
@@ -226,7 +231,7 @@ export default function ReportDetailPage() {
         report_type: "predefined",
       });
     } finally {
-      setDownloadingFull(false);
+      setIsDownloading(false);
     }
   };
 
@@ -242,20 +247,20 @@ export default function ReportDetailPage() {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <Download className="h-4 w-4" /> Descargar informe <ChevronDown className="h-3 w-3" />
+            <Button variant="outline" className="gap-2" disabled={isDownloading}>
+              {isDownloading ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Descargando...</>
+              ) : (
+                <><Download className="h-4 w-4" /> Descargar informe <ChevronDown className="h-3 w-3" /></>
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleDownloadCompleteness}>
               Informe
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDownloadFull} disabled={downloadingFull}>
-              {downloadingFull ? (
-                <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Preparando descarga...</>
-              ) : (
-                "Informe y Productos"
-              )}
+            <DropdownMenuItem onClick={handleDownloadFull}>
+              Informe y Productos
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
