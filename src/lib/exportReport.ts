@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import * as XLSX from "xlsx-js-style";
 import type { AttributeResult, DimensionResult, PIMRecord } from "@/data/mockData";
 
 /** Metadata for the report header ("ficha técnica") */
@@ -25,6 +25,37 @@ function getRecordValue(record: PIMRecord, attr: string): string | null {
   return val != null && String(val) !== "" ? String(val) : null;
 }
 
+const BOLD_STYLE = { font: { bold: true } };
+const TITLE_STYLE = { font: { bold: true, sz: 14 } };
+const HEADER_STYLE = {
+  font: { bold: true, color: { rgb: "FFFFFF" } },
+  fill: { fgColor: { rgb: "6B54D1" } },
+};
+const THOUSANDS_FMT = "#,##0";
+const INT_PCT_FMT = "0\\%";
+
+function setCellStyle(sheet: XLSX.WorkSheet, addr: string, style: Record<string, unknown>) {
+  const cell = sheet[addr];
+  if (cell) cell.s = style;
+}
+
+function autoFitColumns(sheet: XLSX.WorkSheet) {
+  const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+  const colWidths: number[] = [];
+  for (let c = range.s.c; c <= range.e.c; c++) {
+    let max = 8;
+    for (let r = range.s.r; r <= range.e.r; r++) {
+      const cell = sheet[XLSX.utils.encode_cell({ r, c })];
+      if (cell && cell.v != null) {
+        const len = String(cell.v).length;
+        if (len > max) max = len;
+      }
+    }
+    colWidths.push(Math.min(max + 3, 60));
+  }
+  sheet["!cols"] = colWidths.map((w) => ({ wch: w }));
+}
+
 function buildSummarySheet(
   attrResults: AttributeResult[],
   dimensionResults?: DimensionResult[],
@@ -32,6 +63,7 @@ function buildSummarySheet(
   meta?: ReportMeta,
 ) {
   const rows: (string | number)[][] = [];
+  let metaRowCount = 0;
 
   if (meta) {
     const now = new Date();
@@ -41,25 +73,76 @@ function buildSummarySheet(
     rows.push([]);
     rows.push(["Fecha de descarga", `${dateStr}, ${timeStr}`]);
     rows.push(["Informe", meta.reportName]);
-    rows.push(["Universo evaluado", meta.universe]);
+    rows.push(["Universo de Productos evaluado:", `${meta.totalSKUs} SKUs`]);
     rows.push(["Total SKUs evaluados", meta.totalSKUs]);
     rows.push(["Atributos evaluados", meta.evaluatedAttrs]);
     rows.push(["Atributos foco de atención (< 50%)", meta.focusAttrs]);
     rows.push(["Completitud promedio", `${meta.avgCompleteness}%`]);
     rows.push([]);
+    metaRowCount = 10;
   }
 
+  const headerRow = metaRowCount;
   rows.push(["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"]);
   attrResults.forEach((a) => rows.push([a.name, a.totalSKUs, a.populated, a.completeness]));
 
+  let dimHeaderRow = -1;
   if (dimensionResults?.length && dimensionName) {
     rows.push([]);
     rows.push([`Distribución por ${dimensionName}`, "", "", ""]);
+    dimHeaderRow = rows.length;
     rows.push([dimensionName, "SKUs", "Poblados", "Completitud %"]);
     dimensionResults.forEach((d) => rows.push([d.value, d.totalSKUs, d.populated, d.completeness]));
   }
 
-  return XLSX.utils.aoa_to_sheet(rows);
+  const sheet = XLSX.utils.aoa_to_sheet(rows);
+
+  // --- Styling ---
+  if (meta) {
+    // Title: bold + size 14
+    setCellStyle(sheet, "A1", TITLE_STYLE);
+    // Bold all labels in column A of ficha técnica (rows 3-9, 0-indexed 2-8)
+    for (let r = 2; r <= 8; r++) {
+      setCellStyle(sheet, XLSX.utils.encode_cell({ r, c: 0 }), BOLD_STYLE);
+    }
+  }
+
+  // Header row: purple bg, white bold text
+  for (let c = 0; c < 4; c++) {
+    setCellStyle(sheet, XLSX.utils.encode_cell({ r: headerRow, c }), HEADER_STYLE);
+  }
+
+  // Data rows: thousands format for cols B,C and integer % for col D
+  for (let r = headerRow + 1; r < headerRow + 1 + attrResults.length; r++) {
+    const addrB = XLSX.utils.encode_cell({ r, c: 1 });
+    const addrC = XLSX.utils.encode_cell({ r, c: 2 });
+    const addrD = XLSX.utils.encode_cell({ r, c: 3 });
+    if (sheet[addrB]) sheet[addrB].z = THOUSANDS_FMT;
+    if (sheet[addrC]) sheet[addrC].z = THOUSANDS_FMT;
+    if (sheet[addrD]) sheet[addrD].z = INT_PCT_FMT;
+  }
+
+  // Dimension section header
+  if (dimHeaderRow > 0) {
+    for (let c = 0; c < 4; c++) {
+      setCellStyle(sheet, XLSX.utils.encode_cell({ r: dimHeaderRow, c }), HEADER_STYLE);
+    }
+    // Dimension data rows
+    const dimDataStart = dimHeaderRow + 1;
+    const dimDataEnd = dimDataStart + (dimensionResults?.length || 0);
+    for (let r = dimDataStart; r < dimDataEnd; r++) {
+      const addrB = XLSX.utils.encode_cell({ r, c: 1 });
+      const addrC = XLSX.utils.encode_cell({ r, c: 2 });
+      const addrD = XLSX.utils.encode_cell({ r, c: 3 });
+      if (sheet[addrB]) sheet[addrB].z = THOUSANDS_FMT;
+      if (sheet[addrC]) sheet[addrC].z = THOUSANDS_FMT;
+      if (sheet[addrD]) sheet[addrD].z = INT_PCT_FMT;
+    }
+  }
+
+  autoFitColumns(sheet);
+
+  return sheet;
 }
 
 function forceColumnAsText(sheet: XLSX.WorkSheet, colIndex: number) {
@@ -79,15 +162,10 @@ function buildProductsSheet(
   reportAttributes: string[],
   attributeOrder: string[],
 ) {
-  // Build column order per the plan:
-  // 1. Código Jaivaná (always first)
-  // 2. Report attributes in attributeOrder order, excluding Estado (Global)
-  // 3. Estado (Global) (always last)
   const estadoKey = "Estado (Global)";
   const orderedAttrs = attributeOrder.filter(
     (a) => reportAttributes.includes(a) && a !== estadoKey,
   );
-  // Add any report attrs not in attributeOrder (shouldn't happen, but safety)
   reportAttributes.forEach((a) => {
     if (a !== estadoKey && !orderedAttrs.includes(a)) orderedAttrs.push(a);
   });
@@ -103,7 +181,7 @@ function buildProductsSheet(
   });
 
   const sheet = XLSX.utils.aoa_to_sheet(rows);
-  forceColumnAsText(sheet, 0); // Código Jaivaná as text
+  forceColumnAsText(sheet, 0);
   return sheet;
 }
 
@@ -112,7 +190,7 @@ function saveWorkbook(wb: XLSX.WorkBook, filename: string) {
 }
 
 /**
- * Export completeness-only .xlsx (single "Resumen" tab).
+ * Export completeness-only .xlsx (single "Informe de Completitud" tab).
  */
 export function exportCompletenessXlsx(
   filename: string,
@@ -143,7 +221,7 @@ export function exportProductsXlsx(
 }
 
 /**
- * Export full report .xlsx with "Resumen" + "Productos" tabs.
+ * Export full report .xlsx with "Informe de Completitud" + "Productos" tabs.
  */
 export function exportFullReportXlsx(
   filename: string,
