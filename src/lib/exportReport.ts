@@ -12,7 +12,7 @@ const FIXED_FIELD_MAP: Record<string, string> = {
 
 function getRecordValue(record: PIMRecord, attr: string): string {
   const val = record[attr];
-  return val != null ? String(val) : "";
+  return val != null && String(val) !== "" ? String(val) : null;
 }
 
 function buildSummarySheet(
