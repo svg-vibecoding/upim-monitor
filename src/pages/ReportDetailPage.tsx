@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +12,7 @@ import {
   useReportCompleteness, NON_EVALUABLE_FIELDS, getFullAttributeList,
   computeAttributeResults, computeDimensionResults, getRecordsForReport,
   filterRealAttributes, getEvaluableAttributes, useOperations,
+  fetchAllPimRecords,
 } from "@/hooks/usePimData";
 import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, ChevronDown, Loader2 } from "lucide-react";
 import { exportCompletenessXlsx, exportFullReportXlsx } from "@/lib/exportReport";
