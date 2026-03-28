@@ -15,7 +15,7 @@ import {
   fetchAllPimRecords,
 } from "@/hooks/usePimData";
 import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, ChevronDown, Loader2 } from "lucide-react";
-import { exportCompletenessXlsx, exportFullReportXlsx } from "@/lib/exportReport";
+import { exportCompletenessXlsx, exportFullReportXlsx, exportProductsXlsx } from "@/lib/exportReport";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { CompletenessCircle } from "@/components/CompletenessCircle";
@@ -206,6 +206,32 @@ export default function ReportDetailPage() {
     }
   };
 
+  const handleDownloadProducts = async () => {
+    setIsDownloading(true);
+    try {
+      const recs = await queryClient.fetchQuery({
+        queryKey: ["pim-records"],
+        queryFn: fetchAllPimRecords,
+        staleTime: 5 * 60 * 1000,
+      });
+      const reportRecords = getRecordsForReport(recs, report, operations);
+      exportProductsXlsx(
+        `${report.name.replace(/\s/g, "_")}_productos.xlsx`,
+        reportRecords,
+        report.attributes,
+        pimOrderList,
+      );
+      trackEvent("report_downloaded", {
+        report_id: report.id,
+        report_name: report.name,
+        report_type: "predefined",
+        
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const handleDownloadFull = async () => {
     setIsDownloading(true);
     try {
@@ -229,6 +255,7 @@ export default function ReportDetailPage() {
         report_id: report.id,
         report_name: report.name,
         report_type: "predefined",
+        
       });
     } finally {
       setIsDownloading(false);
@@ -258,6 +285,9 @@ export default function ReportDetailPage() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={handleDownloadCompleteness}>
               Informe
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDownloadProducts}>
+              Productos
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleDownloadFull}>
               Informe y Productos
