@@ -30,6 +30,7 @@ export default function ReportDetailPage() {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
   const trackEvent = useTrackEvent();
+  const queryClient = useQueryClient();
   const [selectedDimension, setSelectedDimension] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
   type SortField = "completeness" | "attribute" | "pim_order";
