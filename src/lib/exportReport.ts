@@ -26,6 +26,8 @@ function getRecordValue(record: PIMRecord, attr: string): string | null {
 }
 
 const BOLD_STYLE = { font: { bold: true } };
+const BOLD_LEFT_STYLE = { font: { bold: true }, alignment: { horizontal: "left" } };
+const LEFT_STYLE = { alignment: { horizontal: "left" } };
 const TITLE_STYLE = { font: { bold: true, sz: 14 } };
 const HEADER_STYLE = {
   font: { bold: true, color: { rgb: "FFFFFF" } },
@@ -39,7 +41,7 @@ function setCellStyle(sheet: XLSX.WorkSheet, addr: string, style: Record<string,
   if (cell) cell.s = style;
 }
 
-function autoFitColumns(sheet: XLSX.WorkSheet) {
+function autoFitColumns(sheet: XLSX.WorkSheet, maxWidth = 60) {
   const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
   const colWidths: number[] = [];
   for (let c = range.s.c; c <= range.e.c; c++) {
@@ -51,7 +53,7 @@ function autoFitColumns(sheet: XLSX.WorkSheet) {
         if (len > max) max = len;
       }
     }
-    colWidths.push(Math.min(max + 3, 60));
+    colWidths.push(Math.min(max + 3, maxWidth));
   }
   sheet["!cols"] = colWidths.map((w) => ({ wch: w }));
 }
@@ -101,9 +103,10 @@ function buildSummarySheet(
   if (meta) {
     // Title: bold + size 14
     setCellStyle(sheet, "A1", TITLE_STYLE);
-    // Bold all labels in column A of ficha técnica (rows 3-9, 0-indexed 2-8)
+    // Bold all labels in column A + left-align values in column B of ficha técnica (rows 3-9, 0-indexed 2-8)
     for (let r = 2; r <= 8; r++) {
       setCellStyle(sheet, XLSX.utils.encode_cell({ r, c: 0 }), BOLD_STYLE);
+      setCellStyle(sheet, XLSX.utils.encode_cell({ r, c: 1 }), LEFT_STYLE);
     }
   }
 
@@ -182,6 +185,15 @@ function buildProductsSheet(
 
   const sheet = XLSX.utils.aoa_to_sheet(rows);
   forceColumnAsText(sheet, 0);
+
+  // Bold header row
+  for (let c = 0; c < headers.length; c++) {
+    setCellStyle(sheet, XLSX.utils.encode_cell({ r: 0, c }), BOLD_STYLE);
+  }
+
+  // Auto-fit columns with max 35
+  autoFitColumns(sheet, 35);
+
   return sheet;
 }
 
