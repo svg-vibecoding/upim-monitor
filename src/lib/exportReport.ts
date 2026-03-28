@@ -1,6 +1,16 @@
 import * as XLSX from "xlsx";
 import type { AttributeResult, DimensionResult, PIMRecord } from "@/data/mockData";
 
+/** Metadata for the report header ("ficha técnica") */
+export interface ReportMeta {
+  reportName: string;
+  universe: string;
+  totalSKUs: number;
+  evaluatedAttrs: number;
+  focusAttrs: number;
+  avgCompleteness: number;
+}
+
 /** Fixed-field mapping: display name → PIMRecord key */
 const FIXED_FIELD_MAP: Record<string, string> = {
   "Estado (Global)": "Estado (Global)",
@@ -19,10 +29,27 @@ function buildSummarySheet(
   attrResults: AttributeResult[],
   dimensionResults?: DimensionResult[],
   dimensionName?: string,
+  meta?: ReportMeta,
 ) {
-  const rows: (string | number)[][] = [
-    ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"],
-  ];
+  const rows: (string | number)[][] = [];
+
+  if (meta) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString("es-CO", { year: "numeric", month: "long", day: "numeric" });
+    const timeStr = now.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+    rows.push(["Ficha técnica del informe", ""]);
+    rows.push([]);
+    rows.push(["Fecha de descarga", `${dateStr}, ${timeStr}`]);
+    rows.push(["Informe", meta.reportName]);
+    rows.push(["Universo evaluado", meta.universe]);
+    rows.push(["Total SKUs evaluados", meta.totalSKUs]);
+    rows.push(["Atributos evaluados", meta.evaluatedAttrs]);
+    rows.push(["Atributos foco de atención (< 50%)", meta.focusAttrs]);
+    rows.push(["Completitud promedio", `${meta.avgCompleteness}%`]);
+    rows.push([]);
+  }
+
+  rows.push(["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"]);
   attrResults.forEach((a) => rows.push([a.name, a.totalSKUs, a.populated, a.completeness]));
 
   if (dimensionResults?.length && dimensionName) {
