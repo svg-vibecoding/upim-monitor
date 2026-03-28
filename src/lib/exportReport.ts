@@ -119,9 +119,10 @@ export function exportCompletenessXlsx(
   attrResults: AttributeResult[],
   dimensionResults?: DimensionResult[],
   dimensionName?: string,
+  meta?: ReportMeta,
 ) {
   const wb = XLSX.utils.book_new();
-  const ws = buildSummarySheet(attrResults, dimensionResults, dimensionName);
+  const ws = buildSummarySheet(attrResults, dimensionResults, dimensionName, meta);
   XLSX.utils.book_append_sheet(wb, ws, "Informe de Completitud");
   saveWorkbook(wb, filename);
 }
@@ -152,9 +153,10 @@ export function exportFullReportXlsx(
   attributeOrder: string[],
   dimensionResults?: DimensionResult[],
   dimensionName?: string,
+  meta?: ReportMeta,
 ) {
   const wb = XLSX.utils.book_new();
-  const summaryWs = buildSummarySheet(attrResults, dimensionResults, dimensionName);
+  const summaryWs = buildSummarySheet(attrResults, dimensionResults, dimensionName, meta);
   XLSX.utils.book_append_sheet(wb, summaryWs, "Informe de Completitud");
   const productsWs = buildProductsSheet(records, reportAttributes, attributeOrder);
   XLSX.utils.book_append_sheet(wb, productsWs, "Productos");
