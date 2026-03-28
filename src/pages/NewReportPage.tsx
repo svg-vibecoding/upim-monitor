@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import {
-  computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
+  computeAttributeResults, computeDimensionResults, PIMRecord,
 } from "@/data/mockData";
+import { exportCompletenessXlsx, exportFullReportXlsx } from "@/lib/exportReport";
 import {
   usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList,
   getAttributeClassification, isNonEvaluable, usePredefinedReports,
@@ -20,6 +21,7 @@ import {
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { FileText, ArrowLeft, Download, Search, CheckSquare, Square, ChevronDown, Check, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { CompletenessCircle } from "@/components/CompletenessCircle";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
@@ -326,10 +328,31 @@ export default function NewReportPage() {
     }
   };
 
-  const handleDownload = () => {
-    const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
-    const rows = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
-    downloadCSV("informe_personalizado.csv", headers, rows);
+  const handleDownloadCompleteness = () => {
+    const dimName = dimension?.name;
+    exportCompletenessXlsx(
+      "informe_personalizado_completitud.xlsx",
+      attrResults,
+      dimensionResults.length > 0 ? dimensionResults : undefined,
+      dimName,
+    );
+    trackEvent("report_downloaded", {
+      report_type: "custom",
+      source_type: source === "file" ? "csv" : "base_pim",
+    });
+  };
+
+  const handleDownloadFull = () => {
+    const dimName = dimension?.name;
+    exportFullReportXlsx(
+      "informe_personalizado_completo.xlsx",
+      attrResults,
+      records,
+      selectedAttrs,
+      pimOrderList,
+      dimensionResults.length > 0 ? dimensionResults : undefined,
+      dimName,
+    );
     trackEvent("report_downloaded", {
       report_type: "custom",
       source_type: source === "file" ? "csv" : "base_pim",
@@ -548,9 +571,21 @@ export default function NewReportPage() {
               <h1 className="text-2xl font-semibold text-foreground">Informe personalizado</h1>
               <p className="text-sm text-muted-foreground">{universeLabel}</p>
             </div>
-            <Button variant="outline" onClick={handleDownload} className="gap-2">
-              <Download className="h-4 w-4" /> Descargar resumen
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2">
+                  <Download className="h-4 w-4" /> Descargar informe <ChevronDown className="h-3 w-3" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleDownloadCompleteness}>
+                  Informe de completitud
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadFull}>
+                  Informe y Productos
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Summary cards */}

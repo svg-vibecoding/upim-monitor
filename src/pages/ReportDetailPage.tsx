@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,9 +12,11 @@ import {
   useReportCompleteness, NON_EVALUABLE_FIELDS, getFullAttributeList,
   computeAttributeResults, computeDimensionResults, getRecordsForReport,
   filterRealAttributes, getEvaluableAttributes, useOperations,
+  fetchAllPimRecords,
 } from "@/hooks/usePimData";
-import { downloadCSV } from "@/data/mockData";
-import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, ChevronDown, Loader2 } from "lucide-react";
+import { exportCompletenessXlsx, exportFullReportXlsx } from "@/lib/exportReport";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { CompletenessCircle } from "@/components/CompletenessCircle";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +30,7 @@ export default function ReportDetailPage() {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
   const trackEvent = useTrackEvent();
+  const queryClient = useQueryClient();
   const [selectedDimension, setSelectedDimension] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
   type SortField = "completeness" | "attribute" | "pim_order";
@@ -34,6 +38,7 @@ export default function ReportDetailPage() {
   const [sortField, setSortField] = useState<SortField>("pim_order");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [tracked, setTracked] = useState(false);
+  const [downloadingFull, setDownloadingFull] = useState(false);
 
   // Dimension sort & filter state
   type DimSortField = "value" | "completeness";
@@ -180,23 +185,49 @@ export default function ReportDetailPage() {
     });
   }
 
-  const handleDownload = () => {
-    const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
-    const rows: (string | number)[][] = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
 
-    if (dimensionResults.length > 0 && dimension) {
-      rows.push([]);
-      rows.push([`Distribución por ${dimension.name}`, "", "", ""]);
-      rows.push([dimension.name, "SKUs", "Poblados", "Completitud %"]);
-      dimensionResults.forEach((d) => rows.push([d.value, d.totalSKUs, d.populated, d.completeness]));
-    }
-
-    downloadCSV(`${report.name.replace(/\s/g, "_")}_resumen.csv`, headers, rows);
+  const handleDownloadCompleteness = () => {
+    const dimName = dimension?.name;
+    exportCompletenessXlsx(
+      `${report.name.replace(/\s/g, "_")}_completitud.xlsx`,
+      attrResults,
+      dimensionResults.length > 0 ? dimensionResults : undefined,
+      dimName,
+    );
     trackEvent("report_downloaded", {
       report_id: report.id,
       report_name: report.name,
       report_type: "predefined",
     });
+  };
+
+  const handleDownloadFull = async () => {
+    setDownloadingFull(true);
+    try {
+      const recs = await queryClient.fetchQuery({
+        queryKey: ["pim-records"],
+        queryFn: fetchAllPimRecords,
+        staleTime: 5 * 60 * 1000,
+      });
+      const reportRecords = getRecordsForReport(recs, report, operations);
+      const dimName = dimension?.name;
+      exportFullReportXlsx(
+        `${report.name.replace(/\s/g, "_")}_completo.xlsx`,
+        attrResults,
+        reportRecords,
+        report.attributes,
+        pimOrderList,
+        dimensionResults.length > 0 ? dimensionResults : undefined,
+        dimName,
+      );
+      trackEvent("report_downloaded", {
+        report_id: report.id,
+        report_name: report.name,
+        report_type: "predefined",
+      });
+    } finally {
+      setDownloadingFull(false);
+    }
   };
 
   return (
@@ -209,9 +240,25 @@ export default function ReportDetailPage() {
           <h1 className="text-2xl font-semibold text-foreground">{report.name}</h1>
           <p className="text-sm text-muted-foreground">{report.universe}</p>
         </div>
-        <Button variant="outline" onClick={handleDownload} className="gap-2">
-          <Download className="h-4 w-4" /> Descargar resumen
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" /> Descargar informe <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleDownloadCompleteness}>
+              Informe de completitud
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDownloadFull} disabled={downloadingFull}>
+              {downloadingFull ? (
+                <><Loader2 className="h-4 w-4 animate-spin mr-1" /> Preparando descarga...</>
+              ) : (
+                "Informe y Productos"
+              )}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Summary cards */}
