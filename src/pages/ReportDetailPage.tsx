@@ -204,18 +204,11 @@ export default function ReportDetailPage() {
   const handleDownloadFull = async () => {
     setDownloadingFull(true);
     try {
-      // If records are already cached this resolves instantly
-      let recs = allRecords || [];
-      if (recs.length === 0) {
-        // Force fetch via react-query refetch — usePimRecords already mounted
-        // We wait for the existing query to have data
-        const maxWait = 30_000;
-        const start = Date.now();
-        while (recs.length === 0 && Date.now() - start < maxWait) {
-          await new Promise((r) => setTimeout(r, 500));
-          recs = allRecords || [];
-        }
-      }
+      const recs = await queryClient.fetchQuery({
+        queryKey: ["pim-records"],
+        queryFn: fetchAllPimRecords,
+        staleTime: 5 * 60 * 1000,
+      });
       const reportRecords = getRecordsForReport(recs, report, operations);
       const dimName = dimension?.name;
       exportFullReportXlsx(
