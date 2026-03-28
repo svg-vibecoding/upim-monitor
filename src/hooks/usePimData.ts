@@ -488,6 +488,29 @@ export function getEvaluableAttributes(allAttrs: string[]): string[] {
 }
 
 // --- Records hook (only fetches valid rows, excludes ghosts) ---
+export async function fetchAllPimRecords(): Promise<PIMRecord[]> {
+  const allRows: PIMRecord[] = [];
+  const PAGE_SIZE = 1000;
+  let from = 0;
+  let hasMore = true;
+  while (hasMore) {
+    const { data, error } = await supabase
+      .from("pim_records")
+      .select("*")
+      .order("codigo_jaivana")
+      .range(from, from + PAGE_SIZE - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) {
+      hasMore = false;
+    } else {
+      allRows.push(...data.map(dbRowToPIMRecord));
+      from += PAGE_SIZE;
+      if (data.length < PAGE_SIZE) hasMore = false;
+    }
+  }
+  return allRows;
+}
+
 export function usePimRecords(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["pim-records"],
