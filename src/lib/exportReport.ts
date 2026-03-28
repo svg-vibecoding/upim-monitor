@@ -143,6 +143,19 @@ function buildSummarySheet(
     if (sheet[addrD]) sheet[addrD].z = INT_PCT_FMT;
   }
 
+  // Dimension title: bold + size 14
+  if (dimTitleRow >= 0) {
+    setCellStyle(sheet, XLSX.utils.encode_cell({ r: dimTitleRow, c: 0 }), TITLE_STYLE);
+  }
+
+  // Dimension KPIs: bold labels + left-align values
+  if (dimKpiStartRow >= 0) {
+    for (let r = dimKpiStartRow; r <= dimKpiEndRow; r++) {
+      setCellStyle(sheet, XLSX.utils.encode_cell({ r, c: 0 }), BOLD_STYLE);
+      setCellStyle(sheet, XLSX.utils.encode_cell({ r, c: 1 }), LEFT_STYLE);
+    }
+  }
+
   // Dimension section header
   if (dimHeaderRow > 0) {
     for (let c = 0; c < 4; c++) {
