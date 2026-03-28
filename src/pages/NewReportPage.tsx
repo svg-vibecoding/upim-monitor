@@ -21,6 +21,7 @@ import {
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
 import { FileText, ArrowLeft, Download, Search, CheckSquare, Square, ChevronDown, Check, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { CompletenessCircle } from "@/components/CompletenessCircle";
 import { UniverseSelector, type UniverseSource, type OperationMode, type InlineOperationDef } from "@/components/UniverseSelector";
