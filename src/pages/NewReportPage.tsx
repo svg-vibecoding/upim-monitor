@@ -20,7 +20,7 @@ import {
   type Condition, type LogicMode,
 } from "@/hooks/usePimData";
 import { Badge } from "@/components/ui/badge";
-import { FileText, ArrowLeft, Download, Search, CheckSquare, Square, ChevronDown, Check, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
+import { FileText, ArrowLeft, Download, Search, CheckSquare, Square, ChevronDown, Check, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, Loader2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { CompletenessCircle } from "@/components/CompletenessCircle";
@@ -68,6 +68,8 @@ export default function NewReportPage() {
   const [inlineOp, setInlineOp] = useState<InlineOperationDef>({
     logicMode: "all",
     conditions: [{ sourceType: "attribute", attribute: "", operator: "has_value", value: null }],
+  });
+  const [isDownloading, setIsDownloading] = useState(false);
   });
   const [csvCodes, setCsvCodes] = useState<string[]>([]);
   const [uploadedFileName, setUploadedFileName] = useState<string>("");
@@ -328,35 +330,45 @@ export default function NewReportPage() {
     }
   };
 
-  const handleDownloadCompleteness = () => {
-    const dimName = dimension?.name;
-    exportCompletenessXlsx(
-      "informe_personalizado_completitud.xlsx",
-      attrResults,
-      dimensionResults.length > 0 ? dimensionResults : undefined,
-      dimName,
-    );
-    trackEvent("report_downloaded", {
-      report_type: "custom",
-      source_type: source === "file" ? "csv" : "base_pim",
-    });
+  const handleDownloadCompleteness = async () => {
+    setIsDownloading(true);
+    try {
+      const dimName = dimension?.name;
+      exportCompletenessXlsx(
+        "informe_personalizado_completitud.xlsx",
+        attrResults,
+        dimensionResults.length > 0 ? dimensionResults : undefined,
+        dimName,
+      );
+      trackEvent("report_downloaded", {
+        report_type: "custom",
+        source_type: source === "file" ? "csv" : "base_pim",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
-  const handleDownloadFull = () => {
-    const dimName = dimension?.name;
-    exportFullReportXlsx(
-      "informe_personalizado_completo.xlsx",
-      attrResults,
-      records,
-      selectedAttrs,
-      pimOrderList,
-      dimensionResults.length > 0 ? dimensionResults : undefined,
-      dimName,
-    );
-    trackEvent("report_downloaded", {
-      report_type: "custom",
-      source_type: source === "file" ? "csv" : "base_pim",
-    });
+  const handleDownloadFull = async () => {
+    setIsDownloading(true);
+    try {
+      const dimName = dimension?.name;
+      exportFullReportXlsx(
+        "informe_personalizado_completo.xlsx",
+        attrResults,
+        records,
+        selectedAttrs,
+        pimOrderList,
+        dimensionResults.length > 0 ? dimensionResults : undefined,
+        dimName,
+      );
+      trackEvent("report_downloaded", {
+        report_type: "custom",
+        source_type: source === "file" ? "csv" : "base_pim",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   const handleReset = () => {
@@ -573,8 +585,12 @@ export default function NewReportPage() {
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Download className="h-4 w-4" /> Descargar informe <ChevronDown className="h-3 w-3" />
+                <Button variant="outline" className="gap-2" disabled={isDownloading}>
+                  {isDownloading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Descargando...</>
+                  ) : (
+                    <><Download className="h-4 w-4" /> Descargar informe <ChevronDown className="h-3 w-3" /></>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
