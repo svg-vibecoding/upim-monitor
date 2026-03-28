@@ -329,6 +329,15 @@ export default function NewReportPage() {
     }
   };
 
+  const buildMeta = (): ReportMeta => ({
+    reportName: "Informe personalizado",
+    universe: universeLabel,
+    totalSKUs: records.length,
+    evaluatedAttrs: attrResults.length,
+    focusAttrs: attrResults.filter(a => a.completeness < 50).length,
+    avgCompleteness,
+  });
+
   const handleDownloadCompleteness = async () => {
     setIsDownloading(true);
     try {
@@ -338,6 +347,7 @@ export default function NewReportPage() {
         attrResults,
         dimensionResults.length > 0 ? dimensionResults : undefined,
         dimName,
+        buildMeta(),
       );
       trackEvent("report_downloaded", {
         report_type: "custom",
@@ -379,6 +389,7 @@ export default function NewReportPage() {
         pimOrderList,
         dimensionResults.length > 0 ? dimensionResults : undefined,
         dimName,
+        buildMeta(),
       );
       trackEvent("report_downloaded", {
         report_type: "custom",
