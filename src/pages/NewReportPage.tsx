@@ -327,10 +327,31 @@ export default function NewReportPage() {
     }
   };
 
-  const handleDownload = () => {
-    const headers = ["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"];
-    const rows = attrResults.map((a) => [a.name, a.totalSKUs, a.populated, a.completeness]);
-    downloadCSV("informe_personalizado.csv", headers, rows);
+  const handleDownloadCompleteness = () => {
+    const dimName = dimension?.name;
+    exportCompletenessXlsx(
+      "informe_personalizado_completitud.xlsx",
+      attrResults,
+      dimensionResults.length > 0 ? dimensionResults : undefined,
+      dimName,
+    );
+    trackEvent("report_downloaded", {
+      report_type: "custom",
+      source_type: source === "file" ? "csv" : "base_pim",
+    });
+  };
+
+  const handleDownloadFull = () => {
+    const dimName = dimension?.name;
+    exportFullReportXlsx(
+      "informe_personalizado_completo.xlsx",
+      attrResults,
+      records,
+      selectedAttrs,
+      pimOrderList,
+      dimensionResults.length > 0 ? dimensionResults : undefined,
+      dimName,
+    );
     trackEvent("report_downloaded", {
       report_type: "custom",
       source_type: source === "file" ? "csv" : "base_pim",

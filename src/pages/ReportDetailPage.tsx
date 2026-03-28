@@ -35,6 +35,7 @@ export default function ReportDetailPage() {
   const [sortField, setSortField] = useState<SortField>("pim_order");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [tracked, setTracked] = useState(false);
+  const [downloadingFull, setDownloadingFull] = useState(false);
 
   // Dimension sort & filter state
   type DimSortField = "value" | "completeness";
@@ -181,7 +182,6 @@ export default function ReportDetailPage() {
     });
   }
 
-  const [downloadingFull, setDownloadingFull] = useState(false);
 
   const handleDownloadCompleteness = () => {
     const dimName = dimension?.name;
