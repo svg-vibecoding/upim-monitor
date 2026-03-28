@@ -88,10 +88,28 @@ function buildSummarySheet(
   rows.push(["Atributo", "SKUs Evaluados", "Valores Poblados", "Completitud %"]);
   attrResults.forEach((a) => rows.push([a.name, a.totalSKUs, a.populated, a.completeness]));
 
+  let dimTitleRow = -1;
+  let dimKpiStartRow = -1;
+  let dimKpiEndRow = -1;
   let dimHeaderRow = -1;
   if (dimensionResults?.length && dimensionName) {
+    const realGroups = dimensionResults.filter((d) => d.value !== "Sin valor asignado");
+    const groupCount = realGroups.length;
+    const best = realGroups.reduce((a, b) => (b.completeness > a.completeness ? b : a), realGroups[0]);
+    const worst = realGroups.reduce((a, b) => (b.completeness < a.completeness ? b : a), realGroups[0]);
+    const avgDim = groupCount > 0 ? Math.round(realGroups.reduce((s, d) => s + d.completeness, 0) / groupCount) : 0;
+
     rows.push([]);
+    dimTitleRow = rows.length;
     rows.push([`Distribución por ${dimensionName}`, "", "", ""]);
+    rows.push([]);
+    dimKpiStartRow = rows.length;
+    rows.push(["Grupos evaluados (valores únicos):", groupCount]);
+    rows.push(["Grupo con mejor completitud:", `${best.value} ${best.completeness}%`]);
+    rows.push(["Grupo a mejorar:", `${worst.value} ${worst.completeness}%`]);
+    rows.push(["Completitud promedio de los grupos:", `${avgDim}%`]);
+    dimKpiEndRow = rows.length - 1;
+    rows.push([]);
     dimHeaderRow = rows.length;
     rows.push([dimensionName, "SKUs", "Poblados", "Completitud %"]);
     dimensionResults.forEach((d) => rows.push([d.value, d.totalSKUs, d.populated, d.completeness]));
@@ -123,6 +141,19 @@ function buildSummarySheet(
     if (sheet[addrB]) sheet[addrB].z = THOUSANDS_FMT;
     if (sheet[addrC]) sheet[addrC].z = THOUSANDS_FMT;
     if (sheet[addrD]) sheet[addrD].z = INT_PCT_FMT;
+  }
+
+  // Dimension title: bold + size 14
+  if (dimTitleRow >= 0) {
+    setCellStyle(sheet, XLSX.utils.encode_cell({ r: dimTitleRow, c: 0 }), TITLE_STYLE);
+  }
+
+  // Dimension KPIs: bold labels + left-align values
+  if (dimKpiStartRow >= 0) {
+    for (let r = dimKpiStartRow; r <= dimKpiEndRow; r++) {
+      setCellStyle(sheet, XLSX.utils.encode_cell({ r, c: 0 }), BOLD_STYLE);
+      setCellStyle(sheet, XLSX.utils.encode_cell({ r, c: 1 }), LEFT_STYLE);
+    }
   }
 
   // Dimension section header
