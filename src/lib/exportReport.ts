@@ -10,7 +10,7 @@ const FIXED_FIELD_MAP: Record<string, string> = {
   "Clasificación del Producto": "Clasificación del Producto",
 };
 
-function getRecordValue(record: PIMRecord, attr: string): string {
+function getRecordValue(record: PIMRecord, attr: string): string | null {
   const val = record[attr];
   return val != null && String(val) !== "" ? String(val) : null;
 }
@@ -66,10 +66,10 @@ function buildProductsSheet(
   });
 
   const headers = ["Código Jaivaná", ...orderedAttrs, estadoKey];
-  const rows: (string | number)[][] = [headers];
+  const rows: (string | number | null)[][] = [headers];
 
   records.forEach((r) => {
-    const row: string[] = [r.codigoJaivana];
+    const row: (string | null)[] = [r.codigoJaivana];
     orderedAttrs.forEach((attr) => row.push(getRecordValue(r, attr)));
     row.push(getRecordValue(r, estadoKey));
     rows.push(row);
