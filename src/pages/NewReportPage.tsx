@@ -360,7 +360,7 @@ export default function NewReportPage() {
       trackEvent("report_downloaded", {
         report_type: "custom",
         source_type: source === "file" ? "csv" : "base_pim",
-        download_type: "products",
+        
       });
     } finally {
       setIsDownloading(false);
@@ -383,7 +383,7 @@ export default function NewReportPage() {
       trackEvent("report_downloaded", {
         report_type: "custom",
         source_type: source === "file" ? "csv" : "base_pim",
-        download_type: "full",
+        
       });
     } finally {
       setIsDownloading(false);

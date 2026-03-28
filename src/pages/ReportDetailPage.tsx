@@ -225,7 +225,7 @@ export default function ReportDetailPage() {
         report_id: report.id,
         report_name: report.name,
         report_type: "predefined",
-        download_type: "products",
+        
       });
     } finally {
       setIsDownloading(false);
@@ -255,7 +255,7 @@ export default function ReportDetailPage() {
         report_id: report.id,
         report_name: report.name,
         report_type: "predefined",
-        download_type: "full",
+        
       });
     } finally {
       setIsDownloading(false);
