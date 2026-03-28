@@ -11,7 +11,7 @@ import { CompletenessBar } from "@/components/CompletenessBar";
 import {
   computeAttributeResults, computeDimensionResults, PIMRecord,
 } from "@/data/mockData";
-import { exportCompletenessXlsx, exportFullReportXlsx } from "@/lib/exportReport";
+import { exportCompletenessXlsx, exportFullReportXlsx, exportProductsXlsx } from "@/lib/exportReport";
 import {
   usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList,
   getAttributeClassification, isNonEvaluable, usePredefinedReports,
@@ -348,6 +348,25 @@ export default function NewReportPage() {
     }
   };
 
+  const handleDownloadProducts = async () => {
+    setIsDownloading(true);
+    try {
+      exportProductsXlsx(
+        "informe_personalizado_productos.xlsx",
+        records,
+        selectedAttrs,
+        pimOrderList,
+      );
+      trackEvent("report_downloaded", {
+        report_type: "custom",
+        source_type: source === "file" ? "csv" : "base_pim",
+        download_type: "products",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   const handleDownloadFull = async () => {
     setIsDownloading(true);
     try {
@@ -364,6 +383,7 @@ export default function NewReportPage() {
       trackEvent("report_downloaded", {
         report_type: "custom",
         source_type: source === "file" ? "csv" : "base_pim",
+        download_type: "full",
       });
     } finally {
       setIsDownloading(false);
@@ -595,6 +615,9 @@ export default function NewReportPage() {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handleDownloadCompleteness}>
                   Informe
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadProducts}>
+                  Productos
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownloadFull}>
                   Informe y Productos

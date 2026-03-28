@@ -95,7 +95,22 @@ export function exportCompletenessXlsx(
 ) {
   const wb = XLSX.utils.book_new();
   const ws = buildSummarySheet(attrResults, dimensionResults, dimensionName);
-  XLSX.utils.book_append_sheet(wb, ws, "Resumen");
+  XLSX.utils.book_append_sheet(wb, ws, "Informe de Completitud");
+  saveWorkbook(wb, filename);
+}
+
+/**
+ * Export products-only .xlsx (single "Productos" tab).
+ */
+export function exportProductsXlsx(
+  filename: string,
+  records: PIMRecord[],
+  reportAttributes: string[],
+  attributeOrder: string[],
+) {
+  const wb = XLSX.utils.book_new();
+  const productsWs = buildProductsSheet(records, reportAttributes, attributeOrder);
+  XLSX.utils.book_append_sheet(wb, productsWs, "Productos");
   saveWorkbook(wb, filename);
 }
 
@@ -113,7 +128,7 @@ export function exportFullReportXlsx(
 ) {
   const wb = XLSX.utils.book_new();
   const summaryWs = buildSummarySheet(attrResults, dimensionResults, dimensionName);
-  XLSX.utils.book_append_sheet(wb, summaryWs, "Resumen");
+  XLSX.utils.book_append_sheet(wb, summaryWs, "Informe de Completitud");
   const productsWs = buildProductsSheet(records, reportAttributes, attributeOrder);
   XLSX.utils.book_append_sheet(wb, productsWs, "Productos");
   saveWorkbook(wb, filename);
