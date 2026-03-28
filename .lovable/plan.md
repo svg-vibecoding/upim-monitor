@@ -1,111 +1,151 @@
-Diagnóstico
+# Notas de ajuste al plan de descarga — leer antes de implementar
 
-El problema ya no está en el timeout de 30s en sí. La causa raíz actual es más estructural:
+Tu plan es correcto en estructura. Aplica estos ajustes:
 
-1. La app considera “autenticado” solo cuando `user` existe (`isAuthenticated: !!user` en `AuthContext`).
-2. Pero `user` no sale de la sesión persistida del navegador; sale de 2 queries adicionales a base de datos (`profiles` y `user_roles`) dentro de `onAuthStateChange`.
-3. Mientras esas queries terminan, existe una sesión válida, pero `user` sigue en `null`.
-4. En ese hueco:
-  - `AppRoutes` ve `isLoading = false` + `isAuthenticated = false`
-  - redirige a `/login`
-  - luego el perfil termina de cargar
-  - `user` aparece
-  - la app vuelve a entrar
+## Ajuste 1: NO cargar 77K registros siempre
 
-Eso explica exactamente el síntoma: loader gris → login → app.
+No cambies `needsRecords = !!selectedDimension` para cargar records siempre. En su lugar, carga los registros bajo demanda solo cuando el usuario haga click en "Informe y Productos":
 
-Evidencia del código
+- Usar `queryClient.fetchQuery` o un estado booleano que active la carga
+- Mientras los registros cargan, mostrar un estado de loading en el item del dropdown (texto "Preparando descarga..." o un spinner)
+- Si los registros ya están en cache de React Query (porque el usuario seleccionó una dimensión antes), la descarga será instantánea
 
-- `src/contexts/AuthContext.tsx`
-  - `isAuthenticated` depende de `!!user`, no de la sesión.
-  - `onAuthStateChange` hace trabajo async pesado (`loadAppUser`) antes de consolidar el estado final.
-  - `loadAppUser` hace 2 lecturas secuenciales: `profiles` y luego `user_roles`.
-- `src/App.tsx`
-  - el router decide entre app y login solo con `isLoading` + `isAuthenticated`.
-- `src/components/AppLayout.tsx`
-  - además vuelve a redirigir a login si `!isAuthenticated`.
+Esto mantiene el rendimiento actual para los usuarios que solo quieren ver el informe sin descargar.
 
-Por qué el refresh se siente largo
+## Ajuste 2: Columnas de "Productos" — reglas de orden
 
-No se está restaurando la app desde la sesión local de forma inmediata. Se está esperando a completar hidratación de perfil/rol para considerar al usuario “dentro”. Además:
+La pestaña "Productos" debe tener este orden de columnas:
 
-- `loadAppUser` hoy es secuencial
-- se ejecuta dentro del callback de auth
-- el timeout de refresco de perfil es de 15s, demasiado alto para el camino crítico de recarga
+1. **Primera columna siempre:** `Código Jaivaná` (como texto, preservando ceros a la izquierda). Aparece aunque NO esté en los atributos del informe.
+2. **Columnas intermedias:** los atributos que el informe evalúa (`report.attributes` en predefinidos, `selectedAttrs` en ad-hoc), en el orden definido por `attributeOrder` (pim_metadata). Si `Estado (Global)` está en los atributos del informe, NO ponerlo aquí — va al final.
+3. **Última columna siempre:** `Estado (Global)`. Aparece aunque NO esté en los atributos del informe.
 
-Lo que propongo
+Ejemplo: si el informe evalúa ["Visibilidad Adobe B2B", "Marca", "Peso"], la pestaña "Productos" tendría las columnas: `Código Jaivaná | Visibilidad Adobe B2B | Marca | Peso | Estado (Global)`
 
-1. Separar “sesión lista” de “perfil listo”
-  - `AuthContext` debe manejar al menos dos estados distintos:
-    - auth restaurada desde storage (`isAuthReady`)
-    - perfil de app cargado (`user`)
-  - La sesión (`session` / `supabaseUser`) debe ser la fuente para saber si el usuario está autenticado.
-  - El perfil debe quedar como capa adicional para nombre, rol y permisos.
-2. No bloquear `onAuthStateChange` con carga de perfil
-  - En `onAuthStateChange`, hacer solo:
-    - `setSession`
-    - `setSupabaseUser`
-    - marcar auth como lista
-  - Mover la carga de perfil a un `useEffect` separado que observe `supabaseUser?.id`.
-  - Así se evita el hueco de redirección y también la fragilidad de esperar lógica async dentro del callback de auth.
-3. Cambiar el criterio de routing
-  - `AppRoutes` no debe mandar a login cuando existe sesión pero el perfil aún está cargando.
-  - Regla:
-    - si `!isAuthReady` → spinner
-    - si no hay sesión → login
-    - si hay sesión pero el perfil sigue hidratando → spinner corto / shell loader
-    - si hay sesión y perfil → app
-  - `AppLayout` debe seguir la misma lógica y no hacer `Navigate` a login mientras exista sesión válida.
-4. Reducir el tiempo de refresh percibido
-  - Paralelizar `profiles` + `user_roles` con `Promise.all`.
-  - Usar un timeout corto para la carga inicial de perfil (por ejemplo 4–6s), pero sin redirigir a login si hay sesión.
-  - Si el perfil tarda más, mostrar loader de app o estado de recuperación, no login.
+NO incluir los 74 atributos del PIM — solo los del informe + las dos columnas fijas obligatorias.
 
-Implementación concreta
+## Ajuste 3: Forzar código como texto con cell.t = "s"
 
-1. `src/contexts/AuthContext.tsx`
-  - Introducir `isAuthReady` y opcionalmente `isProfileLoading`.
-  - `isAuthenticated` debe basarse en `!!session` o `!!supabaseUser`, no en `!!user`.
-  - `getSession()` al montar solo restaura sesión local y define el estado inicial.
-  - `onAuthStateChange` actualiza sesión de forma síncrona.
-  - Nuevo efecto separado para cargar `profile + role` cuando exista `supabaseUser`.
-  - `loadAppUser` pasa a usar `Promise.all` para reducir latencia.
-2. `src/App.tsx`
-  - Ajustar `AppRoutes` para usar:
-    - `isAuthReady`
-    - `session` o `supabaseUser`
-    - opcionalmente `isProfileLoading`
-  - Evitar cualquier `<Navigate to="/login" />` mientras haya sesión activa pero perfil pendiente.
-3. `src/components/AppLayout.tsx`
-  - No redirigir a login si hay sesión activa y el perfil todavía no está disponible.
-  - Mantener la validación de rol solo cuando `user` ya exista.
+Para asegurar que el Código Jaivaná se exporte como texto (preservando ceros a la izquierda):
 
-Resultado esperado
+```typescript
+// Después de crear la hoja con aoa_to_sheet:
+const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+for (let row = range.s.r + 1; row <= range.e.r; row++) {
+  const cell = sheet[XLSX.utils.encode_cell({ r: row, c: 0 })];
+  if (cell) {
+    cell.t = "s"; // Force string type
+    cell.v = String(cell.v); // Ensure value is string
+  }
+}
 
-Flujo correcto tras el cambio:
+```
 
-- Con sesión activa: recarga → spinner corto → app
-- Sin sesión: recarga → spinner muy breve → login
-- Si el perfil tarda: recarga → spinner / shell loader → app
-- Nunca: recarga → login → app
+Usar `cell.t = "s"` (tipo string) en vez de `cell.z = "@"` (formato display). El primero le dice a Excel que el dato ES texto. El segundo solo cambia cómo se muestra pero Excel puede seguir tratándolo como número.
 
-Mejora específica para que el refresh no sea tan largo
+## Todo lo demás del plan está correcto
 
-La mejora de mayor impacto no es bajar ciegamente un timeout, sino dejar de usar la carga de perfil como puerta de entrada a toda la app. Con eso:
+Procede con la implementación aplicando estos 3 ajustes.
 
-- la autenticación se resuelve instantáneamente desde storage
-- el login flash desaparece
-- el tiempo percibido baja mucho
-- el perfil/rol se hidrata en paralelo sin romper navegación
+## Plan: Dropdown de descarga con dos opciones (.xlsx)
 
-Archivos a tocar
+### Resumen
 
-- `src/contexts/AuthContext.tsx`
-- `src/App.tsx`
-- `src/components/AppLayout.tsx`
+Reemplazar el botón "Descargar resumen" por un `DropdownMenu` con dos opciones:
 
-Alcance recomendado
+1. **Informe de completitud** — pestaña única "Resumen" con la tabla de completitud por atributo (lo que hoy exporta como CSV, ahora en .xlsx)
+2. **Informe y Productos** — .xlsx con dos pestañas: "Resumen" (completitud) + "Productos" (todos los registros del universo con los atributos como columnas)
 
-No tocar hooks de negocio ni queries de datos. El fix debe ser exclusivamente de orquestación de sesión/hidratación, manteniendo intacta la lógica actual de perfiles, roles e inactividad.  
-  
-**Nota adicional:** En `AppLayout.tsx`, asegúrate de que la validación de rol (`user?.role !== "usuario_pro"`) solo se evalúe cuando `user` no sea null. Si `user` es null pero hay sesión activa, mostrar un spinner breve en vez de redirigir a home. Esto evita que un PIM Manager vea un flash del Dashboard mientras su perfil carga.
+### Archivos a modificar
+
+
+| Archivo                          | Cambio                                                                                                                      |
+| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `src/lib/exportReport.ts`        | **Nuevo** — función utilitaria compartida para generar ambos .xlsx                                                          |
+| `src/pages/ReportDetailPage.tsx` | Reemplazar botón por dropdown; usar nueva función; asegurar que `records` se carguen siempre (no solo cuando hay dimensión) |
+| `src/pages/NewReportPage.tsx`    | Reemplazar botón por dropdown; usar nueva función                                                                           |
+
+
+### Detalle técnico
+
+#### 1. `src/lib/exportReport.ts` (nuevo)
+
+Dos funciones exportadas usando la librería `xlsx` (ya instalada):
+
+```text
+exportCompletenessXlsx(filename, attrResults, dimensionResults?, dimensionName?)
+  → Genera .xlsx con pestaña "Resumen"
+  → Mismas columnas que el CSV actual + sección dimensión si aplica
+
+exportFullReportXlsx(filename, attrResults, records, reportAttributes, attributeOrder, dimensionResults?, dimensionName?)
+  → Genera .xlsx con dos pestañas:
+  → Pestaña "Resumen": igual que arriba
+  → Pestaña "Productos": una fila por producto del universo
+```
+
+**Pestaña "Productos"** — construcción:
+
+- Columna A: `Código Jaivaná` (siempre texto, forzado con `z: "@"` en la celda o `t: "s"`)
+- Columnas siguientes: los atributos del informe, en el orden de `attributeOrder` (pim_metadata)
+- Para cada registro `PIMRecord`, se mapean los campos fijos (`estadoGlobal`, `visibilidadB2B`, etc.) y los atributos dinámicos del JSONB
+- Se usa `XLSX.utils.json_to_sheet` o `aoa_to_sheet` y se fuerza el formato texto en la columna de código
+
+#### 2. `src/pages/ReportDetailPage.tsx`
+
+- Importar `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem` y las nuevas funciones de export
+- Cambiar la carga de records: actualmente solo carga si hay dimensión seleccionada (`needsRecords = !!selectedDimension`). Para "Informe y Productos" se necesitan siempre. Cambiar a cargar records siempre (ya se usa `usePimRecords()` que trae todos)
+- Derivar `reportRecords` con `getRecordsForReport(allRecords, report, operations)` sin condicional de dimensión
+- Reemplazar el `<Button>` por:
+
+```text
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <Button variant="outline" className="gap-2">
+      <Download /> Descargar informe <ChevronDown />
+    </Button>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent>
+    <DropdownMenuItem onClick={handleDownloadCompleteness}>
+      Informe de completitud
+    </DropdownMenuItem>
+    <DropdownMenuItem onClick={handleDownloadFull}>
+      Informe y Productos
+    </DropdownMenuItem>
+  </DropdownMenuContent>
+</DropdownMenu>
+```
+
+- `handleDownloadCompleteness` llama a `exportCompletenessXlsx`
+- `handleDownloadFull` llama a `exportFullReportXlsx` pasando `reportRecords`, `report.attributes` y `pimOrderList`
+- Ambos trackean `report_downloaded` con un campo extra `download_type`
+
+#### 3. `src/pages/NewReportPage.tsx`
+
+- Mismo patrón de dropdown
+- `records` ya está disponible en el estado de resultados
+- `selectedAttrs` son los atributos del informe
+- Misma lógica: dos handlers que llaman a las funciones de export
+
+### Mapeo de atributos a valores del PIMRecord
+
+La función de export necesita mapear nombre de atributo → valor del registro. Los campos fijos se mapean así:
+
+```text
+"Estado (Global)" → record.estadoGlobal
+"Visibilidad Adobe B2B" → record.visibilidadB2B
+"Visibilidad Adobe B2C" → record.visibilidadB2C
+"Categoría N1 Comercial" → record.categoriaN1Comercial
+"Clasificación del Producto" → record.clasificacionProducto
+Cualquier otro → record[attrName] (del JSONB plano)
+```
+
+### Código como texto
+
+Para forzar `Código Jaivaná` como texto en el .xlsx, se recorrerán las celdas de la columna A después de crear la hoja y se asignará `cell.z = "@"` (formato texto), o se construirá con `aoa_to_sheet` donde el valor ya es string y se aplicará formato de columna.
+
+### Lo que NO cambia
+
+- Lógica de negocio, hooks, queries
+- Estructura de la tabla de completitud en pantalla
+- DimensionSummaryCards
+- Tracking de eventos (solo se agrega campo `download_type`)
