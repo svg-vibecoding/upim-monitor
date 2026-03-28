@@ -12,8 +12,9 @@ import {
   computeAttributeResults, computeDimensionResults, getRecordsForReport,
   filterRealAttributes, getEvaluableAttributes, useOperations,
 } from "@/hooks/usePimData";
-import { downloadCSV } from "@/data/mockData";
-import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Download, ArrowUpDown, ArrowUp, ArrowDown, AlertTriangle, ChevronDown, Loader2 } from "lucide-react";
+import { exportCompletenessXlsx, exportFullReportXlsx } from "@/lib/exportReport";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { DimensionSummaryCards } from "@/components/DimensionSummaryCards";
 import { CompletenessCircle } from "@/components/CompletenessCircle";
 import { Badge } from "@/components/ui/badge";

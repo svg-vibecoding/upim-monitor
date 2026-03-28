@@ -9,8 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CompletenessBar } from "@/components/CompletenessBar";
 import {
-  computeAttributeResults, computeDimensionResults, downloadCSV, PIMRecord,
+  computeAttributeResults, computeDimensionResults, PIMRecord,
 } from "@/data/mockData";
+import { exportCompletenessXlsx, exportFullReportXlsx } from "@/lib/exportReport";
 import {
   usePimRecords, useDimensions, useAttributeOrder, getFullAttributeList,
   getAttributeClassification, isNonEvaluable, usePredefinedReports,
