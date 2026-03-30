@@ -129,6 +129,7 @@ export interface AttributeCompleteness {
   totalSKUs: number;
   populated: number;
   completeness: number;
+  rawCompleteness?: number;
 }
 
 // --- Computed results layer (precomputed cache) ---
