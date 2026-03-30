@@ -25,6 +25,7 @@ export interface AttributeResult {
   totalSKUs: number;
   populated: number;
   completeness: number;
+  rawCompleteness: number;
 }
 
 export interface DimensionResult {
@@ -32,6 +33,7 @@ export interface DimensionResult {
   totalSKUs: number;
   populated: number;
   completeness: number;
+  rawCompleteness: number;
 }
 
 export type UniverseKey = "all" | "active" | "visible_b2b" | "visible_b2c" | "digital_base" | "producto_foco";
