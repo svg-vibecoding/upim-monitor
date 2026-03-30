@@ -191,7 +191,7 @@ export default function NewReportPage() {
     sorted.sort((a, b) => {
       let cmp = 0;
       if (sortField === "completeness") {
-        cmp = a.completeness - b.completeness;
+        cmp = a.rawCompleteness - b.rawCompleteness;
       } else {
         cmp = a.name.localeCompare(b.name, "es");
       }
