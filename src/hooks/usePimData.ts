@@ -623,15 +623,17 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
     }
     return {
       value,
+      const raw = totalChecks > 0 ? (populatedChecks / totalChecks) * 100 : 0;
       totalSKUs: recs.length,
       populated: populatedChecks,
-      completeness: totalChecks > 0 ? Math.round((populatedChecks / totalChecks) * 100) : 0,
+      completeness: Math.round(raw),
+      rawCompleteness: raw,
     };
   }).sort((a, b) => {
     // "Sin valor asignado" always last
     if (a.value === "Sin valor asignado") return 1;
     if (b.value === "Sin valor asignado") return -1;
-    return a.completeness - b.completeness;
+    return a.rawCompleteness - b.rawCompleteness;
   });
 }
 

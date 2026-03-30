@@ -157,7 +157,8 @@ export function computeAttributeResults(records: PIMRecord[], attributes: string
   return attributes.map((attr) => {
     const total = records.length;
     const populated = records.filter((r) => r[attr] !== null && r[attr] !== "" && r[attr] !== undefined).length;
-    return { name: attr, totalSKUs: total, populated, completeness: total > 0 ? Math.round((populated / total) * 100) : 0 };
+    const raw = total > 0 ? (populated / total) * 100 : 0;
+    return { name: attr, totalSKUs: total, populated, completeness: Math.round(raw), rawCompleteness: raw };
   });
 }
 

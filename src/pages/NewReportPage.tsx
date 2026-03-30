@@ -218,7 +218,7 @@ export default function NewReportPage() {
       });
     } else {
       rest.sort((a, b) => {
-        const cmp = a.completeness - b.completeness;
+        const cmp = a.rawCompleteness - b.rawCompleteness;
         return dimSortDir === "asc" ? cmp : -cmp;
       });
     }
