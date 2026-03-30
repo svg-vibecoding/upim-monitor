@@ -1,44 +1,68 @@
 
 
-## Diagnóstico: Bug de reordenamiento en primer/último informe
+## Diagnóstico
 
-### Causa raíz
-
-En `handleMoveReport` (AdminPage.tsx, línea 123-125), el swap usa los valores de `displayOrder` de cada informe:
+En `computeAttributeResults` (usePimData.ts línea 602), el valor `completeness` se guarda ya redondeado con `Math.round()`:
 
 ```ts
-const updates = [
-  { id: sorted[idx].id, display_order: sorted[swapIdx].displayOrder },
-  { id: sorted[swapIdx].id, display_order: sorted[idx].displayOrder },
-];
+completeness: total > 0 ? Math.round((populated / total) * 100) : 0
 ```
 
-Si varios informes tienen `display_order = null` en la base de datos, todos reciben `displayOrder: 99` (el fallback en `usePimData.ts` línea 539). Al hacer swap entre dos informes con el mismo valor 99, se escribe `display_order: 99` a ambos — **nada cambia realmente**.
+Cuando dos atributos tienen, por ejemplo, 0.8% y 1.4%, ambos se redondean a 1% y el sort en `ReportDetailPage.tsx` / `NewReportPage.tsx` compara `1 - 1 = 0`, dejando el orden arbitrario.
 
-Esto afecta especialmente al primer y último informe cuando comparten `displayOrder` con su vecino.
+## Solución
 
-### Solución
+Guardar la precisión real en un campo adicional y usar ese campo para ordenar, sin cambiar lo que se muestra en la UI.
 
-Cambiar `handleMoveReport` para usar el **índice del array** como orden efectivo en lugar de los valores `displayOrder`:
+### 1. Agregar `rawCompleteness` al tipo `AttributeResult`
+
+En `src/data/mockData.ts` (donde se define la interfaz) y en `src/hooks/usePimData.ts`:
 
 ```ts
-const handleMoveReport = useCallback((reportId: string, direction: "up" | "down") => {
-  const sorted = sortReportsByDisplayOrder(dbReports);
-  const idx = sorted.findIndex((r) => r.id === reportId);
-  if (idx < 0) return;
-  const swapIdx = direction === "up" ? idx - 1 : idx + 1;
-  if (swapIdx < 0 || swapIdx >= sorted.length) return;
-  const updates = [
-    { id: sorted[idx].id, display_order: swapIdx },      // ← índice, no displayOrder
-    { id: sorted[swapIdx].id, display_order: idx },       // ← índice, no displayOrder
-  ];
-  reorderReports.mutate(updates);
-}, [dbReports, reorderReports]);
+export interface AttributeResult {
+  name: string;
+  totalSKUs: number;
+  populated: number;
+  completeness: number;      // redondeado, para display
+  rawCompleteness: number;   // precisión real, para sort
+}
 ```
 
-Así, aunque todos los informes empiecen con `displayOrder: 99`, al mover el primero hacia abajo se asignan valores distintos (0 y 1), y el cambio persiste correctamente.
+### 2. Calcular `rawCompleteness` en `computeAttributeResults`
 
-### Archivo a modificar
+En `src/hooks/usePimData.ts` línea 602 y en `src/data/mockData.ts` (la función equivalente):
 
-- `src/pages/AdminPage.tsx` — solo las líneas 123-126 (el array `updates` dentro de `handleMoveReport`)
+```ts
+const raw = total > 0 ? (populated / total) * 100 : 0;
+return {
+  name: attr, totalSKUs: total, populated,
+  completeness: Math.round(raw),
+  rawCompleteness: raw,
+};
+```
+
+### 3. Usar `rawCompleteness` en el sort
+
+En `ReportDetailPage.tsx` (línea ~91) y `NewReportPage.tsx` (línea ~194), cambiar:
+
+```ts
+// Antes
+cmp = a.completeness - b.completeness;
+
+// Después
+cmp = a.rawCompleteness - b.rawCompleteness;
+```
+
+Hacer lo mismo en `computeDimensionResults` y en los sorts de dimensión si aplica.
+
+### Archivos a modificar
+
+| Archivo | Cambio |
+|---|---|
+| `src/data/mockData.ts` | Agregar `rawCompleteness` a la interfaz y a la función `computeAttributeResults` |
+| `src/hooks/usePimData.ts` | Agregar `rawCompleteness` a `computeAttributeResults` y `computeDimensionResults` |
+| `src/pages/ReportDetailPage.tsx` | Usar `rawCompleteness` en los sorts de atributos y dimensiones |
+| `src/pages/NewReportPage.tsx` | Usar `rawCompleteness` en los sorts de atributos y dimensiones |
+
+No se modifica la UI mostrada — `completeness` (redondeado) sigue siendo el valor que se renderiza en `CompletenessBar` y en las tablas.
 
