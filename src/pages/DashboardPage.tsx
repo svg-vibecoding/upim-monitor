@@ -181,7 +181,7 @@ export default function DashboardPage() {
     if (!rawFocusItems) return [];
     return rawFocusItems
       .filter((a) => !NON_EVALUABLE_FIELDS.includes(a.name) && a.completeness <= 50)
-      .sort((a, b) => a.completeness - b.completeness);
+      .sort((a, b) => (a.rawCompleteness ?? a.completeness) - (b.rawCompleteness ?? b.completeness));
   }, [rawFocusItems]);
 
   const filteredFocusItems = severityFilter
