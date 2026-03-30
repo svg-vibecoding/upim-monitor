@@ -226,6 +226,14 @@ export function useOperationCount(operationId: string | null | undefined) {
   return { data: fallback.data ?? 0, isLoading: cached.isLoading || fallback.isLoading };
 }
 
+function enrichRawCompleteness(items: AttributeCompleteness[]): AttributeCompleteness[] {
+  return items.map(item => ({
+    ...item,
+    rawCompleteness: item.rawCompleteness ??
+      (item.totalSKUs > 0 ? (item.populated / item.totalSKUs) * 100 : 0),
+  }));
+}
+
 export function useReportCompleteness(reportId: string | null | undefined) {
   // Try cached result first
   const cached = useComputedResult<AttributeCompleteness[]>("report_completeness", reportId);
@@ -257,9 +265,9 @@ export function useReportCompleteness(reportId: string | null | undefined) {
   });
 
   if (hasCached) {
-    return { data: cached.data!.result, isLoading: cached.isLoading };
+    return { data: enrichRawCompleteness(cached.data!.result), isLoading: cached.isLoading };
   }
-  return { data: live.data, isLoading: cached.isLoading || live.isLoading };
+  return { data: live.data ? enrichRawCompleteness(live.data) : live.data, isLoading: cached.isLoading || live.isLoading };
 }
 
 // --- Attribute order from pim_metadata ---
