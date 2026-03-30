@@ -621,9 +621,9 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
         if (!isEmptyValue(r[attr])) populatedChecks++;
       }
     }
+    const raw = totalChecks > 0 ? (populatedChecks / totalChecks) * 100 : 0;
     return {
       value,
-      const raw = totalChecks > 0 ? (populatedChecks / totalChecks) * 100 : 0;
       totalSKUs: recs.length,
       populated: populatedChecks,
       completeness: Math.round(raw),
