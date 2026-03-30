@@ -322,6 +322,7 @@ export default function NewReportPage() {
   const handleGenerate = () => {
     if (canGenerate) {
       setStep("results");
+      window.scrollTo(0, 0);
       trackEvent("report_created", {
         report_type: "custom",
         source_type: source === "file" ? "csv" : "base_pim",
