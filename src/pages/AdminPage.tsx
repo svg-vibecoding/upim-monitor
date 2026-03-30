@@ -121,8 +121,8 @@ export default function AdminPage() {
     const swapIdx = direction === "up" ? idx - 1 : idx + 1;
     if (swapIdx < 0 || swapIdx >= sorted.length) return;
     const updates = [
-      { id: sorted[idx].id, display_order: sorted[swapIdx].displayOrder },
-      { id: sorted[swapIdx].id, display_order: sorted[idx].displayOrder },
+      { id: sorted[idx].id, display_order: swapIdx },
+      { id: sorted[swapIdx].id, display_order: idx },
     ];
     reorderReports.mutate(updates);
   }, [dbReports, reorderReports]);
