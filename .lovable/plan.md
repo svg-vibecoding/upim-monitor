@@ -2,67 +2,35 @@
 
 ## Diagnóstico
 
-En `computeAttributeResults` (usePimData.ts línea 602), el valor `completeness` se guarda ya redondeado con `Math.round()`:
+`ReportDetailPage` obtiene los datos de completitud desde `computed_results` en la base de datos (tabla precomputada). Esos registros JSON se guardaron **antes** de agregar `rawCompleteness`, por lo que el campo no existe en los datos cacheados. El sort hace fallback a `completeness` (redondeado) y el orden entre Imagen 4 (310 poblados, 1.15%) e Imagen 5 (143 poblados, 0.53%) queda arbitrario porque ambos muestran `1`.
+
+## Solución: dos partes
+
+### 1. Derivar `rawCompleteness` al leer los datos (client-side)
+
+En `useReportCompleteness` (usePimData.ts, ~línea 229-263), después de obtener el array de `AttributeCompleteness[]` (ya sea de cache o live), recalcular `rawCompleteness` para cada item si no viene en el JSON:
 
 ```ts
-completeness: total > 0 ? Math.round((populated / total) * 100) : 0
-```
-
-Cuando dos atributos tienen, por ejemplo, 0.8% y 1.4%, ambos se redondean a 1% y el sort en `ReportDetailPage.tsx` / `NewReportPage.tsx` compara `1 - 1 = 0`, dejando el orden arbitrario.
-
-## Solución
-
-Guardar la precisión real en un campo adicional y usar ese campo para ordenar, sin cambiar lo que se muestra en la UI.
-
-### 1. Agregar `rawCompleteness` al tipo `AttributeResult`
-
-En `src/data/mockData.ts` (donde se define la interfaz) y en `src/hooks/usePimData.ts`:
-
-```ts
-export interface AttributeResult {
-  name: string;
-  totalSKUs: number;
-  populated: number;
-  completeness: number;      // redondeado, para display
-  rawCompleteness: number;   // precisión real, para sort
+function enrichRawCompleteness(items: AttributeCompleteness[]): AttributeCompleteness[] {
+  return items.map(item => ({
+    ...item,
+    rawCompleteness: item.rawCompleteness ?? 
+      (item.totalSKUs > 0 ? (item.populated / item.totalSKUs) * 100 : 0),
+  }));
 }
 ```
 
-### 2. Calcular `rawCompleteness` en `computeAttributeResults`
+Aplicar esta función tanto al retorno de `cached.data.result` como al de `live.data`.
 
-En `src/hooks/usePimData.ts` línea 602 y en `src/data/mockData.ts` (la función equivalente):
+### 2. Refrescar los datos precomputados (opcional, una sola vez)
 
-```ts
-const raw = total > 0 ? (populated / total) * 100 : 0;
-return {
-  name: attr, totalSKUs: total, populated,
-  completeness: Math.round(raw),
-  rawCompleteness: raw,
-};
-```
-
-### 3. Usar `rawCompleteness` en el sort
-
-En `ReportDetailPage.tsx` (línea ~91) y `NewReportPage.tsx` (línea ~194), cambiar:
-
-```ts
-// Antes
-cmp = a.completeness - b.completeness;
-
-// Después
-cmp = a.rawCompleteness - b.rawCompleteness;
-```
-
-Hacer lo mismo en `computeDimensionResults` y en los sorts de dimensión si aplica.
+Ejecutar manualmente "Actualizar datos de la app" desde Admin regenerará los `computed_results` con el nuevo `rawCompleteness`. Pero el fix del punto 1 hace que funcione inmediatamente sin necesidad de refrescar.
 
 ### Archivos a modificar
 
 | Archivo | Cambio |
 |---|---|
-| `src/data/mockData.ts` | Agregar `rawCompleteness` a la interfaz y a la función `computeAttributeResults` |
-| `src/hooks/usePimData.ts` | Agregar `rawCompleteness` a `computeAttributeResults` y `computeDimensionResults` |
-| `src/pages/ReportDetailPage.tsx` | Usar `rawCompleteness` en los sorts de atributos y dimensiones |
-| `src/pages/NewReportPage.tsx` | Usar `rawCompleteness` en los sorts de atributos y dimensiones |
+| `src/hooks/usePimData.ts` | Agregar `enrichRawCompleteness` y aplicarla en los dos returns de `useReportCompleteness` |
 
-No se modifica la UI mostrada — `completeness` (redondeado) sigue siendo el valor que se renderiza en `CompletenessBar` y en las tablas.
+No se modifica ningún otro archivo. El sort en `ReportDetailPage.tsx` ya usa `rawCompleteness ?? completeness`, así que con el enriquecimiento funcionará correctamente.
 
