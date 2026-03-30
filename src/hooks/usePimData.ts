@@ -129,6 +129,7 @@ export interface AttributeCompleteness {
   totalSKUs: number;
   populated: number;
   completeness: number;
+  rawCompleteness?: number;
 }
 
 // --- Computed results layer (precomputed cache) ---
@@ -599,7 +600,8 @@ export function computeAttributeResults(records: PIMRecord[], attributes: string
   return attributes.map((attr) => {
     const total = records.length;
     const populated = records.filter((r) => !isEmptyValue(r[attr])).length;
-    return { name: attr, totalSKUs: total, populated, completeness: total > 0 ? Math.round((populated / total) * 100) : 0 };
+    const raw = total > 0 ? (populated / total) * 100 : 0;
+    return { name: attr, totalSKUs: total, populated, completeness: Math.round(raw), rawCompleteness: raw };
   });
 }
 
@@ -620,17 +622,19 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
         if (!isEmptyValue(r[attr])) populatedChecks++;
       }
     }
+    const raw = totalChecks > 0 ? (populatedChecks / totalChecks) * 100 : 0;
     return {
       value,
       totalSKUs: recs.length,
       populated: populatedChecks,
-      completeness: totalChecks > 0 ? Math.round((populatedChecks / totalChecks) * 100) : 0,
+      completeness: Math.round(raw),
+      rawCompleteness: raw,
     };
   }).sort((a, b) => {
     // "Sin valor asignado" always last
     if (a.value === "Sin valor asignado") return 1;
     if (b.value === "Sin valor asignado") return -1;
-    return a.completeness - b.completeness;
+    return a.rawCompleteness - b.rawCompleteness;
   });
 }
 

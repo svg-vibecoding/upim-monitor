@@ -25,6 +25,7 @@ export interface AttributeResult {
   totalSKUs: number;
   populated: number;
   completeness: number;
+  rawCompleteness?: number;
 }
 
 export interface DimensionResult {
@@ -32,6 +33,7 @@ export interface DimensionResult {
   totalSKUs: number;
   populated: number;
   completeness: number;
+  rawCompleteness?: number;
 }
 
 export type UniverseKey = "all" | "active" | "visible_b2b" | "visible_b2c" | "digital_base" | "producto_foco";
@@ -155,7 +157,8 @@ export function computeAttributeResults(records: PIMRecord[], attributes: string
   return attributes.map((attr) => {
     const total = records.length;
     const populated = records.filter((r) => r[attr] !== null && r[attr] !== "" && r[attr] !== undefined).length;
-    return { name: attr, totalSKUs: total, populated, completeness: total > 0 ? Math.round((populated / total) * 100) : 0 };
+    const raw = total > 0 ? (populated / total) * 100 : 0;
+    return { name: attr, totalSKUs: total, populated, completeness: Math.round(raw), rawCompleteness: raw };
   });
 }
 
@@ -176,16 +179,18 @@ export function computeDimensionResults(records: PIMRecord[], attributes: string
         if (r[attr] !== null && r[attr] !== "" && r[attr] !== undefined) populatedChecks++;
       }
     }
+    const raw = totalChecks > 0 ? (populatedChecks / totalChecks) * 100 : 0;
     return {
       value,
       totalSKUs: recs.length,
       populated: populatedChecks,
-      completeness: totalChecks > 0 ? Math.round((populatedChecks / totalChecks) * 100) : 0,
+      completeness: Math.round(raw),
+      rawCompleteness: raw,
     };
   }).sort((a, b) => {
     if (a.value === "Sin valor asignado") return 1;
     if (b.value === "Sin valor asignado") return -1;
-    return a.completeness - b.completeness;
+    return a.rawCompleteness - b.rawCompleteness;
   });
 }
 

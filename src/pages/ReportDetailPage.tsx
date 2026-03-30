@@ -88,7 +88,7 @@ export default function ReportDetailPage() {
     sorted.sort((a, b) => {
       let cmp = 0;
       if (sortField === "completeness") {
-        cmp = a.completeness - b.completeness;
+        cmp = (a.rawCompleteness ?? a.completeness) - (b.rawCompleteness ?? b.completeness);
       } else {
         cmp = a.name.localeCompare(b.name, "es");
       }
@@ -120,7 +120,7 @@ export default function ReportDetailPage() {
       });
     } else {
       rest.sort((a, b) => {
-        const cmp = a.completeness - b.completeness;
+        const cmp = (a.rawCompleteness ?? a.completeness) - (b.rawCompleteness ?? b.completeness);
         return dimSortDir === "asc" ? cmp : -cmp;
       });
     }
