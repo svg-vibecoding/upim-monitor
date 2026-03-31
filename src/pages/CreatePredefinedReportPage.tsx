@@ -145,6 +145,12 @@ export default function CreatePredefinedReportPage() {
           setSource("operation");
           setSelectedOperationId(report.operationId);
           setOpMode("existing");
+        } else if (report.csvCodes && report.csvCodes.length > 0) {
+          setSource("file");
+          setCsvCodes(report.csvCodes);
+          setUploadedFileName("Archivo cargado previamente");
+          setUploadedFileReady(true);
+          setUploadedTotalRows(report.csvCodes.length);
         } else {
           setSource("general");
         }
