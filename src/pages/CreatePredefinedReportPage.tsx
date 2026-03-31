@@ -263,12 +263,13 @@ export default function CreatePredefinedReportPage() {
         await updateReportOp.mutateAsync({ reportId: reportId!, operationId: opId });
         await updateReportAttrs.mutateAsync({ reportId: reportId!, attributes: selectedAttrs });
 
-        // Update name/description
+        // Update name/description/csv_codes
         const { error } = await supabase.from("predefined_reports").update({
           name: name.trim(),
           description: description.trim(),
           universe: universeDesc.trim(),
           show_in_focus: showInFocus,
+          csv_codes: source === "file" ? csvCodes : [],
         } as any).eq("id", reportId!);
         if (error) throw error;
         queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
