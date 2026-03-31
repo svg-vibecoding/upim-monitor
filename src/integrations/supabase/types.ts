@@ -249,6 +249,7 @@ export type Database = {
         Row: {
           attributes: string[]
           created_at: string
+          csv_codes: string[]
           description: string
           display_order: number
           id: string
@@ -262,6 +263,7 @@ export type Database = {
         Insert: {
           attributes?: string[]
           created_at?: string
+          csv_codes?: string[]
           description?: string
           display_order?: number
           id?: string
@@ -275,6 +277,7 @@ export type Database = {
         Update: {
           attributes?: string[]
           created_at?: string
+          csv_codes?: string[]
           description?: string
           display_order?: number
           id?: string

@@ -547,6 +547,7 @@ export function usePredefinedReports() {
         attributes: r.attributes || [],
         displayOrder: (r as any).display_order ?? 99,
         showInFocus: (r as any).show_in_focus ?? true,
+        csvCodes: (r as any).csv_codes || [],
       }));
     },
     staleTime: 5 * 60 * 1000,
@@ -654,6 +655,11 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
       return allRecords.filter((r) => evaluateOperation(r, operation, allOperations));
     }
   }
+  // If report has csv_codes, filter by them
+  if (report.csvCodes && report.csvCodes.length > 0) {
+    const codeSet = new Set(report.csvCodes);
+    return allRecords.filter((r) => codeSet.has(r.codigoJaivana));
+  }
   // Fallback to legacy universe_key logic
   switch (report.universeKey) {
     case "active":
@@ -707,6 +713,7 @@ export function useCreatePredefinedReport() {
       attributes,
       showInFocus = true,
       universe,
+      csvCodes = [],
     }: {
       name: string;
       description: string;
@@ -714,6 +721,7 @@ export function useCreatePredefinedReport() {
       attributes: string[];
       showInFocus?: boolean;
       universe?: string;
+      csvCodes?: string[];
     }) => {
       const { data, error } = await supabase.from("predefined_reports").insert({
         name,
@@ -723,6 +731,7 @@ export function useCreatePredefinedReport() {
         operation_id: operationId,
         attributes,
         show_in_focus: showInFocus,
+        csv_codes: csvCodes,
       } as any).select("id").single();
       if (error) throw error;
       return (data as any).id as string;

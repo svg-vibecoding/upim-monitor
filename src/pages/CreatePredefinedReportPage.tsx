@@ -145,6 +145,12 @@ export default function CreatePredefinedReportPage() {
           setSource("operation");
           setSelectedOperationId(report.operationId);
           setOpMode("existing");
+        } else if (report.csvCodes && report.csvCodes.length > 0) {
+          setSource("file");
+          setCsvCodes(report.csvCodes);
+          setUploadedFileName("Archivo cargado previamente");
+          setUploadedFileReady(true);
+          setUploadedTotalRows(report.csvCodes.length);
         } else {
           setSource("general");
         }
@@ -257,12 +263,13 @@ export default function CreatePredefinedReportPage() {
         await updateReportOp.mutateAsync({ reportId: reportId!, operationId: opId });
         await updateReportAttrs.mutateAsync({ reportId: reportId!, attributes: selectedAttrs });
 
-        // Update name/description
+        // Update name/description/csv_codes
         const { error } = await supabase.from("predefined_reports").update({
           name: name.trim(),
           description: description.trim(),
           universe: universeDesc.trim(),
           show_in_focus: showInFocus,
+          csv_codes: source === "file" ? csvCodes : [],
         } as any).eq("id", reportId!);
         if (error) throw error;
         queryClient.invalidateQueries({ queryKey: ["predefined-reports"] });
@@ -280,6 +287,7 @@ export default function CreatePredefinedReportPage() {
           attributes: selectedAttrs,
           showInFocus,
           universe: universeDesc.trim(),
+          csvCodes: source === "file" ? csvCodes : [],
         });
 
         // Refresh computed results for the new report
