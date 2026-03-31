@@ -655,6 +655,11 @@ export function getRecordsForReport(allRecords: PIMRecord[], report: PredefinedR
       return allRecords.filter((r) => evaluateOperation(r, operation, allOperations));
     }
   }
+  // If report has csv_codes, filter by them
+  if (report.csvCodes && report.csvCodes.length > 0) {
+    const codeSet = new Set(report.csvCodes);
+    return allRecords.filter((r) => codeSet.has(r.codigoJaivana));
+  }
   // Fallback to legacy universe_key logic
   switch (report.universeKey) {
     case "active":
