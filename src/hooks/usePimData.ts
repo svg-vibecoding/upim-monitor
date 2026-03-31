@@ -713,6 +713,7 @@ export function useCreatePredefinedReport() {
       attributes,
       showInFocus = true,
       universe,
+      csvCodes = [],
     }: {
       name: string;
       description: string;
@@ -720,6 +721,7 @@ export function useCreatePredefinedReport() {
       attributes: string[];
       showInFocus?: boolean;
       universe?: string;
+      csvCodes?: string[];
     }) => {
       const { data, error } = await supabase.from("predefined_reports").insert({
         name,
@@ -729,6 +731,7 @@ export function useCreatePredefinedReport() {
         operation_id: operationId,
         attributes,
         show_in_focus: showInFocus,
+        csv_codes: csvCodes,
       } as any).select("id").single();
       if (error) throw error;
       return (data as any).id as string;

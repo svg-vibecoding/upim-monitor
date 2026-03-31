@@ -48,6 +48,7 @@ export interface PredefinedReport {
   attributes: string[];
   displayOrder: number;
   showInFocus: boolean;
+  csvCodes: string[];
 }
 
 export interface Dimension {
