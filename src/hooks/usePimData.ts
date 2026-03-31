@@ -547,6 +547,7 @@ export function usePredefinedReports() {
         attributes: r.attributes || [],
         displayOrder: (r as any).display_order ?? 99,
         showInFocus: (r as any).show_in_focus ?? true,
+        csvCodes: (r as any).csv_codes || [],
       }));
     },
     staleTime: 5 * 60 * 1000,
