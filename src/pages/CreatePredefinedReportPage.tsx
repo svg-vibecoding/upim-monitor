@@ -287,6 +287,7 @@ export default function CreatePredefinedReportPage() {
           attributes: selectedAttrs,
           showInFocus,
           universe: universeDesc.trim(),
+          csvCodes: source === "file" ? csvCodes : [],
         });
 
         // Refresh computed results for the new report
