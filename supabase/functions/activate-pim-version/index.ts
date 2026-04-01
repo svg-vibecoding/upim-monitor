@@ -63,8 +63,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Call the atomic activation function
-    const { error: rpcError } = await adminClient.rpc("activate_pim_version", {
+    // Call the atomic activation function (now returns cleanup summary)
+    const { data: rpcData, error: rpcError } = await adminClient.rpc("activate_pim_version", {
       p_upload_id: upload_id,
     });
 
@@ -76,7 +76,7 @@ Deno.serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ success: true }),
+      JSON.stringify({ success: true, cleanup: rpcData }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
