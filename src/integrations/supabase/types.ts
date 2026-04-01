@@ -58,18 +58,21 @@ export type Database = {
       }
       dimensions: {
         Row: {
+          active: boolean
           created_at: string
           field: string
           id: string
           name: string
         }
         Insert: {
+          active?: boolean
           created_at?: string
           field: string
           id?: string
           name: string
         }
         Update: {
+          active?: boolean
           created_at?: string
           field?: string
           id?: string
