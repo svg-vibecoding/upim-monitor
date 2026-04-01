@@ -390,10 +390,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      activate_pim_version: {
-        Args: { p_upload_id: string }
-        Returns: undefined
-      }
+      activate_pim_version: { Args: { p_upload_id: string }; Returns: Json }
       build_operation_where: {
         Args: { p_depth?: number; p_operation_id: string }
         Returns: string
