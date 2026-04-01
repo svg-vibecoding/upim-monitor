@@ -912,7 +912,30 @@ export default function AdminPage() {
                               setCsvResult(null);
                               setPendingUploadId(null);
                               setPendingAttributeOrder([]);
-                              toast.success("Base PIM activada correctamente");
+
+                              // Show cleanup summary if any changes were made
+                              const cleanup = data?.cleanup;
+                              if (cleanup) {
+                                const parts: string[] = [];
+                                if (cleanup.removedAttributes?.length > 0) {
+                                  parts.push(`Atributos eliminados de informes: ${cleanup.removedAttributes.join(", ")}`);
+                                }
+                                if (cleanup.operationsDeactivated?.length > 0) {
+                                  parts.push(`Operaciones desactivadas: ${cleanup.operationsDeactivated.join(", ")}`);
+                                }
+                                if (cleanup.dimensionsDeactivated?.length > 0) {
+                                  parts.push(`Dimensiones desactivadas: ${cleanup.dimensionsDeactivated.join(", ")}`);
+                                }
+                                if (parts.length > 0) {
+                                  toast.warning(`Base PIM activada. Se detectaron atributos eliminados:\n${parts.join("\n")}`, {
+                                    duration: 15000,
+                                  });
+                                } else {
+                                  toast.success("Base PIM activada correctamente");
+                                }
+                              } else {
+                                toast.success("Base PIM activada correctamente");
+                              }
                             } catch (err: any) {
                               toast.error(err.message || "Error activando la base PIM");
                             } finally {
