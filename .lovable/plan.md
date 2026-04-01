@@ -1,81 +1,99 @@
 
 
-# Persistir universo por lista de códigos en informes predefinidos
+## Diagnóstico: Referencias huérfanas tras recarga de Base PIM
 
-## Problema
+### Entidades afectadas
 
-Cuando el usuario selecciona "Cargar archivo Excel" como fuente del universo en `CreatePredefinedReportPage`, los códigos se leen correctamente en el cliente (`csvCodes`), pero:
-- `resolveOperationId()` retorna `null` para `source === "file"`
-- Los códigos no se guardan en ningún campo de `predefined_reports`
-- Al recargar, el informe se interpreta como universo general
+Cuando se carga un archivo con columnas renombradas o eliminadas, las siguientes entidades conservan referencias a atributos que ya no existen en `pim_records.attributes`:
 
-## Estrategia propuesta: columna `csv_codes` en `predefined_reports`
+| Entidad | Campo | Tipo de referencia |
+|---|---|---|
+| `predefined_reports` | `attributes text[]` | Lista de atributos evaluados por el informe |
+| `pim_metadata` | `attribute_order text[]` | Se actualiza correctamente en `activate_pim_version` — **no queda huérfano** |
+| `operations` | `conditions jsonb` | Cada condición con `sourceType=attribute` referencia un nombre de atributo en `attribute` |
+| `dimensions` | `field text` | Nombre del atributo usado como eje de agrupación |
+| `computed_results` | `result jsonb` | Datos cacheados con nombres de atributos anteriores — se resuelve con `refresh_all_computed_results` |
 
-Crear una columna `csv_codes text[]` en la tabla `predefined_reports` para almacenar directamente la lista de códigos. Esta estrategia es preferible a crear una operación derivada porque:
-- Las operaciones usan condiciones por atributo (equals, contains, etc.) — no están diseñadas para listas de miles de códigos
-- Una columna `csv_codes` permite un filtro SQL simple y eficiente: `WHERE codigo_jaivana = ANY(csv_codes)`
-- Es explícita, auditable y no contamina el módulo de operaciones con datos que no son reglas funcionales
+`pim_metadata.attribute_order` ya se sobrescribe en `activate_pim_version`, así que no es un problema.
 
-## Cambios necesarios
+### Impacto real
 
-### 1. Migración: agregar columna `csv_codes`
+- **Informes**: muestran atributos con 0% de completitud permanente (el atributo existe en la config pero no en los datos)
+- **Operaciones**: condiciones que evalúan atributos inexistentes siempre dan `no_value` o `false`, distorsionando filtros
+- **Dimensiones**: si el campo referenciado no existe, la dimensión devuelve cero valores únicos
+
+### Estrategia propuesta: limpieza post-activación
+
+El momento natural es dentro de `activate_pim_version` (función SQL), justo después de copiar staging → producción y actualizar `pim_metadata`. Los nuevos atributos válidos ya están en `v_attr_order`.
+
+#### Paso 1: Limpiar `predefined_reports.attributes`
 
 ```sql
-ALTER TABLE predefined_reports 
-ADD COLUMN csv_codes text[] NOT NULL DEFAULT '{}';
+UPDATE predefined_reports
+SET attributes = (
+  SELECT array_agg(a)
+  FROM unnest(attributes) a
+  WHERE a = ANY(v_attr_order)
+)
+WHERE attributes != '{}';
 ```
 
-### 2. Actualizar `get_report_completeness` (función SQL)
+Elimina de cada informe los atributos que ya no existen en el nuevo archivo. Los informes conservan solo atributos válidos.
 
-Agregar un bloque que, cuando `csv_codes` no está vacío y no hay `operation_id`, use:
+#### Paso 2: Desactivar operaciones con condiciones huérfanas
+
+Para operaciones con `sourceType=attribute`: verificar si el atributo referenciado existe en `v_attr_order`. Si alguna condición referencia un atributo eliminado, marcar la operación como `active = false` y registrar el motivo. No borrar la operación ni sus condiciones para permitir revisión manual.
+
 ```sql
-v_where := 'codigo_jaivana = ANY(' || quote_literal(v_csv_codes::text) || '::text[])';
+UPDATE operations SET active = false
+WHERE active = true
+AND EXISTS (
+  SELECT 1 FROM jsonb_array_elements(conditions) c
+  WHERE COALESCE(c->>'sourceType','attribute') = 'attribute'
+  AND NOT (c->>'attribute' = ANY(v_attr_order))
+);
 ```
 
-Prioridad: `operation_id` > `csv_codes` > `universe_key` > `all`.
+#### Paso 3: Desactivar dimensiones con campo huérfano
 
-### 3. `CreatePredefinedReportPage.tsx` — guardar `csv_codes`
+No hay campo `active` en `dimensions`, así que hay dos opciones:
+- **Opción A**: Agregar columna `active boolean DEFAULT true` y filtrar en queries
+- **Opción B**: Eliminar la dimensión directamente (más simple pero destructiva)
 
-En `handleSave`, cuando `source === "file"`, pasar `csv_codes` al insert/update del informe:
-- **Crear**: incluir `csv_codes: csvCodes` en el payload de `createReport.mutateAsync`
-- **Editar**: incluir `csv_codes: csvCodes` en el update
+Recomendación: **Opción A** para consistencia con operaciones.
 
-Cuando `source !== "file"`, guardar `csv_codes: []` para limpiar códigos previos si se cambia la fuente.
+#### Paso 4: Refrescar `computed_results`
 
-### 4. `useCreatePredefinedReport` / `usePredefinedReports` (usePimData.ts)
+Ya se ejecuta `refresh_all_computed_results` tras la activación. Los resultados cacheados se regeneran con los atributos válidos.
 
-- Agregar `csvCodes` al tipo `PredefinedReport` y al mapeo de la query
-- Incluir `csv_codes` en el mutation de creación
+### Informe de limpieza
 
-### 5. `getRecordsForReport` (usePimData.ts) — filtro client-side
+Después de la limpieza, devolver al frontend un resumen de lo que se limpió:
 
-Agregar un bloque antes del fallback a `universe_key`:
-```ts
-if (report.csvCodes && report.csvCodes.length > 0) {
-  const codeSet = new Set(report.csvCodes);
-  return allRecords.filter(r => codeSet.has(r.codigoJaivana));
+```text
+{
+  reportsCleanedCount: 2,
+  removedAttributes: ["Imagen antigua", "Color legacy"],
+  operationsDeactivated: ["Filtro descontinuado"],
+  dimensionsDeactivated: []
 }
 ```
 
-### 6. `CreatePredefinedReportPage.tsx` — repoblar en edición
+Esto se puede mostrar en la UI de activación como un aviso post-confirmación.
 
-En el `useEffect` de edición, si `report.csvCodes?.length > 0`, setear `source = "file"` y poblar `csvCodes`, `uploadedFileName` (como "Archivo cargado previamente"), `uploadedFileReady = true`.
-
-## Archivos a modificar
+### Archivos a modificar
 
 | Archivo | Cambio |
 |---|---|
-| Nueva migración SQL | `ALTER TABLE predefined_reports ADD COLUMN csv_codes text[]` |
-| Función SQL `get_report_completeness` | Agregar rama de filtrado por `csv_codes` |
-| `src/hooks/usePimData.ts` | `PredefinedReport.csvCodes`, `getRecordsForReport`, mutation de creación |
-| `src/data/mockData.ts` | Agregar `csvCodes` a la interfaz `PredefinedReport` |
-| `src/pages/CreatePredefinedReportPage.tsx` | Guardar `csv_codes` al crear/editar, repoblar en edición |
+| Migración SQL | Agregar `active` a `dimensions`; modificar `activate_pim_version` para incluir limpieza |
+| `src/hooks/usePimData.ts` | Filtrar dimensiones inactivas en `useDimensions()` |
+| `src/pages/AdminPage.tsx` | Mostrar resumen de limpieza tras activación (opcional) |
+| Edge Function `activate-pim-version` | Sin cambios — ya llama a `activate_pim_version` RPC |
 
-## Lo que NO cambia
+### Lo que NO cambia
 
-- Lógica de operaciones
-- Módulo de dimensiones
-- Descarga de informes
+- Lógica de carga/upload de archivos
+- Módulo de descarga de informes
 - Dashboard / focos de atención
-- RLS policies (la columna hereda las policies existentes de `predefined_reports`)
+- RLS policies
 
