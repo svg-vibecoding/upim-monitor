@@ -41,7 +41,7 @@ export default function ReportDetailPage() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   // Dimension sort & filter state
-  type DimSortField = "value" | "completeness";
+  type DimSortField = "value" | "completeness" | "skus" | "populated";
   const [dimSortField, setDimSortField] = useState<DimSortField>("value");
   const [dimSortDir, setDimSortDir] = useState<SortDir>("asc");
   const [dimSeverityFilter, setDimSeverityFilter] = useState<SeverityLevel | null>(null);
@@ -118,6 +118,16 @@ export default function ReportDetailPage() {
         const cmp = a.value.localeCompare(b.value, "es");
         return dimSortDir === "asc" ? cmp : -cmp;
       });
+    } else if (dimSortField === "skus") {
+      rest.sort((a, b) => {
+        const cmp = a.totalSKUs - b.totalSKUs;
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
+    } else if (dimSortField === "populated") {
+      rest.sort((a, b) => {
+        const cmp = a.populated - b.populated;
+        return dimSortDir === "asc" ? cmp : -cmp;
+      });
     } else {
       rest.sort((a, b) => {
         const cmp = (a.rawCompleteness ?? a.completeness) - (b.rawCompleteness ?? b.completeness);
@@ -141,7 +151,7 @@ export default function ReportDetailPage() {
   };
 
   // Dimension sort: 3-state cycle, default = value asc (A-Z)
-  const handleDimSort = (field: "value" | "completeness") => {
+  const handleDimSort = (field: DimSortField) => {
     if (dimSortField !== field) {
       setDimSortField(field);
       setDimSortDir("asc");
@@ -423,8 +433,16 @@ export default function ReportDetailPage() {
                           {dimension?.name} <SortIcon field="value" activeField={dimSortField} activeDir={dimSortDir} />
                         </button>
                       </TableHead>
-                      <TableHead className="text-right w-24">SKUs</TableHead>
-                      <TableHead className="text-right w-28">Poblados</TableHead>
+                      <TableHead className="text-right w-24">
+                        <button onClick={() => handleDimSort("skus")} className="flex items-center gap-1 hover:text-foreground transition-colors ml-auto">
+                          SKUs <SortIcon field="skus" activeField={dimSortField} activeDir={dimSortDir} />
+                        </button>
+                      </TableHead>
+                      <TableHead className="text-right w-28">
+                        <button onClick={() => handleDimSort("populated")} className="flex items-center gap-1 hover:text-foreground transition-colors ml-auto">
+                          Poblados <SortIcon field="populated" activeField={dimSortField} activeDir={dimSortDir} />
+                        </button>
+                      </TableHead>
                       <TableHead className="w-48">
                         <button onClick={() => handleDimSort("completeness")} className="flex items-center gap-1 hover:text-foreground transition-colors">
                           Completitud <SortIcon field="completeness" activeField={dimSortField} activeDir={dimSortDir} />
