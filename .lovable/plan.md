@@ -1,99 +1,58 @@
 
 
-## Diagnóstico: Referencias huérfanas tras recarga de Base PIM
+## Análisis del estado actual
 
-### Entidades afectadas
+**ReportDetailPage** y **NewReportPage** comparten el mismo patrón de orden para la tabla de dimensiones:
+- Estado: `dimSortField: "value" | "completeness"` + `dimSortDir: "asc" | "desc"`
+- Handler: `handleDimSort(field)` con ciclo de 3 estados (asc → desc → reset)
+- Reset → orden por `value` ascendente (A-Z)
+- `"Sin valor asignado"` siempre al final, aplicado tras el sort
 
-Cuando se carga un archivo con columnas renombradas o eliminadas, las siguientes entidades conservan referencias a atributos que ya no existen en `pim_records.attributes`:
+La columna `DimensionResult` ya expone `totalSKUs` y `populated`, así que no se requieren cambios en el cálculo de datos.
 
-| Entidad | Campo | Tipo de referencia |
-|---|---|---|
-| `predefined_reports` | `attributes text[]` | Lista de atributos evaluados por el informe |
-| `pim_metadata` | `attribute_order text[]` | Se actualiza correctamente en `activate_pim_version` — **no queda huérfano** |
-| `operations` | `conditions jsonb` | Cada condición con `sourceType=attribute` referencia un nombre de atributo en `attribute` |
-| `dimensions` | `field text` | Nombre del atributo usado como eje de agrupación |
-| `computed_results` | `result jsonb` | Datos cacheados con nombres de atributos anteriores — se resuelve con `refresh_all_computed_results` |
+## Plan de implementación
 
-`pim_metadata.attribute_order` ya se sobrescribe en `activate_pim_version`, así que no es un problema.
+### 1. Ampliar el tipo del campo de orden
 
-### Impacto real
-
-- **Informes**: muestran atributos con 0% de completitud permanente (el atributo existe en la config pero no en los datos)
-- **Operaciones**: condiciones que evalúan atributos inexistentes siempre dan `no_value` o `false`, distorsionando filtros
-- **Dimensiones**: si el campo referenciado no existe, la dimensión devuelve cero valores únicos
-
-### Estrategia propuesta: limpieza post-activación
-
-El momento natural es dentro de `activate_pim_version` (función SQL), justo después de copiar staging → producción y actualizar `pim_metadata`. Los nuevos atributos válidos ya están en `v_attr_order`.
-
-#### Paso 1: Limpiar `predefined_reports.attributes`
-
-```sql
-UPDATE predefined_reports
-SET attributes = (
-  SELECT array_agg(a)
-  FROM unnest(attributes) a
-  WHERE a = ANY(v_attr_order)
-)
-WHERE attributes != '{}';
+En ambas páginas:
+```ts
+dimSortField: "value" | "completeness" | "skus" | "populated"
 ```
 
-Elimina de cada informe los atributos que ya no existen en el nuevo archivo. Los informes conservan solo atributos válidos.
+### 2. Extender `handleDimSort` 
 
-#### Paso 2: Desactivar operaciones con condiciones huérfanas
+Aceptar los 4 valores. Mantener el mismo ciclo de 3 estados. El reset sigue siendo orden por `value` ascendente.
 
-Para operaciones con `sourceType=attribute`: verificar si el atributo referenciado existe en `v_attr_order`. Si alguna condición referencia un atributo eliminado, marcar la operación como `active = false` y registrar el motivo. No borrar la operación ni sus condiciones para permitir revisión manual.
+### 3. Extender la lógica de `sortedDimensionResults`
 
-```sql
-UPDATE operations SET active = false
-WHERE active = true
-AND EXISTS (
-  SELECT 1 FROM jsonb_array_elements(conditions) c
-  WHERE COALESCE(c->>'sourceType','attribute') = 'attribute'
-  AND NOT (c->>'attribute' = ANY(v_attr_order))
-);
-```
+Añadir dos ramas al comparador:
+- `"skus"` → comparar por `totalSKUs` numérico
+- `"populated"` → comparar por `populated` numérico
+- Para `completeness` mantener uso de `rawCompleteness ?? completeness` (criterio ya establecido)
+- `"Sin valor asignado"` se sigue separando antes del sort y se concatena al final
 
-#### Paso 3: Desactivar dimensiones con campo huérfano
+### 4. Hacer clickeables los headers "SKUs" y "Poblados"
 
-No hay campo `active` en `dimensions`, así que hay dos opciones:
-- **Opción A**: Agregar columna `active boolean DEFAULT true` y filtrar en queries
-- **Opción B**: Eliminar la dimensión directamente (más simple pero destructiva)
+En la tabla de dimensiones, envolver los `TableHead` de SKUs y Poblados con el mismo patrón de botón + ícono de chevron que ya usan "Valor" y "Completitud". Reutilizar el mismo componente/marcado existente.
 
-Recomendación: **Opción A** para consistencia con operaciones.
+### 5. Fuera de alcance
 
-#### Paso 4: Refrescar `computed_results`
+- No se toca la tabla de atributos (solo dimensiones)
+- No se cambia el comportamiento de "Sin valor asignado"
+- No se modifica `computeDimensionResults` ni hooks de datos
+- No se aplica a otras páginas
 
-Ya se ejecuta `refresh_all_computed_results` tras la activación. Los resultados cacheados se regeneran con los atributos válidos.
-
-### Informe de limpieza
-
-Después de la limpieza, devolver al frontend un resumen de lo que se limpió:
-
-```text
-{
-  reportsCleanedCount: 2,
-  removedAttributes: ["Imagen antigua", "Color legacy"],
-  operationsDeactivated: ["Filtro descontinuado"],
-  dimensionsDeactivated: []
-}
-```
-
-Esto se puede mostrar en la UI de activación como un aviso post-confirmación.
-
-### Archivos a modificar
+## Archivos a modificar
 
 | Archivo | Cambio |
 |---|---|
-| Migración SQL | Agregar `active` a `dimensions`; modificar `activate_pim_version` para incluir limpieza |
-| `src/hooks/usePimData.ts` | Filtrar dimensiones inactivas en `useDimensions()` |
-| `src/pages/AdminPage.tsx` | Mostrar resumen de limpieza tras activación (opcional) |
-| Edge Function `activate-pim-version` | Sin cambios — ya llama a `activate_pim_version` RPC |
+| `src/pages/ReportDetailPage.tsx` | Tipo `dimSortField`, comparador en `sortedDimensionResults`, headers clickeables SKUs/Poblados |
+| `src/pages/NewReportPage.tsx` | Mismos cambios espejo |
 
-### Lo que NO cambia
+## Verificación tras implementar
 
-- Lógica de carga/upload de archivos
-- Módulo de descarga de informes
-- Dashboard / focos de atención
-- RLS policies
+- Click en SKUs ordena asc/desc/reset correctamente
+- Click en Poblados ordena asc/desc/reset correctamente
+- "Sin valor asignado" permanece al final en los 4 criterios
+- Orden por completitud sigue usando `rawCompleteness` (sin regresión)
 
