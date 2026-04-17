@@ -33,7 +33,7 @@ export default function ReportDetailPage() {
   const queryClient = useQueryClient();
   const [selectedDimension, setSelectedDimension] = useState<string>("");
   const [severityFilter, setSeverityFilter] = useState<SeverityLevel | null>(null);
-  type SortField = "completeness" | "attribute" | "pim_order";
+  type SortField = "completeness" | "attribute" | "populated" | "pim_order";
   type SortDir = "asc" | "desc";
   const [sortField, setSortField] = useState<SortField>("pim_order");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -89,6 +89,8 @@ export default function ReportDetailPage() {
       let cmp = 0;
       if (sortField === "completeness") {
         cmp = (a.rawCompleteness ?? a.completeness) - (b.rawCompleteness ?? b.completeness);
+      } else if (sortField === "populated") {
+        cmp = a.populated - b.populated;
       } else {
         cmp = a.name.localeCompare(b.name, "es");
       }
@@ -138,7 +140,7 @@ export default function ReportDetailPage() {
   }, [dimensionResults, dimSeverityFilter, dimSortField, dimSortDir]);
 
   // 3-state cycle: inactive (pim_order) → asc → desc → inactive
-  const handleSort = (field: "attribute" | "completeness") => {
+  const handleSort = (field: "attribute" | "completeness" | "populated") => {
     if (sortField !== field) {
       setSortField(field);
       setSortDir("asc");
@@ -359,7 +361,11 @@ export default function ReportDetailPage() {
                     </button>
                   </TableHead>
                   <TableHead className="text-right w-28">SKUs evaluados</TableHead>
-                  <TableHead className="text-right w-28">Poblados</TableHead>
+                  <TableHead className="text-right w-28">
+                    <button onClick={() => handleSort("populated")} className="flex items-center gap-1 hover:text-foreground transition-colors ml-auto">
+                      Poblados <SortIcon field="populated" activeField={sortField} activeDir={sortDir} />
+                    </button>
+                  </TableHead>
                   <TableHead className="w-48">
                     <button onClick={() => handleSort("completeness")} className="flex items-center gap-1 hover:text-foreground transition-colors">
                       Completitud <SortIcon field="completeness" activeField={sortField} activeDir={sortDir} />
